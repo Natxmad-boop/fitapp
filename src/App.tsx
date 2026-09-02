@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const styles = {
   container: {
@@ -75,6 +75,16 @@ const styles = {
     textAlign: 'center' as const,
     fontSize: '14px',
   },
+  dangerButton: {
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    border: 'none',
+    padding: '6px 10px',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '12px',
+  },
   input: {
     width: '100%',
     padding: '10px',
@@ -122,18 +132,33 @@ const styles = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker'>('dashboard');
-  
-  // Estados interactivos para añadir rutinas y registrar series
-  const [routines, setRoutines] = useState([
-    { id: 1, name: 'Día 1: Full Body Fuerza', exercises: 5 },
-    { id: 2, name: 'Día 2: Hipertrofia Tren Superior', exercises: 6 },
-  ]);
-  const [newRoutineName, setNewRoutineName] = useState('');
 
+  // Estados sincronizados con localStorage para no perder los datos al refrescar
+  const [routines, setRoutines] = useState(() => {
+    const saved = localStorage.getItem('fitapp_routines');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'Día 1: Full Body Fuerza', exercises: 5 },
+      { id: 2, name: 'Día 2: Hipertrofia Tren Superior', exercises: 6 },
+    ];
+  });
+
+  const [history, setHistory] = useState(() => {
+    const saved = localStorage.getItem('fitapp_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [newRoutineName, setNewRoutineName] = useState('');
   const [exerciseName, setExerciseName] = useState('Press de Banca');
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
-  const [history, setHistory] = useState<Array<{ name: string; weight: string; reps: string }>>([]);
+
+  useEffect(() => {
+    localStorage.setItem('fitapp_routines', JSON.stringify(routines));
+  }, [routines]);
+
+  useEffect(() => {
+    localStorage.setItem('fitapp_history', JSON.stringify(history));
+  }, [history]);
 
   const handleAddRoutine = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,9 +169,15 @@ export default function App() {
 
   const handleAddSet = () => {
     if (!weight || !reps) return;
-    setHistory([...history, { name: exerciseName, weight, reps }]);
+    setHistory([{ name: exerciseName, weight, reps, date: new Date().toLocaleDateString() }, ...history]);
     setWeight('');
     setReps('');
+  };
+
+  const clearHistory = () => {
+    if (window.confirm('¿Seguro que quieres borrar el historial de series?')) {
+      setHistory([]);
+    }
   };
 
   return (
@@ -163,7 +194,7 @@ export default function App() {
             <h2 style={styles.cardTitle}>Resumen Semanal</h2>
             <div style={styles.grid}>
               <div style={styles.statBox}>
-                <p style={styles.statValue}>{history.length + 3}</p>
+                <p style={styles.statValue}>{history.length}</p>
                 <p style={styles.statLabel}>Series Registradas</p>
               </div>
               <div style={styles.statBox}>
@@ -176,7 +207,7 @@ export default function App() {
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>Próximo Entrenamiento</h2>
             <p style={{ fontSize: '14px', color: '#334155', margin: '0 0 12px 0' }}>
-              Mantén la sobrecarga progresiva y registra cada serie al momento.
+              Tus datos se guardan automáticamente en este dispositivo. ¡A darle duro!
             </p>
             <button style={styles.button} onClick={() => setActiveTab('tracker')}>
               Comenzar Entrenamiento
@@ -204,7 +235,7 @@ export default function App() {
 
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>Mis Rutinas</h2>
-            {routines.map((routine) => (
+            {routines.map((routine: { id: number; name: string; exercises: number }) => (
               <div key={routine.id} style={styles.listItem}>
                 <div>
                   <strong style={{ color: '#1e293b' }}>{routine.name}</strong>
@@ -251,10 +282,16 @@ export default function App() {
 
           {history.length > 0 && (
             <div style={styles.card}>
-              <h2 style={styles.cardTitle}>Series de la Sesión</h2>
-              {history.map((item, index) => (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h2 style={{ ...styles.cardTitle, margin: 0 }}>Historial de Series</h2>
+                <button style={styles.dangerButton} onClick={clearHistory}>Limpiar</button>
+              </div>
+              {history.map((item: { name: string; weight: string; reps: string; date: string }, index: number) => (
                 <div key={index} style={styles.listItem}>
-                  <span style={{ fontWeight: '600', color: '#1e293b' }}>{item.name}</span>
+                  <div>
+                    <strong style={{ color: '#1e293b', display: 'block' }}>{item.name}</strong>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>{item.date}</span>
+                  </div>
                   <span style={{ color: '#0284c7', fontWeight: '600' }}>{item.weight} kg × {item.reps} reps</span>
                 </div>
               ))}
