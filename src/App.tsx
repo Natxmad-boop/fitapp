@@ -74,6 +74,17 @@ const styles = {
     width: '100%',
     textAlign: 'center' as const,
     fontSize: '14px',
+    marginBottom: '8px',
+  },
+  secondaryButton: {
+    backgroundColor: '#e2e8f0',
+    color: '#334155',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '12px',
   },
   dangerButton: {
     backgroundColor: '#ef4444',
@@ -133,7 +144,6 @@ const styles = {
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker'>('dashboard');
 
-  // Estados sincronizados con localStorage para no perder los datos al refrescar
   const [routines, setRoutines] = useState(() => {
     const saved = localStorage.getItem('fitapp_routines');
     return saved ? JSON.parse(saved) : [
@@ -152,6 +162,10 @@ export default function App() {
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
 
+  // Estados del temporizador de descanso
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('fitapp_routines', JSON.stringify(routines));
   }, [routines]);
@@ -159,6 +173,24 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('fitapp_history', JSON.stringify(history));
   }, [history]);
+
+  // Lógica del temporizador
+  useEffect(() => {
+    let interval: any = null;
+    if (isTimerRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsTimerRunning(false);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning, timeLeft]);
+
+  const startTimer = (seconds: number) => {
+    setTimeLeft(seconds);
+    setIsTimerRunning(true);
+  };
 
   const handleAddRoutine = (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +204,7 @@ export default function App() {
     setHistory([{ name: exerciseName, weight, reps, date: new Date().toLocaleDateString() }, ...history]);
     setWeight('');
     setReps('');
+    startTimer(90); // Arranca automáticamente un descanso de 90 segundos al guardar serie
   };
 
   const clearHistory = () => {
@@ -207,7 +240,7 @@ export default function App() {
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>Próximo Entrenamiento</h2>
             <p style={{ fontSize: '14px', color: '#334155', margin: '0 0 12px 0' }}>
-              Tus datos se guardan automáticamente en este dispositivo. ¡A darle duro!
+              Registra tus series y controla tus tiempos de descanso al milímetro.
             </p>
             <button style={styles.button} onClick={() => setActiveTab('tracker')}>
               Comenzar Entrenamiento
@@ -249,9 +282,27 @@ export default function App() {
         </div>
       )}
 
-      {/* VISTA 3: TRACKER DE EJERCICIOS */}
+      {/* VISTA 3: TRACKER DE EJERCICIOS Y TEMPORIZADOR */}
       {activeTab === 'tracker' && (
         <div>
+          {/* Tarjeta de Temporizador */}
+          <div style={{ ...styles.card, backgroundColor: timeLeft > 0 ? '#eff6ff' : '#ffffff', borderColor: timeLeft > 0 ? '#bfdbfe' : '#e2e8f0' }}>
+            <h2 style={styles.cardTitle}>⏱️ Descanso entre Series</h2>
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '32px', fontWeight: '700', color: timeLeft > 0 ? '#0284c7' : '#94a3b8' }}>
+                {Math.floor(timeLeft / 60)}:{('0' + (timeLeft % 60)).slice(-2)}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+              <button style={styles.secondaryButton} onClick={() => startTimer(60)}>1 min</button>
+              <button style={styles.secondaryButton} onClick={() => startTimer(90)}>1:30 min</button>
+              <button style={styles.secondaryButton} onClick={() => startTimer(120)}>2 min</button>
+              {isTimerRunning && (
+                <button style={{ ...styles.secondaryButton, backgroundColor: '#fee2e2', color: '#991b1b' }} onClick={() => { setIsTimerRunning(false); setTimeLeft(0); }}>Parar</button>
+              )}
+            </div>
+          </div>
+
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>Registrar Serie</h2>
             <input
@@ -277,7 +328,7 @@ export default function App() {
                 style={styles.input}
               />
             </div>
-            <button style={styles.button} onClick={handleAddSet}>Guardar Serie</button>
+            <button style={styles.button} onClick={handleAddSet}>Guardar Serie y Descansar</button>
           </div>
 
           {history.length > 0 && (
