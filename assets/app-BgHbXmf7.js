@@ -1,0 +1,4 @@
+document.addEventListener("DOMContentLoaded",()=>{const c=document.getElementById("addBtn"),n=document.getElementById("exerciseName"),s=document.getElementById("exerciseReps"),r=document.getElementById("exerciseList");d(),c.addEventListener("click",()=>{const t=n.value.trim(),e=s.value.trim();if(t===""||e===""){alert("Por favor, rellena ambos campos.");return}const a={name:t,reps:e};o(a),i(a),n.value="",s.value=""});function o(t){const e=document.createElement("li");e.innerHTML=`
+            <span><strong>${t.name}</strong> - ${t.reps}</span>
+            <button style="width: auto; padding: 6px 10px; background-color: #dc2626; font-size: 12px;" onclick="this.parentElement.remove()">X</button>
+        `,r.appendChild(e)}function i(t){let e=JSON.parse(localStorage.getItem("fitapp_exercises"))||[];e.push(t),localStorage.setItem("fitapp_exercises",JSON.stringify(e))}function d(){(JSON.parse(localStorage.getItem("fitapp_exercises"))||[]).forEach(e=>o(e))}});
