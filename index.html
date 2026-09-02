@@ -1,38 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitApp - Tu Entrenador</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-    <div class="card">
-        <h1>FitApp</h1>
-        <p>Apunta tus ejercicios diarios de forma rápida.</p>
-        
-        <!-- Formulario para añadir ejercicios -->
-        <div class="form-group">
-            <label for="exerciseName">Ejercicio:</label>
-            <input type="text" id="exerciseName" placeholder="Ej: Sentadillas, Flexiones...">
-        </div>
-        
-        <div class="form-group">
-            <label for="exerciseReps">Repeticiones / Tiempo:</label>
-            <input type="text" id="exerciseReps" placeholder="Ej: 3 series de 12 reps">
-        </div>
-
-        <button id="addBtn">Añadir Ejercicio</button>
-    </div>
-
-    <div class="card">
-        <h2>Historial de hoy</h2>
-        <ul id="exerciseList">
-            <!-- Aquí aparecerán los ejercicios guardados -->
-        </ul>
-    </div>
-
-    <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>FitApp - Tu Entrenador Inteligente</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#2563eb" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
