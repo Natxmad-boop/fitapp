@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 
-// Estilos base incrustados para que luzca limpio y profesional al instante
 const styles = {
   container: {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     maxWidth: '480px',
     margin: '0 auto',
     padding: '16px',
-    paddingBottom: '80px', // Espacio para la barra de navegación inferior
+    paddingBottom: '90px',
     color: '#111',
     backgroundColor: '#f8fafc',
     minHeight: '100vh',
@@ -66,15 +65,24 @@ const styles = {
   },
   button: {
     backgroundColor: '#0284c7',
-    color: '#white',
+    color: '#ffffff',
     border: 'none',
-    padding: '10px 16px',
+    padding: '12px 16px',
     borderRadius: '8px',
     fontWeight: '600',
     cursor: 'pointer',
     width: '100%',
     textAlign: 'center' as const,
     fontSize: '14px',
+  },
+  input: {
+    width: '100%',
+    padding: '10px',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '14px',
+    marginBottom: '10px',
+    boxSizing: 'border-box' as const,
   },
   nav: {
     position: 'fixed' as const,
@@ -103,7 +111,7 @@ const styles = {
     gap: '4px',
   }),
   listItem: {
-    padding: '10px 0',
+    padding: '12px 0',
     borderBottom: '1px solid #f1f5f9',
     display: 'flex',
     justifyContent: 'space-between',
@@ -114,15 +122,35 @@ const styles = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker'>('dashboard');
+  
+  // Estados interactivos para añadir rutinas y registrar series
   const [routines, setRoutines] = useState([
     { id: 1, name: 'Día 1: Full Body Fuerza', exercises: 5 },
     { id: 2, name: 'Día 2: Hipertrofia Tren Superior', exercises: 6 },
-    { id: 3, name: 'Día 3: Pierna y Core', exercises: 4 },
   ]);
+  const [newRoutineName, setNewRoutineName] = useState('');
+
+  const [exerciseName, setExerciseName] = useState('Press de Banca');
+  const [weight, setWeight] = useState('');
+  const [reps, setReps] = useState('');
+  const [history, setHistory] = useState<Array<{ name: string; weight: string; reps: string }>>([]);
+
+  const handleAddRoutine = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoutineName.trim()) return;
+    setRoutines([...routines, { id: Date.now(), name: newRoutineName, exercises: 4 }]);
+    setNewRoutineName('');
+  };
+
+  const handleAddSet = () => {
+    if (!weight || !reps) return;
+    setHistory([...history, { name: exerciseName, weight, reps }]);
+    setWeight('');
+    setReps('');
+  };
 
   return (
     <div style={styles.container}>
-      {/* Cabecera */}
       <header style={styles.header}>
         <h1 style={styles.title}>FitApp 💪</h1>
         <p style={styles.subtitle}>Tu progreso diario bajo control</p>
@@ -135,20 +163,20 @@ export default function App() {
             <h2 style={styles.cardTitle}>Resumen Semanal</h2>
             <div style={styles.grid}>
               <div style={styles.statBox}>
-                <p style={styles.statValue}>3</p>
-                <p style={styles.statLabel}>Entrenos Realizados</p>
+                <p style={styles.statValue}>{history.length + 3}</p>
+                <p style={styles.statLabel}>Series Registradas</p>
               </div>
               <div style={styles.statBox}>
-                <p style={styles.statValue}>2.4h</p>
-                <p style={styles.statLabel}>Tiempo Total</p>
+                <p style={styles.statValue}>{routines.length}</p>
+                <p style={styles.statLabel}>Rutinas Activas</p>
               </div>
             </div>
           </div>
 
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Próximo Objetivo</h2>
+            <h2 style={styles.cardTitle}>Próximo Entrenamiento</h2>
             <p style={{ fontSize: '14px', color: '#334155', margin: '0 0 12px 0' }}>
-              Completar la rutina de Tren Superior manteniendo la sobrecarga progresiva en press de banca.
+              Mantén la sobrecarga progresiva y registra cada serie al momento.
             </p>
             <button style={styles.button} onClick={() => setActiveTab('tracker')}>
               Comenzar Entrenamiento
@@ -159,9 +187,23 @@ export default function App() {
 
       {/* VISTA 2: RUTINAS */}
       {activeTab === 'routines' && (
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Mis Rutinas</h2>
-          <div>
+        <div>
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Crear Nueva Rutina</h2>
+            <form onSubmit={handleAddRoutine}>
+              <input
+                type="text"
+                placeholder="Ej: Día 3: Pierna y Hombro"
+                value={newRoutineName}
+                onChange={(e) => setNewRoutineName(e.target.value)}
+                style={styles.input}
+              />
+              <button type="submit" style={styles.button}>Añadir Rutina</button>
+            </form>
+          </div>
+
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Mis Rutinas</h2>
             {routines.map((routine) => (
               <div key={routine.id} style={styles.listItem}>
                 <div>
@@ -170,7 +212,6 @@ export default function App() {
                     {routine.exercises} ejercicios configurados
                   </p>
                 </div>
-                <span style={{ color: '#0284c7', fontSize: '13px', fontWeight: '600' }}>Ver</span>
               </div>
             ))}
           </div>
@@ -179,23 +220,50 @@ export default function App() {
 
       {/* VISTA 3: TRACKER DE EJERCICIOS */}
       {activeTab === 'tracker' && (
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Entrenamiento en Curso</h2>
-          <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
-            Registra tus marcas serie a serie:
-          </p>
-          <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-            <strong style={{ fontSize: '14px', color: '#0f172a' }}>Press de Banca</strong>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-              <input type="text" placeholder="Peso (kg)" style={{ width: '50%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
-              <input type="text" placeholder="Reps" style={{ width: '50%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+        <div>
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Registrar Serie</h2>
+            <input
+              type="text"
+              placeholder="Nombre del ejercicio"
+              value={exerciseName}
+              onChange={(e) => setExerciseName(e.target.value)}
+              style={styles.input}
+            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="number"
+                placeholder="Peso (kg)"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                style={styles.input}
+              />
+              <input
+                type="number"
+                placeholder="Reps"
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+                style={styles.input}
+              />
             </div>
+            <button style={styles.button} onClick={handleAddSet}>Guardar Serie</button>
           </div>
-          <button style={styles.button}>Añadir Serie</button>
+
+          {history.length > 0 && (
+            <div style={styles.card}>
+              <h2 style={styles.cardTitle}>Series de la Sesión</h2>
+              {history.map((item, index) => (
+                <div key={index} style={styles.listItem}>
+                  <span style={{ fontWeight: '600', color: '#1e293b' }}>{item.name}</span>
+                  <span style={{ color: '#0284c7', fontWeight: '600' }}>{item.weight} kg × {item.reps} reps</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Barra de Navegación Inferior */}
+      {/* Navegación Inferior */}
       <nav style={styles.nav}>
         <button style={styles.navItem(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>
           📊 Panel
