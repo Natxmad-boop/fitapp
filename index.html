@@ -4,17 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitApp - Tu Entrenador</title>
-    <!-- Enlace al archivo de estilos -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="card">
         <h1>FitApp</h1>
-        <p>¡Estructura modular lista! Los estilos y la lógica ya están separados correctamente.</p>
+        <p>Apunta tus ejercicios diarios de forma rápida.</p>
+        
+        <!-- Formulario para añadir ejercicios -->
+        <div class="form-group">
+            <label for="exerciseName">Ejercicio:</label>
+            <input type="text" id="exerciseName" placeholder="Ej: Sentadillas, Flexiones...">
+        </div>
+        
+        <div class="form-group">
+            <label for="exerciseReps">Repeticiones / Tiempo:</label>
+            <input type="text" id="exerciseReps" placeholder="Ej: 3 series de 12 reps">
+        </div>
+
+        <button id="addBtn">Añadir Ejercicio</button>
     </div>
 
-    <!-- Enlace al archivo de lógica de JavaScript -->
+    <div class="card">
+        <h2>Historial de hoy</h2>
+        <ul id="exerciseList">
+            <!-- Aquí aparecerán los ejercicios guardados -->
+        </ul>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
