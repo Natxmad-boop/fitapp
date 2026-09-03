@@ -42,10 +42,9 @@ interface UserProfile {
   goal: string;
   level: string;
   equipment: string[];
-  // Nuevos campos estrictos del guion maestro
-  allergies: string[]; // Restricciones estrictas (Alergias / Intolerancias)
-  dislikedFoods: string[]; // Preferencias (No me gusta)
-  medicalNotes: string; // Medicación o restricciones profesionales
+  allergies: string[];
+  dislikedFoods: string[];
+  medicalNotes: string;
   bodyMetrics: {
     waist: string;
     hip: string;
@@ -92,12 +91,12 @@ interface SetItem {
   difficulty?: 'Fácil' | 'Normal' | 'Difícil';
   note?: string;
   date: string;
+  suggestedNextWeight?: number; // Añadido por el motor inteligente de adaptación
 }
 
 export default function App() {
-  // 1. Perfiles y Seguridad Avanzada (Guion Maestro)
   const [profiles, setProfiles] = useState<UserProfile[]>(() => {
-    const saved = localStorage.getItem('fitapp_profiles_v11');
+    const saved = localStorage.getItem('fitapp_profiles_v12');
     return saved ? JSON.parse(saved) : [
       { 
         id: '1', 
@@ -115,7 +114,7 @@ export default function App() {
   });
   
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(() => {
-    const saved = localStorage.getItem('fitapp_active_profile_v11');
+    const saved = localStorage.getItem('fitapp_active_profile_v12');
     return saved ? JSON.parse(saved) : null;
   });
 
@@ -128,14 +127,13 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'biblioteca' | 'nutricion' | 'compra' | 'progreso' | 'perfil'>('inicio');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('fitapp_dark_mode');
+    const saved = localStorage.getItem('fitapp_dark_mode_v12');
     return saved ? JSON.parse(saved) : false;
   });
 
   const t = isDarkMode ? themes.dark : themes.light;
   const pKey = currentProfile ? `_${currentProfile.id}` : '_default';
 
-  // Estados editables del Perfil extendidos
   const [editGoal, setEditGoal] = useState(currentProfile?.goal || 'Ganar músculo');
   const [editLevel, setEditLevel] = useState(currentProfile?.level || 'Intermedio');
   const [editEquipment, setEditEquipment] = useState<string[]>(currentProfile?.equipment || ['Mancuernas']);
@@ -154,33 +152,30 @@ export default function App() {
     }
   }, [currentProfile]);
 
-  // 2. Biblioteca de Ejercicios
   const defaultExercises: Exercise[] = [
     { id: 'ex_1', name: 'Press de Banca con Barra', category: 'Fuerza', targetMuscle: 'Pectorales, Tríceps', equipment: 'Barra', difficulty: 'Intermedio', instructions: 'Acuéstate en el banco, retrae omóplatos y baja la barra controladamente hasta el pecho.', commonErrors: 'Rebotar la barra en el pecho.' },
     { id: 'ex_2', name: 'Sentadilla Goblet', category: 'Fuerza', targetMuscle: 'Cuádriceps, Glúteos', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Sostén la mancuerna verticalmente frente al pecho, baja la cadera manteniendo la espalda recta.', commonErrors: 'Levantar los talones del suelo.' },
   ];
 
   const [exerciseLibrary] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem(`fitapp_library_v11${pKey}`);
+    const saved = localStorage.getItem(`fitapp_library_v12${pKey}`);
     return saved ? JSON.parse(saved) : defaultExercises;
   });
 
-  // 3. Nutrición y Menús (Filtrados por Restricciones de Seguridad)
   const defaultDailyMeals: Meal[] = [
     { id: 'm_1', type: 'Desayuno', title: 'Avena Energética con Proteína', description: '60g de avena sin gluten cocida en leche vegetal, plátano y 1 scoop de whey.', calories: 450, protein: 32, carbs: 65, fats: 8 },
-    { id: 'm_2', type: 'Comida', title: 'Pechuga de Pollo con Arroz y Calabacín', description: '200g de pechuga a la plancha, 180g de arroz y calabacín salteado (Sustituto de brócoli por preferencia).', calories: 610, protein: 52, carbs: 68, fats: 12 },
+    { id: 'm_2', type: 'Comida', title: 'Pechuga de Pollo con Arroz y Calabacín', description: '200g de pechuga a la plancha, 180g de arroz y calabacín salteado.', calories: 610, protein: 52, carbs: 68, fats: 12 },
     { id: 'm_3', type: 'Merienda', title: 'Yogur Griego con Frutos Rojos', description: '200g de yogur griego natural con arándanos y nueces.', calories: 280, protein: 20, carbs: 18, fats: 12 },
     { id: 'm_4', type: 'Cena', title: 'Salmón al Horno con Patata', description: '180g de salmón al horno con hierbas y patata cocida.', calories: 540, protein: 40, carbs: 35, fats: 22 }
   ];
 
   const [dailyMeals, setDailyMeals] = useState<Meal[]>(() => {
-    const saved = localStorage.getItem(`fitapp_meals_v11${pKey}`);
+    const saved = localStorage.getItem(`fitapp_meals_v12${pKey}`);
     return saved ? JSON.parse(saved) : defaultDailyMeals;
   });
 
   const [activeMealModal, setActiveMealModal] = useState<Meal | null>(null);
 
-  // 4. Lista de la Compra
   const defaultShoppingList: ShoppingItem[] = [
     { id: 's_1', name: 'Avena certificada sin gluten', category: 'Despensa / Cereales', checked: false, amount: '500g' },
     { id: 's_2', name: 'Plátanos', category: 'Frutas y Verduras', checked: false, amount: '1 kg' },
@@ -191,7 +186,7 @@ export default function App() {
   ];
 
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_shopping_v11${pKey}`);
+    const saved = localStorage.getItem(`fitapp_shopping_v12${pKey}`);
     return saved ? JSON.parse(saved) : defaultShoppingList;
   });
 
@@ -199,14 +194,13 @@ export default function App() {
   const [newCustomItemCat, setNewCustomItemCat] = useState<ShoppingItem['category']>('Despensa / Cereales');
   const [newCustomItemAmount, setNewCustomItemAmount] = useState('');
 
-  // 5. Historial y Progreso
   const defaultHistory: SetItem[] = [
-    { name: 'Press de Banca con Barra', weight: 70, reps: 10, date: '10/05/2026' },
-    { name: 'Sentadilla Goblet', weight: 24, reps: 12, date: '18/05/2026' },
+    { name: 'Press de Banca con Barra', weight: 70, reps: 10, difficulty: 'Normal', date: '10/05/2026', suggestedNextWeight: 72.5 },
+    { name: 'Sentadilla Goblet', weight: 24, reps: 12, difficulty: 'Fácil', date: '18/05/2026', suggestedNextWeight: 26 },
   ];
 
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history_v11${pKey}`);
+    const saved = localStorage.getItem(`fitapp_history_v12${pKey}`);
     return saved ? JSON.parse(saved) : defaultHistory;
   });
 
@@ -217,21 +211,24 @@ export default function App() {
   const [exerciseNote, setExerciseNote] = useState('');
   const [selectedExerciseForGraph, setSelectedExerciseForGraph] = useState('Press de Banca con Barra');
 
+  // Estado del Motor de Adaptación Inteligente (Feedback visual para el usuario)
+  const [adaptationMessage, setAdaptationMessage] = useState<string | null>(null);
+
   // Temporizador
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('fitapp_dark_mode', JSON.stringify(isDarkMode));
+    localStorage.setItem('fitapp_dark_mode_v12', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
   useEffect(() => {
     if (currentProfile) {
-      localStorage.setItem('fitapp_active_profile_v11', JSON.stringify(currentProfile));
-      localStorage.setItem(`fitapp_library_v11${pKey}`, JSON.stringify(exerciseLibrary));
-      localStorage.setItem(`fitapp_meals_v11${pKey}`, JSON.stringify(dailyMeals));
-      localStorage.setItem(`fitapp_shopping_v11${pKey}`, JSON.stringify(shoppingList));
-      localStorage.setItem(`fitapp_history_v11${pKey}`, JSON.stringify(history));
+      localStorage.setItem('fitapp_active_profile_v12', JSON.stringify(currentProfile));
+      localStorage.setItem(`fitapp_library_v12${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_meals_v12${pKey}`, JSON.stringify(dailyMeals));
+      localStorage.setItem(`fitapp_shopping_v12${pKey}`, JSON.stringify(shoppingList));
+      localStorage.setItem(`fitapp_history_v12${pKey}`, JSON.stringify(history));
     }
   }, [currentProfile, exerciseLibrary, dailyMeals, shoppingList, history, pKey]);
 
@@ -280,7 +277,7 @@ export default function App() {
     };
     const updated = [...profiles, newProf];
     setProfiles(updated);
-    localStorage.setItem('fitapp_profiles_v11', JSON.stringify(updated));
+    localStorage.setItem('fitapp_profiles_v12', JSON.stringify(updated));
     setNewProfileName('');
     setNewProfilePin('');
     setIsCreatingProfile(false);
@@ -302,16 +299,8 @@ export default function App() {
     setCurrentProfile(updatedProfile);
     const updatedProfiles = profiles.map(p => p.id === updatedProfile.id ? updatedProfile : p);
     setProfiles(updatedProfiles);
-    localStorage.setItem('fitapp_profiles_v11', JSON.stringify(updatedProfiles));
-    alert('¡Perfil, restricciones de seguridad y preferencias actualizados!');
-  };
-
-  const toggleEquipmentOption = (item: string) => {
-    if (editEquipment.includes(item)) {
-      setEditEquipment(editEquipment.filter(e => e !== item));
-    } else {
-      setEditEquipment([...editEquipment, item]);
-    }
+    localStorage.setItem('fitapp_profiles_v12', JSON.stringify(updatedProfiles));
+    alert('¡Perfil y restricciones actualizados!');
   };
 
   const toggleAllergyOption = (allergen: string) => {
@@ -322,59 +311,31 @@ export default function App() {
     }
   };
 
-  const handleExportData = () => {
-    const backupData = {
-      version: '11.0-MASTER',
-      exportDate: new Date().toISOString(),
-      profiles,
-      currentProfile,
-      history,
-      shoppingList,
-      dailyMeals,
-      exerciseLibrary
-    };
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `fitapp_master_backup_${currentProfile?.name || 'atleta'}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
-
-  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileReader = new FileReader();
-    if (e.target.files && e.target.files[0]) {
-      fileReader.readAsText(e.target.files[0], "UTF-8");
-      fileReader.onload = (event) => {
-        try {
-          const parsedData = JSON.parse(event.target?.result as string);
-          if (parsedData.profiles && parsedData.history) {
-            setProfiles(parsedData.profiles);
-            localStorage.setItem('fitapp_profiles_v11', JSON.stringify(parsedData.profiles));
-            if (parsedData.currentProfile) {
-              setCurrentProfile(parsedData.currentProfile);
-              localStorage.setItem('fitapp_active_profile_v11', JSON.stringify(parsedData.currentProfile));
-            }
-            if (parsedData.history) setHistory(parsedData.history);
-            if (parsedData.shoppingList) setShoppingList(parsedData.shoppingList);
-            if (parsedData.dailyMeals) setDailyMeals(parsedData.dailyMeals);
-            alert('¡Copia de seguridad maestra restaurada con éxito!');
-            window.location.reload();
-          } else {
-            alert('El archivo no tiene un formato válido.');
-          }
-        } catch (err) {
-          alert('Error al leer el archivo JSON.');
-        }
-      };
-    }
-  };
-
+  // 🧠 MOTOR DE ADAPTACIÓN INTELIGENTE DE ENTRENAMIENTO
   const handleAddSet = () => {
     const w = parseFloat(weightInput);
     const r = parseInt(repsInput, 10);
-    if (isNaN(w) || isNaN(r)) return;
+    if (isNaN(w) || isNaN(r)) {
+      alert('Introduce un peso y repeticiones válidos.');
+      return;
+    }
+
+    // Cálculo automático de sobrecarga progresiva según dificultad percibida
+    let suggestedWeight = w;
+    let adaptationMsg = '';
+
+    if (selectedDifficulty === 'Fácil') {
+      suggestedWeight = parseFloat((w * 1.05).toFixed(1)); // +5% de incremento automático
+      adaptationMsg = `🤖 Motor Inteligente: ¡Sensación FÁCIL! Sobrecarga aplicada. Siguiente sesión sugerida con ${suggestedWeight} kg.`;
+    } else if (selectedDifficulty === 'Normal') {
+      suggestedWeight = parseFloat((w * 1.025).toFixed(1)); // +2.5% o consolidación
+      adaptationMsg = `🤖 Motor Inteligente: Excelente ejecución en Rango Normal. Siguiente sesión sugerida con ${suggestedWeight} kg.`;
+    } else {
+      suggestedWeight = w; // Mantener peso por alta fatiga / dificultad
+      adaptationMsg = `🤖 Motor Inteligente: Dificultad alta detectada. Consolidamos peso (${w} kg) para priorizar recuperación y técnica.`;
+    }
+
+    setAdaptationMessage(adaptationMsg);
 
     const newSet: SetItem = {
       name: selectedExerciseForLog,
@@ -382,7 +343,8 @@ export default function App() {
       reps: r,
       difficulty: selectedDifficulty,
       note: exerciseNote,
-      date: new Date().toLocaleDateString()
+      date: new Date().toLocaleDateString(),
+      suggestedNextWeight: suggestedWeight
     };
 
     setHistory([newSet, ...history]);
@@ -390,7 +352,6 @@ export default function App() {
     setRepsInput('');
     setExerciseNote('');
     startTimer(90);
-    alert('¡Serie registrada! El sistema inteligente adaptará tu próxima sesión.');
   };
 
   const toggleShoppingItem = (id: string) => {
@@ -513,8 +474,8 @@ export default function App() {
       <div style={dynamicStyles.container}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: '700', color: t.text, margin: '0 0 4px 0' }}>FitApp Pro 🛡️</h1>
-            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Sistema de Perfiles Aislados y Reglas de Seguridad</p>
+            <h1 style={{ fontSize: '24px', fontWeight: '700', color: t.text, margin: '0 0 4px 0' }}>FitApp Pro 🚀</h1>
+            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Motor de Adaptación Inteligente & Seguridad</p>
           </div>
           <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
             {isDarkMode ? '☀️' : '🌙'}
@@ -522,13 +483,13 @@ export default function App() {
         </div>
 
         <div style={dynamicStyles.card}>
-          <h2 style={dynamicStyles.cardTitle}>🔐 Selección de Perfil Seguro</h2>
+          <h2 style={dynamicStyles.cardTitle}>🔐 Selección de Perfil</h2>
           {profiles.map((prof) => (
             <div key={prof.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <strong style={{ fontSize: '15px', color: t.text }}>{prof.name}</strong>
-                  <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Objetivo: {prof.goal} | Alergias: {prof.allergies.length > 0 ? prof.allergies.join(', ') : 'Ninguna'}</p>
+                  <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Objetivo: {prof.goal}</p>
                 </div>
               </div>
               {prof.pin ? (
@@ -542,27 +503,11 @@ export default function App() {
             </div>
           ))}
         </div>
-
-        <div style={dynamicStyles.card}>
-          {!isCreatingProfile ? (
-            <button style={dynamicStyles.secondaryButton} onClick={() => setIsCreatingProfile(true)}>+ Crear Nuevo Perfil Aislado</button>
-          ) : (
-            <form onSubmit={handleCreateProfile}>
-              <h2 style={dynamicStyles.cardTitle}>Nuevo Perfil Atleta</h2>
-              <input type="text" placeholder="Nombre completo" value={newProfileName} onChange={(e) => setNewProfileName(e.target.value)} style={dynamicStyles.input} />
-              <input type="password" placeholder="PIN de seguridad (4 dígitos)" value={newProfilePin} onChange={(e) => setNewProfilePin(e.target.value)} style={dynamicStyles.input} maxLength={4} />
-              <button type="submit" style={dynamicStyles.button}>Crear Perfil</button>
-              <button type="button" style={dynamicStyles.secondaryButton} onClick={() => setIsCreatingProfile(false)}>Cancelar</button>
-            </form>
-          )}
-        </div>
       </div>
     );
   }
 
   const totalCalories = dailyMeals.reduce((acc, m) => acc + m.calories, 0);
-  const totalProtein = dailyMeals.reduce((acc, m) => acc + m.protein, 0);
-
   const exerciseHistoryFiltered = history.filter(h => h.name === selectedExerciseForGraph).reverse();
   const maxWeightRegistered = exerciseHistoryFiltered.length > 0 ? Math.max(...exerciseHistoryFiltered.map(h => h.weight)) : 0;
 
@@ -570,7 +515,7 @@ export default function App() {
     <div style={dynamicStyles.container}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: t.text, margin: '0 0 2px 0' }}>FitApp Pro 🚀</h1>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: t.text, margin: '0 0 2px 0' }}>FitApp Pro 🧠</h1>
           <p style={{ fontSize: '12px', color: t.primary, margin: 0, fontWeight: '600' }}>Atleta: {currentProfile.name}</p>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
@@ -582,16 +527,10 @@ export default function App() {
       {activeTab === 'inicio' && (
         <div>
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🎯 Panel Inteligente</h2>
+            <h2 style={dynamicStyles.cardTitle}>🎯 Panel Inteligente con IA</h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '12px' }}>
-              Menú adaptado bajo restricciones estrictas. Calorías objetivo: <strong>{totalCalories} kcal</strong>.
+              Objetivo calórico: <strong>{totalCalories} kcal</strong>. Menús y entrenamientos adaptados dinámicamente según tus sensaciones.
             </p>
-            {currentProfile.allergies.length > 0 && (
-              <div style={{ backgroundColor: isDarkMode ? '#450a0a' : '#fee2e2', padding: '8px 12px', borderRadius: '6px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: '#dc2626' }}>🛡️ REGLAS DE SEGURIDAD ACTIVAS:</span>
-                <p style={{ fontSize: '12px', color: t.text, margin: '2px 0 0 0' }}>Excluyendo alérgenos estrictos: {currentProfile.allergies.join(', ')}</p>
-              </div>
-            )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button style={dynamicStyles.button} onClick={() => setActiveTab('entrenar')}>Entrenar 🏋️</button>
               <button style={{ ...dynamicStyles.button, backgroundColor: '#10b981' }} onClick={() => setActiveTab('compra')}>Compra 🛒</button>
@@ -600,7 +539,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 🏋️ 2. ENTRENAR */}
+      {/* 🏋️ 2. ENTRENAR CON MOTOR INTELIGENTE */}
       {activeTab === 'entrenar' && (
         <div>
           {timeLeft > 0 && (
@@ -612,8 +551,14 @@ export default function App() {
             </div>
           )}
 
+          {adaptationMessage && (
+            <div style={{ backgroundColor: isDarkMode ? '#064e3b' : '#d1fae5', border: '1px solid #10b981', padding: '10px 12px', borderRadius: '8px', marginBottom: '12px' }}>
+              <p style={{ fontSize: '12px', color: isDarkMode ? '#a7f3d0' : '#065f46', margin: 0, fontWeight: '600' }}>{adaptationMessage}</p>
+            </div>
+          )}
+
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🏋️ Registrar Serie</h2>
+            <h2 style={dynamicStyles.cardTitle}>🏋️ Registrar Serie y Feedback IA</h2>
             <select value={selectedExerciseForLog} onChange={(e) => setSelectedExerciseForLog(e.target.value)} style={dynamicStyles.input}>
               {exerciseLibrary.map(ex => (
                 <option key={ex.id} value={ex.name}>{ex.name}</option>
@@ -623,7 +568,32 @@ export default function App() {
               <input type="number" placeholder="Peso (kg)" value={weightInput} onChange={(e) => setWeightInput(e.target.value)} style={dynamicStyles.input} />
               <input type="number" placeholder="Reps" value={repsInput} onChange={(e) => setRepsInput(e.target.value)} style={dynamicStyles.input} />
             </div>
-            <button style={dynamicStyles.button} onClick={handleAddSet}>Guardar Serie y Descansar</button>
+
+            <label style={{ fontSize: '12px', fontWeight: '600', color: t.textSecondary, display: 'block', marginBottom: '6px' }}>¿Cómo has sentido el esfuerzo?</label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              {(['Fácil', 'Normal', 'Difícil'] as const).map(diff => (
+                <button
+                  type="button"
+                  key={diff}
+                  onClick={() => setSelectedDifficulty(diff)}
+                  style={{
+                    flex: 1,
+                    backgroundColor: selectedDifficulty === diff ? t.primary : t.statBg,
+                    color: selectedDifficulty === diff ? '#ffffff' : t.text,
+                    border: `1px solid ${selectedDifficulty === diff ? t.primary : t.border}`,
+                    padding: '8px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {diff}
+                </button>
+              ))}
+            </div>
+
+            <button style={dynamicStyles.button} onClick={handleAddSet}>Guardar y Calcular Adaptación</button>
           </div>
         </div>
       )}
@@ -646,7 +616,7 @@ export default function App() {
       {/* 🍽️ 4. NUTRICIÓN */}
       {activeTab === 'nutricion' && (
         <div style={dynamicStyles.card}>
-          <h2 style={dynamicStyles.cardTitle}>🍽️ Nutrición Personalizada</h2>
+          <h2 style={dynamicStyles.cardTitle}>🍽️ Nutrición Adaptada</h2>
           {dailyMeals.map((meal) => (
             <div key={meal.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -660,10 +630,10 @@ export default function App() {
         </div>
       )}
 
-      {/* 🛒 5. LISTA DE LA COMPRA */}
+      {/* 🛒 5. COMPRA */}
       {activeTab === 'compra' && (
         <div style={dynamicStyles.card}>
-          <h2 style={dynamicStyles.cardTitle}>🛒 Lista de Compra Segura</h2>
+          <h2 style={dynamicStyles.cardTitle}>🛒 Lista de Compra Inteligente</h2>
           <form onSubmit={addCustomShoppingItem} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${t.border}` }}>
             <input type="text" placeholder="Añadir producto..." value={newCustomItemName} onChange={(e) => setNewCustomItemName(e.target.value)} style={dynamicStyles.input} />
             <button type="submit" style={{ ...dynamicStyles.button, marginTop: '8px', backgroundColor: '#10b981' }}>+ Añadir</button>
@@ -686,7 +656,7 @@ export default function App() {
       {/* 📈 6. PROGRESO */}
       {activeTab === 'progreso' && (
         <div style={dynamicStyles.card}>
-          <h2 style={dynamicStyles.cardTitle}>📈 Progreso y Cargas</h2>
+          <h2 style={dynamicStyles.cardTitle}>📈 Progreso y Historial Adaptativo</h2>
           <select value={selectedExerciseForGraph} onChange={(e) => setSelectedExerciseForGraph(e.target.value)} style={dynamicStyles.input}>
             {Array.from(new Set(history.map(h => h.name))).map(exName => (
               <option key={exName} value={exName}>{exName}</option>
@@ -696,14 +666,29 @@ export default function App() {
             <span style={{ fontSize: '18px', fontWeight: '700', color: t.primary }}>{maxWeightRegistered} kg</span>
             <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Peso Máximo Registrado</p>
           </div>
+
+          <h3 style={{ fontSize: '14px', fontWeight: '600', color: t.text, marginTop: '16px', marginBottom: '8px' }}>Historial de Adaptaciones</h3>
+          {exerciseHistoryFiltered.map((h, idx) => (
+            <div key={idx} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '13px', fontWeight: '600' }}>{h.weight} kg × {h.reps} reps</span>
+                <span style={{ fontSize: '11px', color: t.textSecondary }}>{h.date}</span>
+              </div>
+              {h.suggestedNextWeight && (
+                <span style={{ fontSize: '11px', color: t.primary, fontWeight: '600' }}>
+                  🤖 Próximo peso sugerido: {h.suggestedNextWeight} kg
+                </span>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* 👤 7. PERFIL Y RESTRICCIONES */}
+      {/* 👤 7. PERFIL */}
       {activeTab === 'perfil' && (
         <div>
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>👤 Perfil y Restricciones Médicas</h2>
+            <h2 style={dynamicStyles.cardTitle}>👤 Perfil y Seguridad</h2>
             <form onSubmit={handleSaveProfileSettings}>
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Objetivo</label>
@@ -715,7 +700,7 @@ export default function App() {
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#dc2626', display: 'block', marginBottom: '6px' }}>⚠️ Restricciones Estrictas (Alergias / Intolerancias)</label>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#dc2626', display: 'block', marginBottom: '6px' }}>⚠️ Alergias Estrictas</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {['Gluten', 'Lactosa', 'Frutos secos', 'Marisco', 'Huevo'].map(allergen => {
                     const isSelected = editAllergies.includes(allergen);
@@ -742,28 +727,10 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Preferencias ("No me gusta")</label>
-                <input type="text" value={editDisliked.join(', ')} onChange={(e) => setEditDisliked(e.target.value.split(',').map(s => s.trim()))} style={dynamicStyles.input} placeholder="Ej. Brócoli, Pescado azul" />
-              </div>
-
-              <button type="submit" style={dynamicStyles.button}>Guardar Cambios de Perfil</button>
+              <button type="submit" style={dynamicStyles.button}>Guardar Cambios</button>
             </form>
           </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>💾 Respaldo y Seguridad</h2>
-            <button style={{ ...dynamicStyles.button, backgroundColor: '#10b981', marginBottom: '10px' }} onClick={handleExportData}>
-              📥 Exportar Datos Maestro (JSON)
-            </button>
-            <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block', width: '100%', marginBottom: '10px' }}>
-              <button style={{ ...dynamicStyles.secondaryButton, width: '100%', padding: '12px', textAlign: 'center' }}>
-                📂 Restaurar Datos
-              </button>
-              <input type="file" accept=".json" onChange={handleImportData} style={{ position: 'absolute', left: 0, top: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
-            </div>
-            <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>🚪 Bloquear / Cambiar Perfil</button>
-          </div>
+          <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>🚪 Bloquear / Cambiar Perfil</button>
         </div>
       )}
 
