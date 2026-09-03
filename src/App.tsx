@@ -133,7 +133,7 @@ export default function App() {
   ];
 
   const [exerciseLibrary] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem(`fitapp_library_v9${pKey}`);
+    const saved = localStorage.getItem(`fitapp_library_v10${pKey}`);
     return saved ? JSON.parse(saved) : defaultExercises;
   });
 
@@ -146,7 +146,7 @@ export default function App() {
   ];
 
   const [dailyMeals, setDailyMeals] = useState<Meal[]>(() => {
-    const saved = localStorage.getItem(`fitapp_meals_v9${pKey}`);
+    const saved = localStorage.getItem(`fitapp_meals_v10${pKey}`);
     return saved ? JSON.parse(saved) : defaultDailyMeals;
   });
 
@@ -166,7 +166,7 @@ export default function App() {
   ];
 
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_shopping_v9${pKey}`);
+    const saved = localStorage.getItem(`fitapp_shopping_v10${pKey}`);
     return saved ? JSON.parse(saved) : defaultShoppingList;
   });
 
@@ -184,7 +184,7 @@ export default function App() {
   ];
 
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history_v9${pKey}`);
+    const saved = localStorage.getItem(`fitapp_history_v10${pKey}`);
     return saved ? JSON.parse(saved) : defaultHistory;
   });
 
@@ -206,10 +206,10 @@ export default function App() {
   useEffect(() => {
     if (currentProfile) {
       localStorage.setItem('fitapp_active_profile', JSON.stringify(currentProfile));
-      localStorage.setItem(`fitapp_library_v9${pKey}`, JSON.stringify(exerciseLibrary));
-      localStorage.setItem(`fitapp_meals_v9${pKey}`, JSON.stringify(dailyMeals));
-      localStorage.setItem(`fitapp_shopping_v9${pKey}`, JSON.stringify(shoppingList));
-      localStorage.setItem(`fitapp_history_v9${pKey}`, JSON.stringify(history));
+      localStorage.setItem(`fitapp_library_v10${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_meals_v10${pKey}`, JSON.stringify(dailyMeals));
+      localStorage.setItem(`fitapp_shopping_v10${pKey}`, JSON.stringify(shoppingList));
+      localStorage.setItem(`fitapp_history_v10${pKey}`, JSON.stringify(history));
     }
   }, [currentProfile, exerciseLibrary, dailyMeals, shoppingList, history, pKey]);
 
@@ -285,10 +285,9 @@ export default function App() {
     }
   };
 
-  // Fase 9: Funciones de Exportación e Importación de Datos
   const handleExportData = () => {
     const backupData = {
-      version: '9.0',
+      version: '10.0-PROD',
       exportDate: new Date().toISOString(),
       profiles,
       currentProfile,
@@ -496,7 +495,7 @@ export default function App() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', color: t.text, margin: '0 0 4px 0' }}>FitApp Pro 💪</h1>
-            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Selecciona tu perfil de atleta</p>
+            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Selecciona tu perfil de atleta (Modo PWA)</p>
           </div>
           <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
             {isDarkMode ? '☀️' : '🌙'}
@@ -554,7 +553,7 @@ export default function App() {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: t.text, margin: '0 0 2px 0' }}>FitApp Pro 💪</h1>
-          <p style={{ fontSize: '12px', color: t.primary, margin: 0, fontWeight: '600' }}>Atleta: {currentProfile.name}</p>
+          <p style={{ fontSize: '12px', color: t.primary, margin: 0, fontWeight: '600' }}>Atleta: {currentProfile.name} (Modo Offline)</p>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
           {isDarkMode ? '☀️' : '🌙'}
@@ -729,7 +728,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 👤 7. PERFIL Y COPIA DE SEGURIDAD (Fase 9 del Guion) */}
+      {/* 👤 7. PERFIL Y CONFIGURACIÓN */}
       {activeTab === 'perfil' && (
         <div>
           <div style={dynamicStyles.card}>
@@ -792,18 +791,17 @@ export default function App() {
             </form>
           </div>
 
-          {/* Módulo de Copias de Seguridad (Fase 9) */}
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>💾 Copia de Seguridad y Datos</h2>
+            <h2 style={dynamicStyles.cardTitle}>💾 Copia de Seguridad y PWA</h2>
             <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '14px' }}>
-              Exporta todos tus historiales, perfiles y listas de compra en un archivo JSON seguro o restaura una copia anterior.
+              Exporta todos tus datos o restaura copias de seguridad. La app está optimizada para funcionar 100% offline.
             </p>
 
             <button style={{ ...dynamicStyles.button, backgroundColor: '#10b981', marginBottom: '10px' }} onClick={handleExportData}>
               📥 Exportar Datos (Backup JSON)
             </button>
 
-            <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block', width: '100%' }}>
+            <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block', width: '100%', marginBottom: '10px' }}>
               <button style={{ ...dynamicStyles.secondaryButton, width: '100%', padding: '12px', textAlign: 'center', backgroundColor: isDarkMode ? '#334155' : '#e2e8f0' }}>
                 📂 Restaurar Datos desde JSON
               </button>
@@ -815,7 +813,7 @@ export default function App() {
               />
             </div>
 
-            <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: `1px solid ${t.border}` }}>
+            <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: `1px solid ${t.border}` }}>
               <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>🚪 Cambiar de Perfil / Bloquear</button>
             </div>
           </div>
@@ -826,7 +824,7 @@ export default function App() {
       {activeMealModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 200 }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '20px', maxWidth: '400px', width: '100%', border: `1px solid ${t.border}` }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary }}>{activeMealModal.type}</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary}>{activeMealModal.type}</span>
             <h3 style={{ fontSize: '16px', fontWeight: '700', color: t.text, margin: '4px 0 10px 0' }}>{activeMealModal.title}</h3>
             <p style={{ fontSize: '13px', color: t.textSecondary, margin: '0 0 16px 0', lineHeight: '1.4' }}>{activeMealModal.description}</p>
             <button style={dynamicStyles.button} onClick={() => setActiveMealModal(null)}>Cerrar</button>
