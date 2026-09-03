@@ -23,7 +23,7 @@ interface UserProfile {
   id: string;
   name: string;
   weight: number;
-  goal: string;
+  goal: string[]; // Ahora es un array para admitir múltiples objetivos seleccionados
 }
 
 interface MealIdea {
@@ -34,6 +34,14 @@ interface MealIdea {
   description: string;
   caloriesApprox: string;
 }
+
+const AVAILABLE_GOALS = [
+  'Ganar fuerza',
+  'Perder grasa',
+  'Ganar masa muscular',
+  'Mejorar resistencia',
+  'Movilidad y salud'
+];
 
 const EXERCISES: Exercise[] = [
   // --- CASA ---
@@ -251,8 +259,8 @@ export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
-      { id: 'user_1', name: 'Nacho', weight: 70, goal: 'Ganar fuerza y músculo' },
-      { id: 'user_2', name: 'Lucía', weight: 60, goal: 'Tonificación y pérdida de grasa' }
+      { id: 'user_1', name: 'Nacho', weight: 70, goal: ['Ganar fuerza'] },
+      { id: 'user_2', name: 'Lucía', weight: 60, goal: ['Perder grasa', 'Tonificación'] }
     ];
   });
 
@@ -282,6 +290,7 @@ export default function App() {
   // Nuevo usuario inputs
   const [newUserName, setNewUserName] = useState<string>('');
   const [newUserWeight, setNewUserWeight] = useState<string>('');
+  const [newUserGoals, setNewUserGoals] = useState<string[]>(['Ganar fuerza']);
 
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
@@ -302,6 +311,33 @@ export default function App() {
     setProfilesList(updated);
   };
 
+  // Función para alternar objetivos múltiples en el perfil activo
+  const handleToggleActiveGoal = (goalOption: string) => {
+    const currentGoals = profile.goal || [];
+    let updatedGoals;
+    if (currentGoals.includes(goalOption)) {
+      // Si ya lo tiene marcado y hay más de uno, lo quita
+      if (currentGoals.length === 1) {
+        alert('⚠️ Debes seleccionar al menos un objetivo.');
+        return;
+      }
+      updatedGoals = currentGoals.filter(g => g !== goalOption);
+    } else {
+      updatedGoals = [...currentGoals, goalOption];
+    }
+    handleUpdateActiveProfile('goal', updatedGoals);
+  };
+
+  // Función para alternar objetivos en la creación de nuevo usuario
+  const handleToggleNewUserGoal = (goalOption: string) => {
+    if (newUserGoals.includes(goalOption)) {
+      if (newUserGoals.length === 1) return;
+      setNewUserGoals(newUserGoals.filter(g => g !== goalOption));
+    } else {
+      setNewUserGoals([...newUserGoals, goalOption]);
+    }
+  };
+
   const handleCreateUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUserName.trim()) return;
@@ -311,13 +347,14 @@ export default function App() {
       id: newId,
       name: newUserName.trim(),
       weight: Number(newUserWeight) || 65,
-      goal: 'Mantener forma física'
+      goal: newUserGoals
     };
 
     setProfilesList([...profilesList, newUser]);
     setActiveUserId(newId);
     setNewUserName('');
     setNewUserWeight('');
+    setNewUserGoals(['Ganar fuerza']);
     alert(`¡Perfil de ${newUser.name} creado y seleccionado con éxito! 🎉`);
   };
 
@@ -361,7 +398,6 @@ export default function App() {
     alert(`¡Entrenamiento guardado para ${profile.name}! 🚀`);
   };
 
-  // NUEVA FUNCIÓN: Sugiere un ejercicio alternativo del mismo campo (categoría y ubicación)
   const handleSubstituteExercise = (currentEx: Exercise) => {
     const alternatives = EXERCISES.filter(ex => 
       ex.id !== currentEx.id && 
@@ -374,7 +410,6 @@ export default function App() {
       return;
     }
 
-    // Selecciona una alternativa aleatoria del mismo campo
     const randomAlternative = alternatives[Math.floor(Math.random() * alternatives.length)];
     alert(`🏥 Sustituto sugerido por molestia:\n\n👉 En lugar de "${currentEx.name}", te recomendamos hacer:\n⭐ ${randomAlternative.name} (${randomAlternative.category} - ${randomAlternative.location})\n\n💡 Material: ${randomAlternative.equipment}`);
   };
@@ -485,7 +520,6 @@ export default function App() {
                     ▶️ Ver vídeo
                   </a>
                   
-                  {/* Botón de sustitución por dolencia */}
                   <button
                     onClick={() => handleSubstituteExercise(ex)}
                     style={{ 
@@ -646,7 +680,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Editar Perfil Activo */}
+          {/* Editar Perfil Activo con Checkboxes de Objetivos */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>⚙️ Configurar a: {profile.name}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
@@ -666,18 +700,36 @@ export default function App() {
                   style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
                 />
               </label>
-              <label>Objetivo:
-                <input 
-                  type="text" 
-                  value={profile.goal} 
-                  onChange={e => handleUpdateActiveProfile('goal', e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
+
+              {/* Objetivos múltiples predefinidos */}
+              <div>
+                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Objetivos (puedes marcar varios):</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {AVAILABLE_GOALS.map(goalOption => {
+                    const isSelected = profile.goal?.includes(goalOption);
+                    return (
+                      <div 
+                        key={goalOption}
+                        onClick={() => handleToggleActiveGoal(goalOption)}
+                        style={{ 
+                          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', cursor: 'pointer',
+                          backgroundColor: isSelected ? (isDarkMode ? '#0369a1' : '#e0f2fe') : t.bg,
+                          border: `1px solid ${isSelected ? t.primary : t.border}`,
+                          color: isSelected ? t.text : t.textSec
+                        }}
+                      >
+                        <span style={{ fontSize: '14px' }}>{isSelected ? '✅' : '⬜'}</span>
+                        <span style={{ fontWeight: isSelected ? '600' : 'normal' }}>{goalOption}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
           </div>
 
-          {/* Crear Nuevo Usuario */}
+          {/* Crear Nuevo Usuario con Objetivos múltiples */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>➕ Añadir Nuevo Perfil</h2>
             <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
@@ -695,11 +747,36 @@ export default function App() {
                   type="number" 
                   placeholder="Ej: 75" 
                   value={newUserWeight} 
-                  onChange={e => newUserWeightInput => setNewUserWeight(newUserWeightInput.target.value)}
+                  onChange={e => setNewUserWeight(e.target.value)}
                   style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
                 />
               </label>
-              <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
+
+              <div>
+                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Selecciona sus objetivos:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {AVAILABLE_GOALS.map(goalOption => {
+                    const isSelected = newUserGoals.includes(goalOption);
+                    return (
+                      <div 
+                        key={goalOption}
+                        onClick={() => handleToggleNewUserGoal(goalOption)}
+                        style={{ 
+                          display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer',
+                          backgroundColor: isSelected ? (isDarkMode ? '#0369a1' : '#e0f2fe') : t.bg,
+                          border: `1px solid ${isSelected ? t.primary : t.border}`,
+                          color: t.text
+                        }}
+                      >
+                        <span style={{ fontSize: '12px' }}>{isSelected ? '✅' : '⬜'}</span>
+                        <span>{goalOption}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '6px' }}>
                 Crear y Cambiar a este Usuario 🚀
               </button>
             </form>
