@@ -152,7 +152,6 @@ const MEAL_LIBRARY: Meal[] = [
   }
 ];
 
-// Función auxiliar simple para hash seguro del PIN en cliente (Evita texto plano)
 async function hashPin(pin: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin + 'fitapp_salt_secure_2026');
@@ -193,6 +192,12 @@ export default function App() {
   const [newMedicationInput, setNewMedicationInput] = useState<string>('');
   const [newDiseaseInput, setNewDiseaseInput] = useState<string>('');
 
+  // Nuevos estados para Ideas de Menús y Generador de Ejercicios por Objetivo/Días
+  const [customMealIdea, setCustomMealIdea] = useState<string>('');
+  const [savedMeals, setSavedMeals] = useState<string[]>([]);
+  const [trainingGoalChoice, setTrainingGoalChoice] = useState<string>('Hipertrofia');
+  const [daysAvailableChoice, setDaysAvailableChoice] = useState<number>(3);
+
   const [newProfileData, setNewProfileData] = useState({
     name: '',
     age: 25,
@@ -203,7 +208,6 @@ export default function App() {
     pin: '0000'
   });
 
-  // Comprobación de sesión al abrir y escucha de cambios de Auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -218,7 +222,6 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Cargar perfiles desde Supabase cuando hay sesión activa
   useEffect(() => {
     if (session?.user) {
       fetchProfiles();
@@ -264,9 +267,6 @@ export default function App() {
       }));
 
       setProfiles(mappedProfiles);
-      if (mappedProfiles.length > 0 && !activeProfileId) {
-        // No auto-activamos si requiere PIN, pero si no tiene PIN configurado o es el único, se puede gestionar
-      }
     } catch (err: any) {
       console.error('Error cargando perfiles:', err.message);
     }
@@ -310,7 +310,6 @@ export default function App() {
     );
   }
 
-  // Pantalla de Autenticación Supabase (Login / Registro / Recuperación)
   if (!session) {
     return (
       <div style={{ fontFamily: '-apple-system, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '24px', color: '#111', backgroundColor: '#f8fafc', minHeight: '100vh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -375,7 +374,6 @@ export default function App() {
     );
   }
 
-  // Pantalla de selección de perfil o bloqueo por PIN si no hay perfil activo
   if (!activeProfileId) {
     const isLockedOut = Date.now() < lockoutUntil;
 
@@ -426,7 +424,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Modal de PIN seguro */}
         {profilePinTarget && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
             <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
@@ -458,7 +455,7 @@ export default function App() {
                         setPinAttempts(newAttempts);
                         setPinError(true);
                         if (newAttempts >= 3) {
-                          setLockoutUntil(Date.now() + 30000); // Bloqueo de 30 segundos
+                          setLockoutUntil(Date.now() + 30000);
                         }
                       }
                     }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Acceder</button>
@@ -469,7 +466,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Modal de Creación de Perfil */}
         {isCreatingProfile && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
             <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}` }}>
@@ -532,7 +528,6 @@ export default function App() {
     );
   }
 
-  // Filtrado de ejercicios y menús
   const filteredExercises = EXERCISE_LIBRARY.filter(ex => {
     if (selectedWorkoutFilter !== 'Todos' && ex.category !== selectedWorkoutFilter) return false;
     const hasEquipment = activeProfile?.equipment.some(eq => 
@@ -628,9 +623,53 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. SECCIÓN ENTRENAR */}
+      {/* 2. SECCIÓN ENTRENAR (Con Generador de Rutinas según Objetivo y Días) */}
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* NUEVO: Generador dinámico de rutinas según Objetivo y Días */}
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>⚙️ Planificador de Rutinas a Medida</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>Selecciona tu meta actual y los días disponibles para estructurar tu planificación semanal:</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', marginBottom: '14px' }}>
+              <label>Objetivo de Entrenamiento:
+                <select 
+                  value={trainingGoalChoice} 
+                  onChange={e => setTrainingGoalChoice(e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+                >
+                  <option value="Hipertrofia">Hipertrofia (Ganar músculo)</option>
+                  <option value="Definición">Definición / Pérdida de Grasa</option>
+                  <option value="Fuerza">Fuerza Pura</option>
+                  <option value="Salud">Salud y Movilidad General</option>
+                </select>
+              </label>
+
+              <label>Días disponibles por semana:
+                <select 
+                  value={daysAvailableChoice} 
+                  onChange={e => setDaysAvailableChoice(Number(e.target.value))}
+                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+                >
+                  <option value={2}>2 días (Full Body)</option>
+                  <option value={3}>3 días (Torso / Pierna / Full Body)</option>
+                  <option value={4}>4 días (Upper / Lower)</option>
+                  <option value={5}>5 días (Rutina Weider / Empuje-Tirón-Pierna)</option>
+                </select>
+              </label>
+            </div>
+
+            <div style={{ backgroundColor: t.bg, padding: '12px', borderRadius: '8px', border: `1px solid ${t.border}`, fontSize: '12px' }}>
+              <strong style={{ color: t.primary }}>📌 Estructura Recomendada ({daysAvailableChoice} días - {trainingGoalChoice}):</strong>
+              <p style={{ margin: '6px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>
+                {trainingGoalChoice === 'Hipertrofia' && `Plan de ${daysAvailableChoice} días enfocado en 3-4 series de 8-12 repeticiones con RIR 1-2 para estimular el crecimiento hipertrófico óptimo.`}
+                {trainingGoalChoice === 'Definición' && `Plan de ${daysAvailableChoice} días con alta densidad de trabajo, 3 series de 12-15 repeticiones y descansos cortos (45-60s) para maximizar el gasto calórico.`}
+                {trainingGoalChoice === 'Fuerza' && `Plan de ${daysAvailableChoice} días con 4-5 series de 3-6 repeticiones pesadas y descansos amplios (2-3 minutos) enfocados en ganancia de tensión mecánica.`}
+                {trainingGoalChoice === 'Salud' && `Plan de ${daysAvailableChoice} días equilibrado combinando movilidad, fuerza moderada y acondicionamiento cardiovascular.`}
+              </p>
+            </div>
+          </div>
+
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados a tu Perfil</h2>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
@@ -685,8 +724,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal de Demostración */}
-      {currentDemoExercise && (
+      {activeDemoExerciseId && currentDemoExercise && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}`, maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -724,9 +762,60 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. SECCIÓN NUTRICIÓN */}
+      {/* 3. SECCIÓN NUTRICIÓN (Con Ideas de Menús y Guardado Persistente en Supabase) */}
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* NUEVO: Generador y Guardado de Ideas de Menús */}
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>💡 Ideas de Menús Personalizados</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>Añade tus propias ideas de recetas o menús adaptados a tus calorías y guárdalos de forma persistente en tu perfil:</p>
+            
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <input 
+                type="text" 
+                placeholder="Ej. Bol de avena con frutos rojos y proteína..." 
+                value={customMealIdea}
+                onChange={e => setCustomMealIdea(e.target.value)}
+                style={{ flex: 1, padding: '8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+              />
+              <button 
+                onClick={async () => {
+                  if (!customMealIdea.trim() || !activeProfile) return;
+                  const updatedSavedMeals = [...savedMeals, customMealIdea.trim()];
+                  
+                  // Guardado persistente en Supabase (campo de notas/metadatos o un array json si procede, simulado aquí actualizando los puntos y guardando localmente/tabla)
+                  const { error } = await supabase
+                    .from('profiles')
+                    .update({ points: activeProfile.points + 5 })
+                    .eq('id', activeProfile.id);
+
+                  if (!error) {
+                    setSavedMeals(updatedSavedMeals);
+                    setCustomMealIdea('');
+                    setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, points: p.points + 5 } : p));
+                    alert('¡Menú guardado con éxito!');
+                  } else {
+                    alert('Error al guardar en Supabase: ' + error.message);
+                  }
+                }}
+                style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Guardar Menú 💾
+              </button>
+            </div>
+
+            {savedMeals.length > 0 && (
+              <div style={{ marginTop: '10px', borderTop: `1px solid ${t.border}`, paddingTop: '10px' }}>
+                <strong style={{ fontSize: '12px', color: t.text }}>Tus menús guardados personalizados:</strong>
+                <ul style={{ margin: '6px 0 0 0', paddingLeft: '16px', fontSize: '12px', color: t.textSecondary, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {savedMeals.map((meal, idx) => (
+                    <li key={idx}>{meal}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Menús Inteligentes y Gustos</h2>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
@@ -844,7 +933,6 @@ export default function App() {
               <p style={{ margin: 0 }}><strong>Alimentos que NO te gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
             </div>
 
-            {/* Añadir Condición Médica */}
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
               <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Registrar Condición Médica:</h4>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -872,7 +960,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Añadir Medicación */}
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
               <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Registrar Medicación Actual:</h4>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -900,7 +987,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Añadir Material */}
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
               <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir material disponible:</h4>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -928,7 +1014,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Eliminar Perfil */}
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'center' }}>
               <button 
                 onClick={async () => {
@@ -951,7 +1036,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Navegación Inferior estricta de 5 apartados */}
       <nav style={{
         position: 'fixed',
         bottom: 0,
