@@ -124,7 +124,7 @@ const styles = {
     borderTop: '1px solid #e2e8f0',
     display: 'flex',
     justifyContent: 'space-around',
-    padding: '10px 0',
+    padding: '8px 0',
     maxWidth: '480px',
     margin: '0 auto',
     zIndex: 100,
@@ -132,14 +132,14 @@ const styles = {
   navItem: (active: boolean) => ({
     background: 'none',
     border: 'none',
-    fontSize: '11px',
+    fontSize: '10px',
     fontWeight: active ? '700' : '500',
     color: active ? '#0284c7' : '#64748b',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '4px',
+    gap: '2px',
   }),
   listItem: {
     padding: '12px 0',
@@ -170,10 +170,16 @@ interface MealItem {
   date: string;
 }
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker' | 'nutrition'>('dashboard');
+interface WeightItem {
+  id: number;
+  weight: number;
+  date: string;
+}
 
-  // Estados de Entreno y Rutinas
+export default function App() {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker' | 'nutrition' | 'body'>('dashboard');
+
+  // Estados con persistencia en localStorage
   const [routines, setRoutines] = useState(() => {
     const saved = localStorage.getItem('fitapp_routines');
     return saved ? JSON.parse(saved) : [
@@ -187,9 +193,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Estados de Nutrición y Salud
   const [meals, setMeals] = useState<MealItem[]>(() => {
     const saved = localStorage.getItem('fitapp_meals');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [bodyWeights, setBodyWeights] = useState<WeightItem[]>(() => {
+    const saved = localStorage.getItem('fitapp_body_weights');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -205,13 +215,16 @@ export default function App() {
   const [reps, setReps] = useState('');
   const [exerciseNote, setExerciseNote] = useState('');
 
-  // Formulario de Nutrición ampliado con Macros
+  // Nutrición
   const [mealCategory, setMealCategory] = useState('Desayuno');
   const [foodName, setFoodName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fats, setFats] = useState('');
+
+  // Peso Corporal
+  const [newWeight, setNewWeight] = useState('');
 
   // Temporizador
   const [timeLeft, setTimeLeft] = useState(0);
@@ -228,6 +241,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('fitapp_meals', JSON.stringify(meals));
   }, [meals]);
+
+  useEffect(() => {
+    localStorage.setItem('fitapp_body_weights', JSON.stringify(bodyWeights));
+  }, [bodyWeights]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_health', healthNotes);
@@ -300,16 +317,27 @@ export default function App() {
     setFats('');
   };
 
+  const handleAddWeight = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseFloat(newWeight);
+    if (isNaN(parsed)) return;
+
+    const entry: WeightItem = {
+      id: Date.now(),
+      weight: parsed,
+      date: new Date().toLocaleDateString(),
+    };
+
+    setBodyWeights([entry, ...bodyWeights]);
+    setNewWeight('');
+  };
+
   const clearHistory = () => {
-    if (window.confirm('¿Seguro que quieres borrar el historial de series?')) {
-      setHistory([]);
-    }
+    if (window.confirm('¿Seguro que quieres borrar el historial de series?')) setHistory([]);
   };
 
   const clearMeals = () => {
-    if (window.confirm('¿Seguro que quieres borrar el registro de comidas?')) {
-      setMeals([]);
-    }
+    if (window.confirm('¿Seguro que quieres borrar el registro de comidas?')) setMeals([]);
   };
 
   const saveHealthNotes = () => {
@@ -317,7 +345,7 @@ export default function App() {
     setIsEditingHealth(false);
   };
 
-  // Cálculos
+  // Cálculos rápidos
   const personalRecords = history.reduce((acc: { [key: string]: number }, item) => {
     if (!acc[item.name] || item.weight > acc[item.name]) {
       acc[item.name] = item.weight;
@@ -329,12 +357,13 @@ export default function App() {
   const totalProteinToday = meals.reduce((acc, m) => acc + m.protein, 0);
   const totalCarbsToday = meals.reduce((acc, m) => acc + m.carbs, 0);
   const totalFatsToday = meals.reduce((acc, m) => acc + m.fats, 0);
+  const latestWeight = bodyWeights.length > 0 ? bodyWeights[0].weight : '--';
 
   return (
     <div style={styles.container}>
       <header style={styles.header}>
         <h1 style={styles.title}>FitApp 💪</h1>
-        <p style={styles.subtitle}>Entreno, Nutrición y Salud Integral</p>
+        <p style={styles.subtitle}>Centro de Control de Salud y Rendimiento</p>
       </header>
 
       {/* VISTA 1: DASHBOARD */}
@@ -344,8 +373,8 @@ export default function App() {
             <h2 style={styles.cardTitle}>Resumen General</h2>
             <div style={styles.grid}>
               <div style={styles.statBox}>
-                <p style={styles.statValue}>{history.length}</p>
-                <p style={styles.statLabel}>Series Hechas</p>
+                <p style={styles.statValue}>{latestWeight} kg</p>
+                <p style={styles.statLabel}>Peso Corporal</p>
               </div>
               <div style={styles.statBox}>
                 <p style={styles.statValue}>{totalCaloriesToday} kcal</p>
@@ -605,6 +634,42 @@ export default function App() {
         </div>
       )}
 
+      {/* VISTA 5: PESO CORPORAL */}
+      {activeTab === 'body' && (
+        <div>
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>⚖️ Registrar Peso Corporal</h2>
+            <form onSubmit={handleAddWeight}>
+              <input
+                type="number"
+                step="0.1"
+                placeholder="Peso actual (ej. 75.5)"
+                value={newWeight}
+                onChange={(e) => setNewWeight(e.target.value)}
+                style={styles.input}
+              />
+              <button type="submit" style={styles.button}>Guardar Peso</button>
+            </form>
+          </div>
+
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Evolución de Peso</h2>
+            {bodyWeights.length === 0 ? (
+              <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                Aún no has registrado ningún pesaje.
+              </p>
+            ) : (
+              bodyWeights.map((item: WeightItem) => (
+                <div key={item.id} style={styles.listItem}>
+                  <span style={{ fontSize: '13px', color: '#64748b' }}>{item.date}</span>
+                  <strong style={{ color: '#0284c7', fontSize: '16px' }}>{item.weight} kg</strong>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Navegación Inferior */}
       <nav style={styles.nav}>
         <button style={styles.navItem(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>
@@ -618,6 +683,9 @@ export default function App() {
         </button>
         <button style={styles.navItem(activeTab === 'nutrition')} onClick={() => setActiveTab('nutrition')}>
           🥗 Nutrición
+        </button>
+        <button style={styles.navItem(activeTab === 'body')} onClick={() => setActiveTab('body')}>
+          ⚖️ Peso
         </button>
       </nav>
     </div>
