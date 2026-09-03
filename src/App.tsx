@@ -116,7 +116,6 @@ const INITIAL_MEALS: MealIdea[] = [
   }
 ];
 
-// Usamos directamente las abreviaturas cortas como identificadores unificados
 const DAYS_LIST = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 export default function App() {
@@ -169,8 +168,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   
-  // Dejamos un par de ingredientes seleccionados por defecto para que el generador de batidos funcione de inmediato
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>(['Plátano', 'Yogur griego', 'Avena']);
+  const [smoothieSeed, setSmoothieSeed] = useState<number>(0);
   
   const [dailyMenu, setDailyMenu] = useState<{ desayuno?: MealIdea; almuerzo?: MealIdea; cena?: MealIdea; snack?: MealIdea; bebida?: MealIdea }>({});
 
@@ -196,7 +195,6 @@ export default function App() {
       const currentTimeStr = `${currentHours}:${currentMinutes}`;
 
       const currentDayIndex = now.getDay();
-      // Mapeo índice JS a abreviatura
       const mapDays: Record<number, string> = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
       const currentDayName = mapDays[currentDayIndex];
 
@@ -367,11 +365,13 @@ export default function App() {
 
   const solidMealsList = filteredMeals.filter(m => m.type !== 'Bebida / Batido');
   
-  // Generador inteligente ampliado para que detecte cualquier ingrediente seleccionado si no hay restricciones duras
+  // Generador dinámico que cambia de combinación al pulsar el botón de rotación
+  const smoothieStyles = ['Smart Express', 'Power Protein', 'Detox Vital', 'Recovery Boost', 'Fit Energy'];
+  const currentStyleIndex = smoothieSeed % smoothieStyles.length;
   const generatedSmartSmoothie = {
-    title: selectedIngredients.length > 0 ? `Batido Smart Express de ${selectedIngredients.slice(0, 2).join(' y ')}` : 'Batido Energético Base',
-    description: selectedIngredients.length > 0 ? `Creado combinando tus ingredientes: ${selectedIngredients.join(', ')}.` : 'Selecciona ingredientes en Nutrición para personalizarlo.',
-    caloriesApprox: `${180 + (selectedIngredients.length * 35)} kcal`
+    title: selectedIngredients.length > 0 ? `Batido ${smoothieStyles[currentStyleIndex]} de ${selectedIngredients.slice(0, 2).join(' y ')}` : 'Batido Energético Base',
+    description: selectedIngredients.length > 0 ? `Combinación optimizada con tus ingredientes: ${selectedIngredients.join(', ')}.` : 'Selecciona ingredientes en Nutrición para personalizarlo.',
+    caloriesApprox: `${180 + ((selectedIngredients.length * 25 + smoothieSeed * 15) % 150)} kcal`
   };
 
   const t = isDarkMode ? {
@@ -404,7 +404,6 @@ export default function App() {
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* Selector de días funcional con IDs cortos */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>📅 ¿Qué días quieres entrenar?</h2>
             <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 8px 0' }}>Selecciona los días de la semana:</p>
@@ -432,7 +431,6 @@ export default function App() {
             </p>
           </div>
 
-          {/* Recordatorios */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h3 style={{ fontSize: '13px', marginTop: 0, marginBottom: '6px' }}>🔔 Recordatorio y Avisos Push</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -530,8 +528,16 @@ export default function App() {
       {activeTab === 'batidos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, color: '#8b5cf6' }}>🪄 Batido Generado</h2>
-            <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '8px', padding: '10px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ fontSize: '14px', margin: 0, color: '#8b5cf6' }}>🪄 Batido Generado</h2>
+              <button 
+                onClick={() => setSmoothieSeed(prev => prev + 1)} 
+                style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '11px', color: t.text, fontWeight: 'bold' }}
+              >
+                🔄 Cambiar idea
+              </button>
+            </div>
+            <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '8px', padding: '10px' }}>
               <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{generatedSmartSmoothie.title}</strong>
               <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{generatedSmartSmoothie.description}</p>
               <span style={{ fontSize: '11px', fontWeight: 'bold', color: t.primary }}>⚡ {generatedSmartSmoothie.caloriesApprox}</span>
@@ -539,7 +545,7 @@ export default function App() {
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🥤 Crear Batido</h3>
+            <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🥤 Crear Batido Personalizado</h3>
             <form onSubmit={handleAddBatidoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
               <input type="text" placeholder="Nombre..." value={newMealTitle} onChange={e => setNewMealTitle(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
               <input type="text" placeholder="Calorías (ej: 250 kcal)..." value={newMealCalories} onChange={e => setNewMealCalories(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
