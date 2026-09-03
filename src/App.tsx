@@ -25,6 +25,7 @@ interface UserProfile {
   weight: number;
   goal: string[];
   allergies: string[];
+  trainingDaysPerWeek: number; // Nuevo: días elegidos a la semana
 }
 
 interface MealIdea {
@@ -35,6 +36,12 @@ interface MealIdea {
   caloriesApprox: string;
   ingredients: string[]; 
   allergens: string[];
+}
+
+interface CustomWorkoutRoutine {
+  id: string;
+  name: string;
+  exercises: string[];
 }
 
 const AVAILABLE_GOALS = [
@@ -63,131 +70,110 @@ const AVAILABLE_ALLERGIES = [
 ];
 
 const EXERCISES: Exercise[] = [
-  // --- CASA ---
+  // --- CALISTENIA / CASA CON BANDAS Y PESO CORPORAL ---
   { 
-    id: '1', 
-    name: 'Sentadillas Libres', 
+    id: 'c_emp_1', 
+    name: 'Flexiones Declinadas con Banda', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Bandas elásticas y silla', 
+    homeSubstitute: 'Flexiones normales en suelo',
+    instructions: 'Pies elevados en silla, banda cruzada en la espalda para añadir resistencia.',
+    videoUrl: 'https://www.youtube.com/results?search_query=flexiones+declinadas+con+bandas'
+  },
+  { 
+    id: 'c_emp_2', 
+    name: 'Flexiones Diamante', 
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Peso corporal', 
-    homeSubstitute: 'Garrafa de agua o mochila con libros',
-    instructions: 'Espalda recta, baja controlando el movimiento y empuja desde los talones.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+sentadillas+correctamente'
+    homeSubstitute: 'Flexiones cerradas',
+    instructions: 'Manos juntas bajo el pecho para enfocar el esfuerzo en tríceps.',
+    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+flexiones+diamante'
   },
   { 
-    id: '2', 
-    name: 'Flexiones de Pecho', 
+    id: 'c_emp_3', 
+    name: 'Flexiones en Pica (Pike Push-ups)', 
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Peso corporal', 
-    homeSubstitute: 'Manos elevadas en una silla o bordillo si te cuesta',
-    instructions: 'Cuerpo completamente alineado, baja el pecho cerca del suelo sin arquear la espalda.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+flexiones+de+pecho'
+    homeSubstitute: 'Press militar con botellas',
+    instructions: 'Cadera arriba formando una V invertida, baja la cabeza hacia el suelo para hombros.',
+    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+flexiones+en+pica'
   },
   { 
-    id: '3', 
-    name: 'Zancadas Alternas', 
+    id: 'c_trac_1', 
+    name: 'Remo al Pecho con Banda', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Bandas elásticas', 
+    homeSubstitute: 'Remo con mochila pesada',
+    instructions: 'Pisa la banda, sujeta los extremos y rema hacia las costillas apretando la espalda.',
+    videoUrl: 'https://www.youtube.com/results?search_query=remo+con+banda+elastica+espalda'
+  },
+  { 
+    id: 'c_trac_2', 
+    name: 'Remo Inclinado a una mano con Banda', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Bandas elásticas', 
+    homeSubstitute: 'Remo a una mano con garrafa',
+    instructions: 'Pisa un extremo con un pie de lado y tira del otro extremo hacia la cadera.',
+    videoUrl: 'https://www.youtube.com/results?search_query=remo+a+una+mano+con+bandas+elasticas'
+  },
+  { 
+    id: 'c_leg_1', 
+    name: 'Sentadillas Búlgaras con Banda', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Bandas elásticas y silla', 
+    homeSubstitute: 'Zancadas estáticas',
+    instructions: 'Apoya un pie en la silla detrás, pasa la banda por el pie delantero y sujeta en los hombros.',
+    videoUrl: 'https://www.youtube.com/results?search_query=sentadillas+bulgaras+con+banda+elastica'
+  },
+  { 
+    id: 'c_leg_2', 
+    name: 'Peso Muerto Rumano con Banda', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Bandas elásticas', 
+    homeSubstitute: 'Peso muerto con garrafa',
+    instructions: 'Pisa la banda con ambos pies, mantén la espalda recta y lleva la cadera atrás.',
+    videoUrl: 'https://www.youtube.com/results?search_query=peso+muerto+con+bandas+elasticas'
+  },
+  { 
+    id: 'c_leg_3', 
+    name: 'Puente de Glúteos a una pierna', 
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Peso corporal', 
-    homeSubstitute: 'Dos botellas de agua o botes de leche en las manos',
-    instructions: 'Da un paso al frente y baja ambas rodillas formando ángulos de 90 grados.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+zancadas+correctamente'
+    homeSubstitute: 'Puente de glúteos normal',
+    instructions: 'Tumbado boca arriba, eleva la cadera apoyando solo un talón.',
+    videoUrl: 'https://www.youtube.com/results?search_query=puente+de+gluteos+a+una+pierna'
   },
   { 
-    id: '4', 
-    name: 'Plancha Abdominal', 
+    id: 'c_core_1', 
+    name: 'Plancha Abdominal con Toque de Hombros', 
     location: 'Casa', 
     category: 'Core', 
     equipment: 'Peso corporal', 
-    homeSubstitute: 'Toalla doblada bajo los codos',
-    instructions: 'Apóyate sobre los antebrazos y puntas de los pies, contrayendo el abdomen con fuerza.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+plancha+abdominal'
+    homeSubstitute: 'Plancha estática',
+    instructions: 'En posición de plancha alta, toca alternativamente tus hombros sin girar la cadera.',
+    videoUrl: 'https://www.youtube.com/results?search_query=plancha+con+toque+de+hombros'
   },
   { 
-    id: '5', 
-    name: 'Puente de Glúteos', 
+    id: 'c_core_2', 
+    name: 'Hollow Body Hold (Tensión Constante)', 
     location: 'Casa', 
-    category: 'Fuerza', 
+    category: 'Core', 
     equipment: 'Peso corporal', 
-    homeSubstitute: 'Libro pesado o mochila sobre la cadera',
-    instructions: 'Tumbado boca arriba con rodillas flexionadas, eleva la cadera contrayendo glúteos.',
-    videoUrl: 'https://www.youtube.com/results?search_query=puente+de+gluteos+ejercicio'
+    homeSubstitute: 'Elevación de piernas',
+    instructions: 'Tumbado boca arriba, eleva ligeramente piernas y hombros despegando la zona lumbar.',
+    videoUrl: 'https://www.youtube.com/results?search_query=hollow+body+hold+ejercicio'
   },
-  { 
-    id: '6', 
-    name: 'Jumping Jacks', 
-    location: 'Casa', 
-    category: 'Cardio', 
-    equipment: 'Peso corporal', 
-    homeSubstitute: 'Ninguno necesario',
-    instructions: 'Salta abriendo y cerrando piernas y brazos de forma rítmica.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+jumping+jacks'
-  },
-  { 
-    id: '7', 
-    name: 'Curl de Bíceps', 
-    location: 'Casa', 
-    category: 'Fuerza', 
-    equipment: 'Banda o Mochila', 
-    homeSubstitute: 'Mochila cargada con libros',
-    instructions: 'Sujeta la mochila firmemente y eleva los antebrazos contrayendo los bíceps.',
-    videoUrl: 'https://www.youtube.com/results?search_query=curl+de+biceps+en+casa+con+mochila'
-  },
-  { 
-    id: '8', 
-    name: 'Press Militar con Botellas', 
-    location: 'Casa', 
-    category: 'Fuerza', 
-    equipment: 'Botellas de agua', 
-    homeSubstitute: 'Dos botellas de agua o bricks de leche',
-    instructions: 'Eleva el peso por encima de la cabeza de forma controlada.',
-    videoUrl: 'https://www.youtube.com/results?search_query=press+de+hombros+en+casa+con+botellas'
-  },
-  { 
-    id: 'c1', 
-    name: 'Fondos de Tríceps en Silla', 
-    location: 'Casa', 
-    category: 'Fuerza', 
-    equipment: 'Silla o sofá firme', 
-    homeSubstitute: 'Borde de la cama o silla estable',
-    instructions: 'Manos al borde de la silla, baja la cadera flexionando los codos y empuja para subir.',
-    videoUrl: 'https://www.youtube.com/results?search_query=fondos+de+triceps+en+silla'
-  },
-  { 
-    id: 'c2', 
-    name: 'Mountain Climbers', 
-    location: 'Casa', 
-    category: 'Cardio', 
-    equipment: 'Peso corporal', 
-    homeSubstitute: 'Ninguno',
-    instructions: 'En posición de plancha alta, lleva alternativamente las rodillas hacia el pecho de forma dinámica.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+mountain+climbers'
-  },
-  { 
-    id: 'c3', 
-    name: 'Peso Muerto Rumano con Garrafa', 
-    location: 'Casa', 
-    category: 'Fuerza', 
-    equipment: 'Garrafa de agua', 
-    homeSubstitute: 'Mochila pesada',
-    instructions: 'Espalda recta, flexiona ligeramente las rodillas y lleva la cadera hacia atrás sintiendo los isquios.',
-    videoUrl: 'https://www.youtube.com/results?search_query=peso+muerto+con+garrafa+en+casa'
-  },
-  { 
-    id: 'c4', 
-    name: 'Bird-Dog (Perro-Pájaro)', 
-    location: 'Casa', 
-    category: 'Movilidad', 
-    equipment: 'Peso corporal', 
-    homeSubstitute: 'Esterilla o alfombra',
-    instructions: 'En cuadrupedia, extiende simultáneamente el brazo derecho y la pierna izquierda manteniendo el equilibrio.',
-    videoUrl: 'https://www.youtube.com/results?search_query=ejercicio+bird+dog+espalda'
-  },
-
   // --- GIMNASIO ---
   { 
-    id: '9', 
+    id: 'g_1', 
     name: 'Press de Banca Plano', 
     location: 'Gimnasio', 
     category: 'Fuerza', 
@@ -197,144 +183,24 @@ const EXERCISES: Exercise[] = [
     videoUrl: 'https://www.youtube.com/results?search_query=press+de+banca+plano+tecnica'
   },
   { 
-    id: '10', 
-    name: 'Sentadilla en Barra Libre', 
+    id: 'g_2', 
+    name: 'Sentadilla con Barra Libre', 
     location: 'Gimnasio', 
     category: 'Fuerza', 
     equipment: 'Jaula y barra', 
     homeSubstitute: 'No aplica',
-    instructions: 'Coloca la barra sobre los trapecios, rompe el paralelo bajando la cadera y sube firme.',
+    instructions: 'Barra en los trapecios, rompe el paralelo bajando la cadera y sube firme.',
     videoUrl: 'https://www.youtube.com/results?search_query=sentadilla+con+barra+libre+tecnica'
   },
   { 
-    id: '11', 
+    id: 'g_3', 
     name: 'Dominadas Asistidas / Libres', 
     location: 'Gimnasio', 
     category: 'Fuerza', 
-    equipment: 'Máquina o barra fija', 
+    equipment: 'Barra fija', 
     homeSubstitute: 'No aplica',
     instructions: 'Tira con la fuerza de la espalda llevando el pecho hacia la barra.',
     videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+dominadas+correctamente'
-  },
-  { 
-    id: '12', 
-    name: 'Remo en Polea Baja', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Máquina de poleas', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Espalda recta, tira del agarre hacia el abdomen contrayendo las escápulas.',
-    videoUrl: 'https://www.youtube.com/results?search_query=remo+en+polea+baja+espalda'
-  },
-  { 
-    id: '13', 
-    name: 'Prensa de Piernas 45º', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Máquina de prensa', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Coloca los pies en la plataforma, baja controlando y empuja sin bloquear las rodillas.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+usar+prensa+de+piernas+45'
-  },
-  { 
-    id: '14', 
-    name: 'Extensiones de Cuádriceps', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Máquina de extensiones', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Eleva las piernas contrayendo los cuádriceps de forma estricta arriba.',
-    videoUrl: 'https://www.youtube.com/results?search_query=extension+de+cuadriceps+maquina'
-  },
-  { 
-    id: '15', 
-    name: 'Curl Femoral Tumbado', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Máquina femoral', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Flexiona las piernas llevando los talones hacia los glúteos.',
-    videoUrl: 'https://www.youtube.com/results?search_query=curl+femoral+tumbado+tecnica'
-  },
-  { 
-    id: '16', 
-    name: 'Elevaciones Laterales con Mancuernas', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Mancuernas', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Eleva los brazos hacia los lados hasta la altura de los hombros con una ligera flexión de codo.',
-    videoUrl: 'https://www.youtube.com/results?search_query=elevaciones+laterales+mancuernas'
-  },
-  { 
-    id: '17', 
-    name: 'Tríceps en Polea Alta', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Polea y cuerda', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Codos pegados al cuerpo y extiende los antebrazos hacia abajo.',
-    videoUrl: 'https://www.youtube.com/results?search_query=triceps+en+polea+alta+con+cuerda'
-  },
-  { 
-    id: '18', 
-    name: 'Cinta de Correr o Elíptica', 
-    location: 'Gimnasio', 
-    category: 'Cardio', 
-    equipment: 'Máquina de cardio', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Mantén un ritmo constante aeróbico durante el tiempo establecido.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+correr+en+cinta+de+gimnasio'
-  },
-  { 
-    id: 'g1', 
-    name: 'Peso Muerto Convencional', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Barra olímpica y discos', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Pies al ancho de cadera, agarre mixto o prono, mantén la espalda neutra y eleva extendiendo cadera y rodillas.',
-    videoUrl: 'https://www.youtube.com/results?search_query=peso+muerto+convencional+tecnica'
-  },
-  { 
-    id: 'g2', 
-    name: 'Press Inclinado con Mancuernas', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Banco inclinado y mancuernas', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Banco a unos 30-45 grados, baja las mancuernas controlando la zona superior del pecho y empuja arriba.',
-    videoUrl: 'https://www.youtube.com/results?search_query=press+inclinado+con+mancuernas'
-  },
-  { 
-    id: 'g3', 
-    name: 'Jalón al Pecho en Polea', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Máquina de polea alta', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Agarre ancho, saca pecho y tira de la barra hacia la parte alta del esternón.',
-    videoUrl: 'https://www.youtube.com/results?search_query=jalon+al+pecho+en+polea+alta'
-  },
-  { 
-    id: 'g4', 
-    name: 'Elevación de Talones en Máquina (Gemelos)', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Máquina de gemelos', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Apoya la punta de los pies, baja estirando el gemelo al máximo y eleve con fuerza.',
-    videoUrl: 'https://www.youtube.com/results?search_query=elevacion+de+talones+gemelos+maquina'
-  },
-  { 
-    id: 'g5', 
-    name: 'Curl de Bíceps con Barra Z', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Barra Z y discos', 
-    homeSubstitute: 'No aplica',
-    instructions: 'De pie, codos fijos a los costados y eleva la barra contrayendo los bíceps de forma estricta.',
-    videoUrl: 'https://www.youtube.com/results?search_query=curl+de+biceps+con+barra+z'
   }
 ];
 
@@ -350,15 +216,6 @@ const INITIAL_MEALS: MealIdea[] = [
   },
   { 
     id: 'm2', 
-    type: 'Almuerzo', 
-    title: 'Lomo adobado salteado con zanahorias y patata', 
-    description: 'Tiras de lomo adobado con patata asada y bastoncitos de zanahoria tierna.', 
-    caloriesApprox: '490 kcal',
-    ingredients: ['Lomo', 'Zanahoria', 'Patata'],
-    allergens: [] 
-  },
-  { 
-    id: 'm3', 
     type: 'Desayuno', 
     title: 'Tostada integral con aguacate y huevo pochado', 
     description: 'Pan integral, medio aguacate machacado por encima y un huevo pochado.', 
@@ -367,82 +224,10 @@ const INITIAL_MEALS: MealIdea[] = [
     allergens: ['Gluten', 'Huevo'] 
   },
   { 
-    id: 'm4', 
-    type: 'Cena', 
-    title: 'Salmón al horno con brócoli y zanahorias', 
-    description: 'Lomo de salmón fresco al horno con guarnición de verduras crujientes.', 
-    caloriesApprox: '510 kcal',
-    ingredients: ['Salmón', 'Brócoli', 'Zanahoria'],
-    allergens: ['Pescado'] 
-  },
-  { 
-    id: 'm5', 
-    type: 'Almuerzo', 
-    title: 'Ternera magra con arroz y patata', 
-    description: 'Filete de ternera a la plancha con arroz blanco y patata cocida.', 
-    caloriesApprox: '580 kcal',
-    ingredients: ['Ternera', 'Arroz', 'Patata'],
-    allergens: [] 
-  },
-  { 
-    id: 'm6', 
-    type: 'Desayuno', 
-    title: 'Porridge de avena con plátano y almendras', 
-    description: 'Copos de avena cocidos con yogur y trocitos de plátano y almendras.', 
-    caloriesApprox: '380 kcal',
-    ingredients: ['Avena', 'Yogur', 'Plátano', 'Almendras'],
-    allergens: ['Gluten', 'Lactosa', 'Frutos secos'] 
-  },
-  { 
-    id: 'm7', 
-    type: 'Cena', 
-    title: 'Tortilla francesa con lomo y ensalada de zanahoria', 
-    description: 'Tortilla de dos huevos acompañada de unos taquitos de lomo y zanahoria rallada.', 
-    caloriesApprox: '410 kcal',
-    ingredients: ['Huevo', 'Lomo', 'Zanahoria'],
-    allergens: ['Huevo'] 
-  },
-  { 
-    id: 'm8', 
-    type: 'Snack', 
-    title: 'Tortitas de arroz con aguacate y huevo', 
-    description: 'Snack energético salado con base de aguacate y huevo cocido picado.', 
-    caloriesApprox: '250 kcal',
-    ingredients: ['Arroz', 'Aguacate', 'Huevo'],
-    allergens: ['Huevo'] 
-  },
-  {
-    id: 'm9',
-    type: 'Almuerzo',
-    title: 'Garbanzos salteados con espinacas y tomate',
-    description: 'Plato de legumbres rápido y ligero salteado con espinacas frescas.',
-    caloriesApprox: '390 kcal',
-    ingredients: ['Garbanzos', 'Espinacas', 'Tomate'],
-    allergens: []
-  },
-  {
-    id: 'm10',
-    type: 'Cena',
-    title: 'Merluza al vapor con calabacín y patata',
-    description: 'Filete de merluza tierno acompañado de rodajas de calabacín y patata.',
-    caloriesApprox: '340 kcal',
-    ingredients: ['Merluza', 'Calabacín', 'Patata'],
-    allergens: ['Pescado']
-  },
-  {
-    id: 'm11',
-    type: 'Snack',
-    title: 'Yogur con nueces y manzana troceada',
-    description: 'Yogur fresco mezclado con frutos secos y trozos de manzana crujiente.',
-    caloriesApprox: '270 kcal',
-    ingredients: ['Yogur', 'Nueces', 'Manzana'],
-    allergens: ['Lactosa', 'Frutos secos']
-  },
-  {
     id: 'm12',
     type: 'Snack',
     title: 'Bol de queso batido con arándanos y almendras',
-    description: 'Queso batido cremoso rico en proteínas con frutos secos y toque fresco.',
+    description: 'Queso batido cremoso rico en proteínas con frutos secos.',
     caloriesApprox: '220 kcal',
     ingredients: ['Queso batido', 'Almendras'],
     allergens: ['Lactosa', 'Frutos secos']
@@ -462,8 +247,7 @@ export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
-      { id: 'user_1', name: 'Nacho', weight: 70, goal: ['Ganar fuerza'], allergies: [] },
-      { id: 'user_2', name: 'Lucía', weight: 60, goal: ['Perder grasa'], allergies: [] }
+      { id: 'user_1', name: 'Nacho', weight: 70, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3 }
     ];
   });
 
@@ -479,16 +263,22 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Lista de ingredientes personalizada persistente
   const [customIngredients, setCustomIngredients] = useState<string[]>(() => {
     const saved = localStorage.getItem('fitapp_custom_ingredients');
     return saved ? JSON.parse(saved) : INITIAL_INGREDIENTS;
   });
 
-  // Lista de recetas personalizada persistente
   const [customMeals, setCustomMeals] = useState<MealIdea[]>(() => {
     const saved = localStorage.getItem('fitapp_custom_meals');
     return saved ? JSON.parse(saved) : INITIAL_MEALS;
+  });
+
+  // Rutinas creadas por el usuario (Modo Libre / Creador)
+  const [customRoutines, setCustomRoutines] = useState<CustomWorkoutRoutine[]>(() => {
+    const saved = localStorage.getItem('fitapp_custom_routines');
+    return saved ? JSON.parse(saved) : [
+      { id: 'rut_1', name: 'Full Body Base (Casa)', exercises: ['Flexiones Declinadas con Banda', 'Remo al Pecho con Banda', 'Sentadillas Búlgaras con Banda', 'Plancha Abdominal con Toque de Hombros'] }
+    ];
   });
 
   const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
@@ -508,7 +298,7 @@ export default function App() {
   const [newUserGoals, setNewUserGoals] = useState<string[]>(['Ganar fuerza']);
   const [newUserAllergies, setNewUserAllergies] = useState<string[]>([]);
 
-  // Estados para añadir nuevo alimento/receta en la pestaña Despensa
+  // Estados Despensa / Recetas
   const [newIngName, setNewIngName] = useState<string>('');
   const [newMealTitle, setNewMealTitle] = useState<string>('');
   const [newMealType, setNewMealType] = useState<'Desayuno' | 'Almuerzo' | 'Cena' | 'Snack'>('Almuerzo');
@@ -516,6 +306,10 @@ export default function App() {
   const [newMealCalories, setNewMealCalories] = useState<string>('');
   const [newMealSelectedIngs, setNewMealSelectedIngs] = useState<string[]>([]);
   const [newMealAllergens, setNewMealAllergens] = useState<string[]>([]);
+
+  // Estados para Creador de Rutinas Libres
+  const [newRoutineName, setNewRoutineName] = useState<string>('');
+  const [newRoutineSelectedExs, setNewRoutineSelectedExs] = useState<string[]>([]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
@@ -528,6 +322,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('fitapp_custom_meals', JSON.stringify(customMeals));
   }, [customMeals]);
+
+  useEffect(() => {
+    localStorage.setItem('fitapp_custom_routines', JSON.stringify(customRoutines));
+  }, [customRoutines]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_active_user_id', activeUserId);
@@ -546,98 +344,49 @@ export default function App() {
 
   const handleToggleActiveGoal = (goalOption: string) => {
     const currentGoals = profile.goal || [];
-    let updatedGoals;
-    if (currentGoals.includes(goalOption)) {
-      if (currentGoals.length === 1) {
-        alert('⚠️ Debes seleccionar al menos un objetivo.');
-        return;
-      }
-      updatedGoals = currentGoals.filter(g => g !== goalOption);
-    } else {
-      updatedGoals = [...currentGoals, goalOption];
-    }
+    let updatedGoals = currentGoals.includes(goalOption) 
+      ? currentGoals.filter(g => g !== goalOption) 
+      : [...currentGoals, goalOption];
+    if (updatedGoals.length === 0) return;
     handleUpdateActiveProfile('goal', updatedGoals);
   };
 
   const handleToggleActiveAllergy = (allergyOption: string) => {
     const currentAllergies = profile.allergies || [];
-    let updatedAllergies;
-    if (currentAllergies.includes(allergyOption)) {
-      updatedAllergies = currentAllergies.filter(a => a !== allergyOption);
-    } else {
-      updatedAllergies = [...currentAllergies, allergyOption];
-    }
+    let updatedAllergies = currentAllergies.includes(allergyOption)
+      ? currentAllergies.filter(a => a !== allergyOption)
+      : [...currentAllergies, allergyOption];
     handleUpdateActiveProfile('allergies', updatedAllergies);
   };
 
-  const handleToggleNewUserGoal = (goalOption: string) => {
-    if (newUserGoals.includes(goalOption)) {
-      if (newUserGoals.length === 1) return;
-      setNewUserGoals(newUserGoals.filter(g => g !== goalOption));
-    } else {
-      setNewUserGoals([...newUserGoals, goalOption]);
-    }
-  };
-
-  const handleToggleNewUserAllergy = (allergyOption: string) => {
-    if (newUserAllergies.includes(allergyOption)) {
-      setNewUserAllergies(newUserAllergies.filter(a => a !== allergyOption));
-    } else {
-      setNewUserAllergies([...newUserAllergies, allergyOption]);
-    }
-  };
-
   const handleToggleIngredient = (ingredient: string) => {
-    if (selectedIngredients.includes(ingredient)) {
-      setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
-    } else {
-      setSelectedIngredients([...selectedIngredients, ingredient]);
-    }
+    setSelectedIngredients(prev => 
+      prev.includes(ingredient) ? prev.filter(i => i !== ingredient) : [...prev, ingredient]
+    );
   };
 
   const handleAddIngredientSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = newIngName.trim();
     if (!cleanName) return;
-
     if (customIngredients.includes(cleanName)) {
-      alert('⚠️ Este alimento ya existe en tu despensa.');
+      alert('⚠️ Este alimento ya existe.');
       return;
     }
-
     setCustomIngredients([...customIngredients, cleanName]);
     setNewIngName('');
-    alert(`¡Alimento "${cleanName}" añadido a tu despensa con éxito! 🛒`);
-  };
-
-  const handleToggleNewMealIng = (ing: string) => {
-    if (newMealSelectedIngs.includes(ing)) {
-      setNewMealSelectedIngs(newMealSelectedIngs.filter(i => i !== ing));
-    } else {
-      setNewMealSelectedIngs([...newMealSelectedIngs, ing]);
-    }
-  };
-
-  const handleToggleNewMealAllergen = (al: string) => {
-    if (newMealAllergens.includes(al)) {
-      setNewMealAllergens(newMealAllergens.filter(a => a !== al));
-    } else {
-      setNewMealAllergens([...newMealAllergens, al]);
-    }
+    alert(`¡Alimento "${cleanName}" añadido con éxito! 🛒`);
   };
 
   const handleAddMealSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMealTitle.trim()) {
-      alert('⚠️ Por favor, introduce un título para la receta.');
-      return;
-    }
+    if (!newMealTitle.trim()) return;
 
     const newMealObj: MealIdea = {
       id: 'custom_meal_' + Date.now(),
       type: newMealType,
       title: newMealTitle.trim(),
-      description: newMealDesc.trim() || 'Receta personalizada de despensa.',
+      description: newMealDesc.trim() || 'Receta de despensa.',
       caloriesApprox: newMealCalories.trim() ? `${newMealCalories.trim()} kcal` : '350 kcal',
       ingredients: newMealSelectedIngs.length > 0 ? newMealSelectedIngs : ['Queso batido'],
       allergens: newMealAllergens
@@ -649,7 +398,54 @@ export default function App() {
     setNewMealCalories('');
     setNewMealSelectedIngs([]);
     setNewMealAllergens([]);
-    alert(`¡Receta "${newMealObj.title}" añadida correctamente! 🍳`);
+    alert(`¡Receta añadida correctamente! 🍳`);
+  };
+
+  // Función de sustitución instantánea ("Cambiar ejercicio")
+  const handleSubstituteExercise = (currentExName: string) => {
+    const currentExObj = EXERCISES.find(ex => ex.name === currentExName);
+    const categoryToMatch = currentExObj ? currentExObj.category : 'Fuerza';
+    const locationToMatch = currentExObj ? currentExObj.location : 'Casa';
+
+    const alternatives = EXERCISES.filter(ex => 
+      ex.name !== currentExName && 
+      ex.category === categoryToMatch && 
+      ex.location === locationToMatch
+    );
+
+    if (alternatives.length === 0) {
+      alert('⚠️ No hay otra alternativa exacta en esta categoría, pero puedes elegir cualquier otro ejercicio de la lista.');
+      return;
+    }
+
+    const randomAlternative = alternatives[Math.floor(Math.random() * alternatives.length)];
+    alert(`🔄 Ejercicio sustituto sugerido:\n\n⭐ En lugar de "${currentExName}", prueba hoy:\n👉 "${randomAlternative.name}"\n\n💡 Material: ${randomAlternative.equipment}`);
+  };
+
+  // Crear rutina personalizada propia (Modo Libre)
+  const handleCreateRoutineSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoutineName.trim() || newRoutineSelectedExs.length === 0) {
+      alert('⚠️ Ponle un nombre a tu rutina y selecciona al menos un ejercicio.');
+      return;
+    }
+
+    const newRoutine: CustomWorkoutRoutine = {
+      id: 'rut_' + Date.now(),
+      name: newRoutineName.trim(),
+      exercises: newRoutineSelectedExs
+    };
+
+    setCustomRoutines([...customRoutines, newRoutine]);
+    setNewRoutineName('');
+    setNewRoutineSelectedExs([]);
+    alert('¡Tu rutina personalizada ha sido guardada con éxito! 💪');
+  };
+
+  const handleDeleteCustomRoutine = (routineId: string) => {
+    if (window.confirm('¿Seguro que deseas eliminar esta rutina personalizada?')) {
+      setCustomRoutines(customRoutines.filter(r => r.id !== routineId));
+    }
   };
 
   const handleCreateUser = (e: React.FormEvent) => {
@@ -662,38 +458,28 @@ export default function App() {
       name: newUserName.trim(),
       weight: Number(newUserWeight) || 65,
       goal: newUserGoals,
-      allergies: newUserAllergies
+      allergies: newUserAllergies,
+      trainingDaysPerWeek: 3
     };
 
     setProfilesList([...profilesList, newUser]);
     setActiveUserId(newId);
     setNewUserName('');
     setNewUserWeight('');
-    setNewUserGoals(['Ganar fuerza']);
-    setNewUserAllergies([]);
-    alert(`¡Perfil de ${newUser.name} creado y seleccionado con éxito! 🎉`);
+    alert(`¡Perfil creado con éxito! 🎉`);
   };
 
   const handleDeleteUserProfile = (userIdToDelete: string) => {
     if (profilesList.length <= 1) {
-      alert('⚠️ No puedes borrar el único perfil disponible.');
+      alert('⚠️ No puedes borrar el único perfil.');
       return;
     }
-
-    const targetUser = profilesList.find(p => p.id === userIdToDelete);
-    if (!window.confirm(`¿Estás seguro de que quieres eliminar el perfil de "${targetUser?.name}" y todos sus registros guardados?`)) {
-      return;
+    if (window.confirm('¿Estás seguro de eliminar este perfil?')) {
+      localStorage.removeItem(`fitapp_logs_${userIdToDelete}`);
+      const updated = profilesList.filter(p => p.id !== userIdToDelete);
+      setProfilesList(updated);
+      if (activeUserId === userIdToDelete) setActiveUserId(updated[0].id);
     }
-
-    localStorage.removeItem(`fitapp_logs_${userIdToDelete}`);
-    const updatedList = profilesList.filter(p => p.id !== userIdToDelete);
-    setProfilesList(updatedList);
-
-    if (activeUserId === userIdToDelete) {
-      setActiveUserId(updatedList[0].id);
-    }
-
-    alert('Perfil eliminado correctamente.');
   };
 
   const handleAddLog = (e: React.FormEvent) => {
@@ -704,30 +490,14 @@ export default function App() {
       id: Date.now().toString(),
       date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       exerciseName: selectedExerciseName,
-      weightUsed: weightUsedInput ? `${weightUsedInput}` : 'Peso corporal / Sin especificar',
-      notes: notesInput || 'Completado con éxito'
+      weightUsed: weightUsedInput ? `${weightUsedInput}` : 'Peso corporal',
+      notes: notesInput || 'Completado'
     };
 
     setLogs([newLog, ...logs]);
     setWeightUsedInput('');
     setNotesInput('');
     alert(`¡Entrenamiento guardado para ${profile.name}! 🚀`);
-  };
-
-  const handleSubstituteExercise = (currentEx: Exercise) => {
-    const alternatives = EXERCISES.filter(ex => 
-      ex.id !== currentEx.id && 
-      ex.category === currentEx.category && 
-      ex.location === currentEx.location
-    );
-
-    if (alternatives.length === 0) {
-      alert('⚠️ No encontramos otra alternativa exacta en el mismo campo y ubicación.');
-      return;
-    }
-
-    const randomAlternative = alternatives[Math.floor(Math.random() * alternatives.length)];
-    alert(`🏥 Sustituto sugerido por molestia:\n\n👉 En lugar de "${currentEx.name}", te recomendamos hacer:\n⭐ ${randomAlternative.name} (${randomAlternative.category} - ${randomAlternative.location})\n\n💡 Material: ${randomAlternative.equipment}`);
   };
 
   const generateDailyMenu = () => {
@@ -738,18 +508,13 @@ export default function App() {
     );
     const pool = matchingMeals.length > 0 ? matchingMeals : safeMeals;
 
-    const breakfasts = pool.filter(m => m.type === 'Desayuno');
-    const lunches = pool.filter(m => m.type === 'Almuerzo');
-    const dinners = pool.filter(m => m.type === 'Cena');
-    const snacks = pool.filter(m => m.type === 'Snack');
-
     const getRandom = (arr: MealIdea[]) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : undefined;
 
     setDailyMenu({
-      desayuno: getRandom(breakfasts),
-      almuerzo: getRandom(lunches),
-      cena: getRandom(dinners),
-      snack: getRandom(snacks)
+      desayuno: getRandom(pool.filter(m => m.type === 'Desayuno')),
+      almuerzo: getRandom(pool.filter(m => m.type === 'Almuerzo')),
+      cena: getRandom(pool.filter(m => m.type === 'Cena')),
+      snack: getRandom(pool.filter(m => m.type === 'Snack'))
     });
   };
 
@@ -761,13 +526,10 @@ export default function App() {
 
   const filteredMeals = customMeals.filter(meal => {
     const userAllergies = profile.allergies || [];
-    const hasForbiddenAllergen = meal.allergens.some(allergen => userAllergies.includes(allergen));
-    if (hasForbiddenAllergen) return false;
-
+    if (meal.allergens.some(al => userAllergies.includes(al))) return false;
     if (selectedIngredients.length > 0) {
       return meal.ingredients.some(ing => selectedIngredients.includes(ing));
     }
-
     return true;
   });
 
@@ -783,7 +545,7 @@ export default function App() {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
           <h1 style={{ fontSize: '18px', margin: 0, color: t.primary }}>FitApp Pro ⚡</h1>
-          <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Usuario: <strong>{profile?.name}</strong> ({profile?.weight} kg)</p>
+          <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Usuario: <strong>{profile?.name}</strong> ({profile?.weight} kg) | 📅 {profile?.trainingDaysPerWeek || 3} días/sem</p>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', fontSize: '14px' }}>
           {isDarkMode ? '☀️' : '🌙'}
@@ -792,39 +554,134 @@ export default function App() {
 
       {/* PESTAÑA: ENTRENAMIENTO */}
       {activeTab === 'entreno' && (
-        <div>
-          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '8px' }}>📍 ¿Dónde vas a entrenar hoy?</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* Bloque de Frecuencia Semanal y Plan Automático */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>📅 Tus Días de Entrenamiento</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Indica cuántos días a la semana quieres entrenar:</p>
+            
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+              {[2, 3, 4, 5].map(days => (
+                <button
+                  key={days}
+                  onClick={() => handleUpdateActiveProfile('trainingDaysPerWeek', days)}
+                  style={{
+                    flex: 1, padding: '8px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
+                    backgroundColor: (profile.trainingDaysPerWeek || 3) === days ? t.primary : t.bg,
+                    color: (profile.trainingDaysPerWeek || 3) === days ? '#fff' : t.text,
+                    border: `1px solid ${(profile.trainingDaysPerWeek || 3) === days ? t.primary : t.border}`
+                  }}
+                >
+                  {days} Días
+                </button>
+              ))}
+            </div>
+
+            <div style={{ backgroundColor: isDarkMode ? '#0f172a' : '#f1f5f9', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
+              🎯 <strong>Programa sugerido ({profile.trainingDaysPerWeek || 3} días):</strong> Se alternan bloques de Fuerza-Control y Densidad con bandas elásticas y peso corporal para evitar repetir los mismos estímulos.
+            </div>
+          </div>
+
+          {/* Tus Rutinas Creadas (Modo Libre) */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '14px', margin: 0 }}>📂 Tus Rutinas Personalizadas ({customRoutines.length})</h3>
+            </div>
+            
+            {customRoutines.map(rut => (
+              <div key={rut.id} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <strong style={{ fontSize: '12px', color: t.primary }}>⭐ {rut.name}</strong>
+                  <button onClick={() => handleDeleteCustomRoutine(rut.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '11px', cursor: 'pointer' }}>🗑️ Borrar</button>
+                </div>
+                <ul style={{ margin: '4px 0 0 16px', padding: 0, fontSize: '11px', color: t.textSec }}>
+                  {rut.exercises.map((exName, idx) => (
+                    <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '2px 0' }}>
+                      <span>{exName}</span>
+                      <button 
+                        onClick={() => handleSubstituteExercise(exName)}
+                        title="Cambiar ejercicio si no puedes hacerlo"
+                        style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '4px', fontSize: '9px', padding: '2px 6px', cursor: 'pointer', color: t.text }}
+                      >
+                        🔄 Cambiar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            {/* Formulario rápido para crear una rutina libre */}
+            <form onSubmit={handleCreateRoutineSubmit} style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <input 
+                type="text" 
+                placeholder="Nombre de tu nueva rutina (ej: Tren Superior Express)" 
+                value={newRoutineName}
+                onChange={e => setNewRoutineName(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '11px', boxSizing: 'border-box' }}
+              />
+              <span style={{ fontSize: '11px', fontWeight: '600', color: t.textSec }}>Selecciona ejercicios para incluir:</span>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxHeight: '100px', overflowY: 'auto', border: `1px solid ${t.border}`, padding: '6px', borderRadius: '6px' }}>
+                {EXERCISES.map(ex => {
+                  const isSelected = newRoutineSelectedExs.includes(ex.name);
+                  return (
+                    <button
+                      type="button"
+                      key={ex.id}
+                      onClick={() => {
+                        setNewRoutineSelectedExs(prev => isSelected ? prev.filter(name => name !== ex.name) : [...prev, ex.name]);
+                      }}
+                      style={{
+                        padding: '3px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer',
+                        backgroundColor: isSelected ? t.primary : t.bg,
+                        color: isSelected ? '#fff' : t.text,
+                        border: `1px solid ${isSelected ? t.primary : t.border}`
+                      }}
+                    >
+                      {isSelected ? '✓ ' : '+ '} {ex.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}>
+                Guardar Nueva Rutina Libre ➕
+              </button>
+            </form>
+          </div>
+
+          {/* Filtros de Ubicación y Categoría */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', marginTop: 0, marginBottom: '8px' }}>📍 Explorar Biblioteca de Ejercicios</h3>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
               {['Todos', 'Casa', 'Gimnasio'].map(loc => (
                 <button 
                   key={loc} 
                   onClick={() => setSelectedLocation(loc as any)}
                   style={{ 
-                    flex: 1, padding: '8px', borderRadius: '8px', 
+                    flex: 1, padding: '6px', borderRadius: '6px', 
                     border: `1px solid ${selectedLocation === loc ? t.primary : t.border}`, 
                     backgroundColor: selectedLocation === loc ? t.primary : t.bg, 
                     color: selectedLocation === loc ? '#fff' : t.text, 
-                    fontSize: '12px', fontWeight: '600', cursor: 'pointer' 
+                    fontSize: '11px', fontWeight: '600', cursor: 'pointer' 
                   }}
                 >
-                  {loc === 'Casa' ? '🏠 Casa' : loc === 'Gimnasio' ? '🏋️ Gimnasio' : '🌐 Todos'}
+                  {loc}
                 </button>
               ))}
             </div>
 
-            <h3 style={{ fontSize: '13px', margin: '10px 0 6px 0', color: t.textSec }}>Filtrar por tipo:</h3>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
               {['Todos', 'Fuerza', 'Core', 'Cardio', 'Movilidad'].map(cat => (
                 <button 
                   key={cat} 
                   onClick={() => setSelectedCategory(cat)}
                   style={{ 
-                    padding: '4px 10px', borderRadius: '6px', 
+                    padding: '4px 8px', borderRadius: '6px', 
                     border: `1px solid ${selectedCategory === cat ? t.primary : t.border}`, 
                     backgroundColor: selectedCategory === cat ? t.primary : t.bg, 
                     color: selectedCategory === cat ? '#fff' : t.text, 
-                    fontSize: '11px', cursor: 'pointer' 
+                    fontSize: '10px', cursor: 'pointer' 
                   }}
                 >
                   {cat}
@@ -833,54 +690,32 @@ export default function App() {
             </div>
           </div>
 
-          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>Ejercicios ({filteredExercises.length})</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Lista de Ejercicios con botón de Sustitución Instantánea */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {filteredExercises.map(ex => (
               <div key={ex.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <strong style={{ fontSize: '13px' }}>{ex.name}</strong>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <span style={{ fontSize: '9px', backgroundColor: ex.location === 'Casa' ? '#0ea5e9' : '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{ex.location}</span>
-                    <span style={{ fontSize: '9px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{ex.category}</span>
-                  </div>
+                  <strong style={{ fontSize: '12px' }}>{ex.name}</strong>
+                  <span style={{ fontSize: '9px', backgroundColor: ex.location === 'Casa' ? '#0ea5e9' : '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{ex.location}</span>
                 </div>
-
                 <p style={{ fontSize: '11px', color: t.primary, margin: '2px 0' }}>🛠️ Material: {ex.equipment}</p>
-                
-                {ex.location === 'Casa' && (
-                  <p style={{ fontSize: '11px', color: '#10b981', margin: '2px 0', fontWeight: '500' }}>
-                    💡 <strong>Si no tienes material:</strong> {ex.homeSubstitute}
-                  </p>
-                )}
-
-                <p style={{ fontSize: '12px', color: t.textSec, margin: '4px 0 8px 0' }}>{ex.instructions}</p>
+                <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 6px 0' }}>{ex.instructions}</p>
                 
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  <a 
-                    href={ex.videoUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    style={{ 
-                      display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '600', 
-                      color: '#fff', backgroundColor: '#dc2626', padding: '4px 10px', borderRadius: '6px', textDecoration: 'none' 
-                    }}
-                  >
-                    ▶️ Ver vídeo
-                  </a>
-                  
                   <button
-                    onClick={() => handleSubstituteExercise(ex)}
+                    onClick={() => handleSubstituteExercise(ex.name)}
                     style={{ 
-                      display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '600', 
-                      color: '#fff', backgroundColor: '#f59e0b', padding: '4px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer' 
+                      display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: '600', 
+                      color: '#fff', backgroundColor: '#f59e0b', padding: '4px 8px', borderRadius: '6px', border: 'none', cursor: 'pointer' 
                     }}
                   >
-                    🔄 Tengo una dolencia (Sustituir)
+                    🔄 Cambiar ejercicio (Alternativa)
                   </button>
                 </div>
               </div>
             ))}
           </div>
+
         </div>
       )}
 
@@ -889,14 +724,12 @@ export default function App() {
         <div>
           {profile.allergies && profile.allergies.length > 0 && (
             <div style={{ backgroundColor: isDarkMode ? '#7f1d1d' : '#fee2e2', border: `1px solid ${isDarkMode ? '#991b1b' : '#fecaca'}`, borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', fontSize: '11px', color: isDarkMode ? '#fca5a5' : '#991b1b' }}>
-              🛡️ <strong>Filtro de seguridad activo:</strong> Se están ocultando recetas con tus alergias o intolerancias marcadas ({profile.allergies.join(', ')}).
+              🛡️ <strong>Filtro de alérgenos activo:</strong> Ocultando recetas con {profile.allergies.join(', ')}.
             </div>
           )}
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 ¿Qué ingredientes tienes o te apetece comer?</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Pincha para marcar tus favoritos y te daremos ideas adaptadas:</p>
-            
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 Selecciona ingredientes de tu despensa</h2>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {customIngredients.map(ing => {
                 const isSelected = selectedIngredients.includes(ing);
@@ -916,265 +749,97 @@ export default function App() {
                 );
               })}
             </div>
-
-            {selectedIngredients.length > 0 && (
-              <button 
-                onClick={() => setSelectedIngredients([])}
-                style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '11px', cursor: 'pointer', marginTop: '10px', padding: 0, textDecoration: 'underline' }}
-              >
-                Limpiar filtros de ingredientes
-              </button>
-            )}
           </div>
 
-          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>
-            Ideas de Comidas ({filteredMeals.length})
-          </h3>
-          
+          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>Recetas Disponibles ({filteredMeals.length})</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {filteredMeals.length === 0 ? (
-              <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>No hay recetas disponibles que cumplan con tus ingredientes seleccionados y tus restricciones de alérgenos.</p>
-            ) : (
-              filteredMeals.map(meal => (
-                <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
-                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ Aprox: {meal.caloriesApprox}</span>
-                  </div>
-                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
-                  <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
-                  
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
-                    {meal.ingredients.map(ing => (
-                      <span key={ing} style={{ fontSize: '9px', backgroundColor: t.bg, border: `1px solid ${t.border}`, color: t.textSec, padding: '2px 6px', borderRadius: '4px' }}>
-                        {ing}
-                      </span>
-                    ))}
-                  </div>
-
-                  {meal.allergens.length > 0 && (
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
-                      {meal.allergens.map(al => (
-                        <span key={al} style={{ fontSize: '8px', backgroundColor: isDarkMode ? '#451a03' : '#fef3c7', color: isDarkMode ? '#fde047' : '#92400e', padding: '1px 4px', borderRadius: '3px' }}>
-                          ⚠️ Contiene {al}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+            {filteredMeals.map(meal => (
+              <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
+                  <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {meal.caloriesApprox}</span>
                 </div>
-              ))
-            )}
+                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
+                <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* PESTAÑA: DESPENSA (NUEVA) */}
+      {/* PESTAÑA: DESPENSA */}
       {activeTab === 'despensa' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
-          {/* Añadir Alimento */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimentos a la Despensa</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Integra nuevos alimentos (queso batido, yogur griego, queso fresco, etc.):</p>
-            
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimentos (Queso batido, yogur, etc.)</h2>
             <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
               <input 
                 type="text" 
                 placeholder="Ej: Queso fresco batido 0%" 
                 value={newIngName}
                 onChange={e => setNewIngName(e.target.value)}
-                style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', boxSizing: 'border-box' }}
+                style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
               />
               <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>
                 Añadir ➕
               </button>
             </form>
-
-            <div style={{ marginTop: '12px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '600', color: t.textSec, display: 'block', marginBottom: '6px' }}>Alimentos disponibles ({customIngredients.length}):</span>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxHeight: '120px', overflowY: 'auto' }}>
-                {customIngredients.map(ing => (
-                  <span key={ing} style={{ fontSize: '10px', backgroundColor: t.bg, border: `1px solid ${t.border}`, padding: '3px 8px', borderRadius: '6px' }}>
-                    {ing}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
 
-          {/* Crear Receta con los nuevos alimentos */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🍳 Crear Receta Personalizada</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Diseña un plato usando tus alimentos:</p>
-
             <form onSubmit={handleAddMealSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-              <label>Título de la Receta:
-                <input 
-                  type="text" 
-                  placeholder="Ej: Bol proteico de queso batido con frutos secos" 
-                  value={newMealTitle}
-                  onChange={e => setNewMealTitle(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
-
-              <label>Tipo de Comida:
-                <select 
-                  value={newMealType}
-                  onChange={e => setNewMealType(e.target.value as any)}
-                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
-                >
-                  <option value="Desayuno">🌅 Desayuno</option>
-                  <option value="Almuerzo">☀️ Almuerzo</option>
-                  <option value="Snack">🍎 Snack</option>
-                  <option value="Cena">🌙 Cena</option>
-                </select>
-              </label>
-
-              <label>Descripción:
-                <input 
-                  type="text" 
-                  placeholder="Breve explicación de la preparación..." 
-                  value={newMealDesc}
-                  onChange={e => setNewMealDesc(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
-
-              <label>Calorías aproximadas (kcal):
-                <input 
-                  type="text" 
-                  placeholder="Ej: 300" 
-                  value={newMealCalories}
-                  onChange={e => setNewMealCalories(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
-
-              <div>
-                <span style={{ display: 'block', marginBottom: '4px', fontWeight: '600' }}>Ingredientes principales incluidos:</span>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxHeight: '100px', overflowY: 'auto', border: `1px solid ${t.border}`, padding: '6px', borderRadius: '6px' }}>
-                  {customIngredients.map(ing => {
-                    const isSelected = newMealSelectedIngs.includes(ing);
-                    return (
-                      <button
-                        type="button"
-                        key={ing}
-                        onClick={() => handleToggleNewMealIng(ing)}
-                        style={{
-                          padding: '3px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer',
-                          backgroundColor: isSelected ? t.primary : t.bg,
-                          color: isSelected ? '#fff' : t.text,
-                          border: `1px solid ${isSelected ? t.primary : t.border}`
-                        }}
-                      >
-                        {isSelected ? '✓ ' : '+ '} {ing}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ display: 'block', marginBottom: '4px', fontWeight: '600' }}>Alérgenos (si contiene):</span>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                  {AVAILABLE_ALLERGIES.map(al => {
-                    const isSelected = newMealAllergens.includes(al);
-                    return (
-                      <button
-                        type="button"
-                        key={al}
-                        onClick={() => handleToggleNewMealAllergen(al)}
-                        style={{
-                          padding: '3px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer',
-                          backgroundColor: isSelected ? '#ef4444' : t.bg,
-                          color: isSelected ? '#fff' : t.text,
-                          border: `1px solid ${isSelected ? '#ef4444' : t.border}`
-                        }}
-                      >
-                        {al}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
+              <input 
+                type="text" 
+                placeholder="Título de la receta..." 
+                value={newMealTitle}
+                onChange={e => setNewMealTitle(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+              />
+              <select 
+                value={newMealType}
+                onChange={e => setNewMealType(e.target.value as any)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+              >
+                <option value="Desayuno">🌅 Desayuno</option>
+                <option value="Almuerzo">☀️ Almuerzo</option>
+                <option value="Snack">🍎 Snack</option>
+                <option value="Cena">🌙 Cena</option>
+              </select>
+              <input 
+                type="text" 
+                placeholder="Calorías (ej: 250 kcal)..." 
+                value={newMealCalories}
+                onChange={e => setNewMealCalories(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+              />
               <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '6px' }}>
-                Guardar Receta en Sistema 🚀
+                Guardar Receta 🚀
               </button>
             </form>
           </div>
-
         </div>
       )}
 
-      {/* PESTAÑA: MENÚ DEL DÍA */}
+      {/* PESTAÑA: MENÚ */}
       {activeTab === 'menu' && (
-        <div>
-          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px', textAlign: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
             <h2 style={{ fontSize: '15px', marginTop: 0, marginBottom: '6px' }}>🍽️ Generador de Menú Automático</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '12px' }}>
-              Crea un menú completo para hoy basado en tus ingredientes marcados ({selectedIngredients.length} activos) y respetando tus alergias.
-            </p>
             <button 
               onClick={generateDailyMenu}
               style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', width: '100%' }}
             >
-              🎲 Generar / Actualizar Menú del Día
+              🎲 Generar Menú del Día
             </button>
           </div>
 
-          {!dailyMenu.desayuno && !dailyMenu.almuerzo && !dailyMenu.cena && !dailyMenu.snack ? (
-            <div style={{ textAlign: 'center', padding: '30px 10px', color: t.textSec, fontSize: '12px' }}>
-              👆 Pulsa el botón superior para generar tu propuesta de menú personalizado.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {dailyMenu.desayuno && (
-                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '10px', backgroundColor: '#f59e0b', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>🌅 Desayuno</span>
-                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.desayuno.caloriesApprox}</span>
-                  </div>
-                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.desayuno.title}</strong>
-                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.desayuno.description}</p>
-                </div>
-              )}
-
-              {dailyMenu.almuerzo && (
-                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>☀️ Almuerzo</span>
-                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.almuerzo.caloriesApprox}</span>
-                  </div>
-                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.almuerzo.title}</strong>
-                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.almuerzo.description}</p>
-                </div>
-              )}
-
-              {dailyMenu.snack && (
-                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '10px', backgroundColor: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>🍎 Snack / Media Tarde</span>
-                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.snack.caloriesApprox}</span>
-                  </div>
-                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.snack.title}</strong>
-                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.snack.description}</p>
-                </div>
-              )}
-
-              {dailyMenu.cena && (
-                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '10px', backgroundColor: '#0ea5e9', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>🌙 Cena</span>
-                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.cena.caloriesApprox}</span>
-                  </div>
-                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.cena.title}</strong>
-                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.cena.description}</p>
-                </div>
-              )}
-            </div>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+            {dailyMenu.desayuno && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🌅 Desayuno:</strong> {dailyMenu.desayuno.title}</div>}
+            {dailyMenu.almuerzo && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>☀️ Almuerzo:</strong> {dailyMenu.almuerzo.title}</div>}
+            {dailyMenu.snack && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🍎 Snack:</strong> {dailyMenu.snack.title}</div>}
+            {dailyMenu.cena && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🌙 Cena:</strong> {dailyMenu.cena.title}</div>}
+          </div>
         </div>
       )}
 
@@ -1182,63 +847,39 @@ export default function App() {
       {activeTab === 'progreso' && (
         <div>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento de {profile?.name}</h2>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento</h2>
             <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
-              <label>Ejercicio:
-                <select 
-                  value={selectedExerciseName} 
-                  onChange={e => setSelectedExerciseName(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
-                >
-                  {EXERCISES.map(ex => (
-                    <option key={ex.id} value={ex.name}>{ex.name} ({ex.location})</option>
-                  ))}
-                </select>
-              </label>
-
-              <label>Carga o peso usado:
-                <input 
-                  type="text" 
-                  placeholder="Ej: 15 kg, o garrafa de agua..." 
-                  value={weightUsedInput} 
-                  onChange={e => setWeightUsedInput(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
-
-              <label>Notas / Series:
-                <input 
-                  type="text" 
-                  placeholder="Ej: 4 series de 10 reps" 
-                  value={notesInput} 
-                  onChange={e => setNotesInput(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
-
-              <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
-                Guardar Avance para {profile?.name} 💾
+              <select 
+                value={selectedExerciseName} 
+                onChange={e => setSelectedExerciseName(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+              >
+                {EXERCISES.map(ex => (
+                  <option key={ex.id} value={ex.name}>{ex.name}</option>
+                ))}
+              </select>
+              <input 
+                type="text" 
+                placeholder="Carga / Notas (ej: 3 series con banda fuerte)" 
+                value={notesInput} 
+                onChange={e => setNotesInput(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+              />
+              <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                Guardar Avance 💾
               </button>
             </form>
           </div>
 
-          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>📊 Historial de {profile?.name} ({logs.length})</h3>
-          {logs.length === 0 ? (
-            <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>Aún no hay entrenamientos registrados para este usuario.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {logs.map(log => (
-                <div key={log.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <strong style={{ fontSize: '13px', color: t.primary }}>{log.exerciseName}</strong>
-                    <span style={{ fontSize: '10px', color: t.textSec }}>{log.date}</span>
-                  </div>
-                  <p style={{ fontSize: '12px', margin: '2px 0' }}>🏋️ <strong>Carga:</strong> {log.weightUsed}</p>
-                  <p style={{ fontSize: '11px', color: t.textSec, margin: 0 }}>💬 {log.notes}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>📊 Historial ({logs.length})</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {logs.map(log => (
+              <div key={log.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                <strong style={{ fontSize: '12px', color: t.primary }}>{log.exerciseName}</strong>
+                <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0' }}>{log.date} - {log.notes}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -1246,43 +887,8 @@ export default function App() {
       {activeTab === 'perfil' && profile && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '15px', marginTop: 0 }}>👥 Gestión de Usuarios</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Selecciona para cambiar o elimina los perfiles que ya no uses:</p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-              {profilesList.map(p => (
-                <div key={p.id} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <button
-                    onClick={() => setActiveUserId(p.id)}
-                    style={{
-                      flex: 1, textAlign: 'left', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
-                      backgroundColor: p.id === activeUserId ? t.primary : t.bg,
-                      color: p.id === activeUserId ? '#fff' : t.text,
-                      border: `1px solid ${p.id === activeUserId ? t.primary : t.border}`,
-                      fontWeight: p.id === activeUserId ? 'bold' : 'normal',
-                      fontSize: '12px'
-                    }}
-                  >
-                    👤 {p.name} ({p.weight} kg) {p.id === activeUserId ? '✓ (Activo)' : ''}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUserProfile(p.id)}
-                    title="Eliminar perfil"
-                    style={{
-                      background: 'none', border: `1px solid #ef4444`, color: '#ef4444', 
-                      borderRadius: '8px', padding: '8px 10px', cursor: 'pointer', fontSize: '12px'
-                    }}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '15px', marginTop: 0 }}>⚙️ Configurar a: {profile.name}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
+            <h2 style={{ fontSize: '15px', marginTop: 0 }}>👤 Perfil Activo: {profile.name}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', marginTop: '10px' }}>
               <label>Nombre:
                 <input 
                   type="text" 
@@ -1300,130 +906,27 @@ export default function App() {
                 />
               </label>
 
-              <div>
-                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Objetivos (puedes marcar varios):</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {AVAILABLE_GOALS.map(goalOption => {
-                    const isSelected = profile.goal?.includes(goalOption);
-                    return (
-                      <div 
-                        key={goalOption}
-                        onClick={() => handleToggleActiveGoal(goalOption)}
-                        style={{ 
-                          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', cursor: 'pointer',
-                          backgroundColor: isSelected ? (isDarkMode ? '#0369a1' : '#e0f2fe') : t.bg,
-                          border: `1px solid ${isSelected ? t.primary : t.border}`,
-                          color: isSelected ? t.text : t.textSec
-                        }}
-                      >
-                        <span style={{ fontSize: '14px' }}>{isSelected ? '✅' : '⬜'}</span>
-                        <span style={{ fontWeight: isSelected ? '600' : 'normal' }}>{goalOption}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600', marginTop: '6px' }}>🛡️ Alergias o Intolerancias (excluye recetas):</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {AVAILABLE_ALLERGIES.map(allergyOption => {
-                    const isSelected = profile.allergies?.includes(allergyOption);
-                    return (
-                      <div 
-                        key={allergyOption}
-                        onClick={() => handleToggleActiveAllergy(allergyOption)}
-                        style={{ 
-                          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', cursor: 'pointer',
-                          backgroundColor: isSelected ? (isDarkMode ? '#7f1d1d' : '#fee2e2') : t.bg,
-                          border: `1px solid ${isSelected ? '#ef4444' : t.border}`,
-                          color: isSelected ? (isDarkMode ? '#fca5a5' : '#991b1b') : t.textSec
-                        }}
-                      >
-                        <span style={{ fontSize: '14px' }}>{isSelected ? '🚫' : '⬜'}</span>
-                        <span style={{ fontWeight: isSelected ? '600' : 'normal' }}>{allergyOption}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+              <span style={{ fontWeight: '600', marginTop: '6px' }}>🛡️ Alergias Activas:</span>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {AVAILABLE_ALLERGIES.map(al => {
+                  const isSel = profile.allergies?.includes(al);
+                  return (
+                    <button
+                      key={al}
+                      onClick={() => handleToggleActiveAllergy(al)}
+                      style={{
+                        padding: '4px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer',
+                        backgroundColor: isSel ? '#ef4444' : t.bg,
+                        color: isSel ? '#fff' : t.text,
+                        border: `1px solid ${isSel ? '#ef4444' : t.border}`
+                      }}
+                    >
+                      {al}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </div>
-
-          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '15px', marginTop: 0 }}>➕ Añadir Nuevo Perfil</h2>
-            <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
-              <label>Nombre del nuevo usuario:
-                <input 
-                  type="text" 
-                  placeholder="Ej: Carlos" 
-                  value={newUserName} 
-                  onChange={e => setNewUserName(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
-              <label>Peso inicial (kg):
-                <input 
-                  type="number" 
-                  placeholder="Ej: 75" 
-                  value={newUserWeight} 
-                  onChange={e => setNewUserWeight(e.target.value)}
-                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-                />
-              </label>
-
-              <div>
-                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Selecciona sus objetivos:</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {AVAILABLE_GOALS.map(goalOption => {
-                    const isSelected = newUserGoals.includes(goalOption);
-                    return (
-                      <div 
-                        key={goalOption}
-                        onClick={() => handleToggleNewUserGoal(goalOption)}
-                        style={{ 
-                          display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer',
-                          backgroundColor: isSelected ? (isDarkMode ? '#0369a1' : '#e0f2fe') : t.bg,
-                          border: `1px solid ${isSelected ? t.primary : t.border}`,
-                          color: t.text
-                        }}
-                      >
-                        <span style={{ fontSize: '12px' }}>{isSelected ? '✅' : '⬜'}</span>
-                        <span>{goalOption}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Selecciona sus alérgenos:</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {AVAILABLE_ALLERGIES.map(allergyOption => {
-                    const isSelected = newUserAllergies.includes(allergyOption);
-                    return (
-                      <div 
-                        key={allergyOption}
-                        onClick={() => handleToggleNewUserAllergy(allergyOption)}
-                        style={{ 
-                          display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer',
-                          backgroundColor: isSelected ? (isDarkMode ? '#7f1d1d' : '#fee2e2') : t.bg,
-                          border: `1px solid ${isSelected ? '#ef4444' : t.border}`,
-                          color: t.text
-                        }}
-                      >
-                        <span style={{ fontSize: '12px' }}>{isSelected ? '🚫' : '⬜'}</span>
-                        <span>{allergyOption}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '6px' }}>
-                Crear y Cambiar a este Usuario 🚀
-              </button>
-            </form>
           </div>
         </div>
       )}
