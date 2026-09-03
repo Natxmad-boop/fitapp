@@ -332,13 +332,10 @@ export default function App() {
       return;
     }
 
-    // Limpiar logs del usuario borrado del localStorage
     localStorage.removeItem(`fitapp_logs_${userIdToDelete}`);
-
     const updatedList = profilesList.filter(p => p.id !== userIdToDelete);
     setProfilesList(updatedList);
 
-    // Si borramos el usuario activo, saltamos al primero restante
     if (activeUserId === userIdToDelete) {
       setActiveUserId(updatedList[0].id);
     }
@@ -362,6 +359,24 @@ export default function App() {
     setWeightUsedInput('');
     setNotesInput('');
     alert(`¡Entrenamiento guardado para ${profile.name}! 🚀`);
+  };
+
+  // NUEVA FUNCIÓN: Sugiere un ejercicio alternativo del mismo campo (categoría y ubicación)
+  const handleSubstituteExercise = (currentEx: Exercise) => {
+    const alternatives = EXERCISES.filter(ex => 
+      ex.id !== currentEx.id && 
+      ex.category === currentEx.category && 
+      ex.location === currentEx.location
+    );
+
+    if (alternatives.length === 0) {
+      alert('⚠️ No encontramos otra alternativa exacta en el mismo campo y ubicación.');
+      return;
+    }
+
+    // Selecciona una alternativa aleatoria del mismo campo
+    const randomAlternative = alternatives[Math.floor(Math.random() * alternatives.length)];
+    alert(`🏥 Sustituto sugerido por molestia:\n\n👉 En lugar de "${currentEx.name}", te recomendamos hacer:\n⭐ ${randomAlternative.name} (${randomAlternative.category} - ${randomAlternative.location})\n\n💡 Material: ${randomAlternative.equipment}`);
   };
 
   const filteredExercises = EXERCISES.filter(ex => {
@@ -457,17 +472,30 @@ export default function App() {
 
                 <p style={{ fontSize: '12px', color: t.textSec, margin: '4px 0 8px 0' }}>{ex.instructions}</p>
                 
-                <a 
-                  href={ex.videoUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  style={{ 
-                    display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '600', 
-                    color: '#fff', backgroundColor: '#dc2626', padding: '4px 10px', borderRadius: '6px', textDecoration: 'none' 
-                  }}
-                >
-                  ▶️ Ver vídeo demostración
-                </a>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <a 
+                    href={ex.videoUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={{ 
+                      display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '600', 
+                      color: '#fff', backgroundColor: '#dc2626', padding: '4px 10px', borderRadius: '6px', textDecoration: 'none' 
+                    }}
+                  >
+                    ▶️ Ver vídeo
+                  </a>
+                  
+                  {/* Botón de sustitución por dolencia */}
+                  <button
+                    onClick={() => handleSubstituteExercise(ex)}
+                    style={{ 
+                      display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '600', 
+                      color: '#fff', backgroundColor: '#f59e0b', padding: '4px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer' 
+                    }}
+                  >
+                    🔄 Tengo una dolencia (Sustituir)
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -667,7 +695,7 @@ export default function App() {
                   type="number" 
                   placeholder="Ej: 75" 
                   value={newUserWeight} 
-                  onChange={e => setNewUserWeight(e.target.value)}
+                  onChange={e => newUserWeightInput => setNewUserWeight(newUserWeightInput.target.value)}
                   style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
                 />
               </label>
