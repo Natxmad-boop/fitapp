@@ -165,16 +165,6 @@ const EXERCISES: Exercise[] = [
     instructions: 'Manos bajo los glúteos, eleva las piernas rectas sin arquear la zona lumbar.',
     videoUrl: 'https://www.youtube.com/results?search_query=elevacion+de+piernas+suelo+abdomen'
   },
-  { 
-    id: 'c_core_3', 
-    name: 'Bichos Muertos (Dead Bug)', 
-    location: 'Casa', 
-    category: 'Core', 
-    equipment: 'Esterilla', 
-    homeSubstitute: 'Plancha abdominal isométrica.',
-    instructions: 'Boca arriba, extiende brazo derecho y pierna izquierda de forma alterna manteniendo lumbar pegada.',
-    videoUrl: 'https://www.youtube.com/results?search_query=dead+bug+ejercicio+core'
-  },
 
   // GIMNASIO
   { 
@@ -209,7 +199,7 @@ const EXERCISES: Exercise[] = [
   },
   { 
     id: 'g_trac_2', 
-    name: 'Remo en Polea Baja (T-Bar / Agarradera)', 
+    name: 'Remo en Polea Baja', 
     location: 'Gimnasio', 
     category: 'Fuerza', 
     equipment: 'Polea baja', 
@@ -235,7 +225,7 @@ const EXERCISES: Exercise[] = [
     equipment: 'Barra o Mancuernas', 
     homeSubstitute: 'Peso muerto con bandas o garrafas en casa.',
     instructions: 'Bisagra de cadera hacia atrás sintiendo el estiramiento en femoral y glúteo.',
-    videoUrl: 'https://www.youtube.com/results?search_query=peso muerto rumano tecnica'
+    videoUrl: 'https://www.youtube.com/results?search_query=peso+muerto+rumano+tecnica'
   }
 ];
 
@@ -313,8 +303,8 @@ export default function App() {
     return 0;
   });
 
-  // Navegación reorganizada: pestañas limpias + cajón "Más"
-  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'menu' | 'progreso' | 'batidos' | 'herramientas' | 'despensa' | 'perfil'>('entreno');
+  // Navegación ampliada con 'ejercicios' (Biblioteca libre)
+  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'menu' | 'progreso' | 'ejercicios' | 'batidos' | 'herramientas' | 'despensa' | 'perfil'>('entreno');
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   
@@ -326,6 +316,8 @@ export default function App() {
   const [weightUsedInput, setWeightUsedInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
   
+  const [libraryFilterLocation, setLibraryFilterLocation] = useState<'Casa' | 'Gimnasio' | 'Todas'>('Casa');
+
   const [newIngName, setNewIngName] = useState<string>('');
   const [newHomeToolName, setNewHomeToolName] = useState<string>('');
   const [newGymToolName, setNewGymToolName] = useState<string>('');
@@ -640,7 +632,7 @@ export default function App() {
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚡ Registro Modo Libre ({profile.workoutLocation})</h3>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚡ Registro Modo Libre</h3>
             <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
               <select value={selectedExerciseName} onChange={e => setSelectedExerciseName(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }}>
                 {filteredExercisesForLog.map(ex => (<option key={ex.id} value={ex.name}>{ex.name} ({ex.category})</option>))}
@@ -745,6 +737,63 @@ export default function App() {
         </div>
       )}
 
+      {/* NUEVA PESTAÑA: BIBLIOTECA LIBRE DE EJERCICIOS (Casa o Gimnasio con explicación y vídeo) */}
+      {activeTab === 'ejercicios' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>📖 Biblioteca Libre de Ejercicios</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 12px 0' }}>¿Entreno libre hoy? Elige qué tipo de ejercicio quieres consultar u ojear:</p>
+            
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(['Casa', 'Gimnasio', 'Todas'] as const).map(opt => {
+                const isSel = libraryFilterLocation === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setLibraryFilterLocation(opt)}
+                    style={{
+                      flex: 1, padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+                      backgroundColor: isSel ? t.primary : t.bg,
+                      color: isSel ? '#fff' : t.text,
+                      border: `1px solid ${isSel ? t.primary : t.border}`
+                    }}
+                  >
+                    {opt === 'Casa' ? '🏠 Casa' : opt === 'Gimnasio' ? '🏋️ Gimnasio' : '✨ Todas'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {EXERCISES.filter(ex => libraryFilterLocation === 'Todas' || ex.location === libraryFilterLocation).map(ex => (
+              <div key={ex.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '14px', padding: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', backgroundColor: ex.location === 'Casa' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: ex.location === 'Casa' ? t.primary : '#10b981', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>
+                      {ex.location === 'Casa' ? '🏠 Casa' : '🏋️ Gimnasio'}
+                    </span>
+                    <span style={{ fontSize: '10px', backgroundColor: t.bg, color: t.textSec, padding: '2px 6px', borderRadius: '6px', border: `1px solid ${t.border}` }}>{ex.category}</span>
+                  </div>
+                  <a 
+                    href={ex.videoUrl} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    style={{ fontSize: '10px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: t.primary, padding: '3px 8px', borderRadius: '6px', textDecoration: 'none', fontWeight: '700' }}
+                  >
+                    ▶️ Ver Vídeo
+                  </a>
+                </div>
+
+                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0 4px 0' }}>{ex.name}</strong>
+                <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 4px 0' }}>💡 <strong>Cómo hacerlo:</strong> {ex.instructions}</p>
+                <p style={{ fontSize: '10px', color: '#f59e0b', margin: 0 }}>🛠️ <strong>Material / Alternativa:</strong> {ex.equipment} ({ex.homeSubstitute})</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* PESTAÑA: BATIDOS */}
       {activeTab === 'batidos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -825,10 +874,11 @@ export default function App() {
         </div>
       )}
 
-      {/* MENÚ DESPLEGABLE "MÁS" (Para que la parte inferior no esté saturada) */}
+      {/* MENÚ DESPLEGABLE "MÁS" (Incluye la nueva Biblioteca de Ejercicios, Batidos, Utilidades, Despensa y Perfil) */}
       {isMoreMenuOpen && (
         <div style={{ position: 'fixed', bottom: '75px', left: '20px', right: '20px', maxWidth: '440px', margin: '0 auto', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '20px', padding: '14px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 101, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
           {[
+            { id: 'ejercicios', label: 'Ejercicios', icon: '📖' },
             { id: 'batidos', label: 'Batidos', icon: '🥤' },
             { id: 'herramientas', label: 'Utilidades', icon: '🛠️' },
             { id: 'despensa', label: 'Despensa', icon: '🛒' },
@@ -850,7 +900,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Barra de Navegación Inferior Limpia (4 accesos directos principales + botón "Más") */}
+      {/* Barra de Navegación Inferior Limpia */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.navBg, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px 10px 16px 10px', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
         {[
           { id: 'entreno', label: 'Entreno', icon: '🏋️' },
@@ -871,13 +921,13 @@ export default function App() {
           );
         })}
 
-        {/* Botón "Más" para desplegar las herramientas secundarias */}
+        {/* Botón "Más" para desplegar la sección de Ejercicios libres y herramientas secundarias */}
         <button 
           onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} 
-          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: ['batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? 1 : 0.6, flex: 1 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: ['ejercicios', 'batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? 1 : 0.6, flex: 1 }}
         >
           <span style={{ fontSize: '20px' }}>📂</span>
-          <span style={{ fontSize: '10px', fontWeight: ['batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? '800' : '500', color: ['batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? t.primary : t.textSec }}>Más</span>
+          <span style={{ fontSize: '10px', fontWeight: ['ejercicios', 'batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? '800' : '500', color: ['ejercicios', 'batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? t.primary : t.textSec }}>Más</span>
         </button>
       </nav>
 
