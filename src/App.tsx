@@ -27,7 +27,7 @@ interface UserProfile {
   allergies: string[];
   trainingDaysPerWeek: number;
   reminderTime: string;
-  selectedDays: string[]; // Días específicos seleccionados (ej: 'Lunes', 'Miércoles', 'Viernes')
+  selectedDays: string[];
 }
 
 interface MealIdea {
@@ -94,16 +94,6 @@ const EXERCISES: Exercise[] = [
     homeSubstitute: 'Plancha estática',
     instructions: 'En posición de plancha alta, toca alternativamente tus hombros sin girar la cadera.',
     videoUrl: 'https://www.youtube.com/results?search_query=plancha+con+toque+de+hombros'
-  },
-  { 
-    id: 'g_1', 
-    name: 'Press de Banca Plano', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Barra y banco', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Acuéstate, baja la barra de manera controlada al pecho y empuja hacia arriba.',
-    videoUrl: 'https://www.youtube.com/results?search_query=press+de+banca+plano+tecnica'
   }
 ];
 
@@ -116,19 +106,19 @@ const INITIAL_MEALS: MealIdea[] = [
     caloriesApprox: '450 kcal',
     ingredients: ['Pollo', 'Arroz', 'Brócoli'],
     allergens: [] 
-  },
-  { 
-    id: 'b1', 
-    type: 'Bebida / Batido', 
-    title: 'Batido Proteico de Plátano y Queso Batido', 
-    description: 'Batido cremoso rico en proteínas de alto valor biológico y carbohidratos de calidad post-entreno.', 
-    caloriesApprox: '280 kcal',
-    ingredients: ['Queso batido', 'Plátano', 'Leche', 'Avena'],
-    allergens: ['Lactosa', 'Gluten'] 
   }
 ];
 
-const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+// Definimos los días con su clave interna completa y su etiqueta corta visible
+const DAYS_CONFIG = [
+  { key: 'Lunes', label: 'Lun' },
+  { key: 'Martes', label: 'Mar' },
+  { key: 'Miércoles', label: 'Mié' },
+  { key: 'Jueves', label: 'Jue' },
+  { key: 'Viernes', label: 'Vie' },
+  { key: 'Sábado', label: 'Sáb' },
+  { key: 'Domingo', label: 'Dom' },
+];
 
 export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
@@ -179,9 +169,6 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-  const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
-
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [dailyMenu, setDailyMenu] = useState<{ desayuno?: MealIdea; almuerzo?: MealIdea; cena?: MealIdea; snack?: MealIdea; bebida?: MealIdea }>({});
 
@@ -194,11 +181,9 @@ export default function App() {
   const [newMealDesc, setNewMealDesc] = useState<string>('');
   const [newMealCalories, setNewMealCalories] = useState<string>('');
 
-  // Estados para Cronómetro de Descanso
   const [restTimerSeconds, setRestTimerSeconds] = useState<number>(0);
   const [isResting, setIsResting] = useState<boolean>(false);
 
-  // Verificador automático de recordatorios por hora del sistema
   useEffect(() => {
     if (!profile.reminderTime) return;
 
@@ -208,14 +193,13 @@ export default function App() {
       const currentMinutes = String(now.getMinutes()).padStart(2, '0');
       const currentTimeStr = `${currentHours}:${currentMinutes}`;
 
-      const currentDayIndex = now.getDay(); // 0 es Domingo, 1 es Lunes...
+      const currentDayIndex = now.getDay();
       const mapDays: Record<number, string> = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 0: 'Domingo' };
       const currentDayName = mapDays[currentDayIndex];
 
       const isScheduledDay = profile.selectedDays?.includes(currentDayName);
 
       if (currentTimeStr === profile.reminderTime && isScheduledDay) {
-        // Disparar Notificación Nativa del Navegador si hay permiso
         if (Notification.permission === 'granted') {
           new Notification('FitApp Pro ⚡', {
             body: `¡Hola ${profile.name}! Es hora de tu entrenamiento de hoy (${currentDayName}). ¡A por todas! 💪`,
@@ -223,21 +207,21 @@ export default function App() {
           });
         }
       }
-    }, 30000); // Comprueba cada 30 segundos
+    }, 30000);
 
     return () => clearInterval(checkReminderInterval);
   }, [profile.reminderTime, profile.selectedDays, profile.name]);
 
   const requestNotificationPermission = () => {
     if (!('Notification' in window)) {
-      alert('⚠️ Este navegador no soporta notificaciones de escritorio.');
+      alert('⚠️ Este navegador no soporta notificaciones.');
       return;
     }
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
-        alert('🔔 ¡Permiso concedido! Recibirás tus recordatorios puntuales.');
+        alert('🔔 ¡Permiso concedido!');
       } else {
-        alert('❌ Has denegado los permisos de notificación.');
+        alert('❌ Permiso denegado.');
       }
     });
   };
@@ -295,11 +279,11 @@ export default function App() {
     setProfilesList(updated);
   };
 
-  const handleToggleSpecificDay = (day: string) => {
+  const handleToggleSpecificDay = (dayKey: string) => {
     const currentDays = profile.selectedDays || [];
-    const updatedDays = currentDays.includes(day)
-      ? currentDays.filter(d => d !== day)
-      : [...currentDays, day];
+    const updatedDays = currentDays.includes(dayKey)
+      ? currentDays.filter(d => d !== dayKey)
+      : [...currentDays, dayKey];
     
     handleUpdateActiveProfile('selectedDays', updatedDays);
     handleUpdateActiveProfile('trainingDaysPerWeek', updatedDays.length);
@@ -315,13 +299,9 @@ export default function App() {
     e.preventDefault();
     const cleanName = newIngName.trim();
     if (!cleanName) return;
-    if (customIngredients.includes(cleanName)) {
-      alert('⚠️ Este alimento ya existe.');
-      return;
-    }
+    if (customIngredients.includes(cleanName)) return;
     setCustomIngredients([...customIngredients, cleanName]);
     setNewIngName('');
-    alert(`¡Alimento "${cleanName}" añadido con éxito! 🛒`);
   };
 
   const handleAddBatidoSubmit = (e: React.FormEvent) => {
@@ -342,27 +322,13 @@ export default function App() {
     setNewMealTitle('');
     setNewMealDesc('');
     setNewMealCalories('');
-    alert(`¡Batido guardado en tu recetario con éxito! 🥤`);
   };
 
   const handleSubstituteExercise = (currentExName: string) => {
-    const currentExObj = EXERCISES.find(ex => ex.name === currentExName);
-    const categoryToMatch = currentExObj ? currentExObj.category : 'Fuerza';
-    const locationToMatch = currentExObj ? currentExObj.location : 'Casa';
-
-    const alternatives = EXERCISES.filter(ex => 
-      ex.name !== currentExName && 
-      ex.category === categoryToMatch && 
-      ex.location === locationToMatch
-    );
-
-    if (alternatives.length === 0) {
-      alert('⚠️ No hay otra alternativa exacta en esta categoría.');
-      return;
-    }
-
+    const alternatives = EXERCISES.filter(ex => ex.name !== currentExName);
+    if (alternatives.length === 0) return;
     const randomAlternative = alternatives[Math.floor(Math.random() * alternatives.length)];
-    alert(`🔄 Ejercicio sustituto sugerido:\n\n⭐ En lugar de "${currentExName}", prueba hoy:\n👉 "${randomAlternative.name}"`);
+    alert(`🔄 Ejercicio sustituto sugerido:\n\n👉 "${randomAlternative.name}"`);
   };
 
   const handleAddLog = (e: React.FormEvent) => {
@@ -380,55 +346,36 @@ export default function App() {
     setLogs([newLog, ...logs]);
     setWeightUsedInput('');
     setNotesInput('');
-    alert(`¡Entrenamiento guardado para ${profile.name}! 🚀`);
+    alert('¡Entrenamiento guardado con éxito! 🚀');
   };
 
   const generateDailyMenu = () => {
-    const userAllergies = profile.allergies || [];
-    let safeMeals = customMeals.filter(meal => !meal.allergens.some(al => userAllergies.includes(al)));
-    const matchingMeals = safeMeals.filter(meal => 
-      selectedIngredients.length === 0 || meal.ingredients.some(ing => selectedIngredients.includes(ing))
-    );
-    const pool = matchingMeals.length > 0 ? matchingMeals : safeMeals;
-
     const getRandom = (arr: MealIdea[]) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : undefined;
-
     setDailyMenu({
-      desayuno: getRandom(pool.filter(m => m.type === 'Desayuno')),
-      almuerzo: getRandom(pool.filter(m => m.type === 'Almuerzo')),
-      cena: getRandom(pool.filter(m => m.type === 'Cena')),
-      snack: getRandom(pool.filter(m => m.type === 'Snack')),
-      bebida: getRandom(pool.filter(m => m.type === 'Bebida / Batido'))
+      desayuno: getRandom(customMeals.filter(m => m.type === 'Desayuno')),
+      almuerzo: getRandom(customMeals.filter(m => m.type === 'Almuerzo')),
+      cena: getRandom(customMeals.filter(m => m.type === 'Cena')),
+      bebida: getRandom(customMeals.filter(m => m.type === 'Bebida / Batido'))
     });
   };
 
-  const filteredExercises = EXERCISES.filter(ex => {
-    if (selectedLocation !== 'Todos' && ex.location !== selectedLocation) return false;
-    if (selectedCategory !== 'Todos' && ex.category !== selectedCategory) return false;
-    return true;
-  });
-
-  const activeFruitsAndLiquids = selectedIngredients.filter(ing => 
-    ['Plátano', 'Manzana', 'Fresa', 'Pera', 'Naranja', 'Queso batido', 'Yogur griego', 'Leche', 'Bebida de almendras', 'Proteína en polvo', 'Cacao puro'].includes(ing)
-  );
-
-  const generatedSmartSmoothie = activeFruitsAndLiquids.length > 0 ? {
-    title: `Batido Smart Express de ${activeFruitsAndLiquids.slice(0, 2).join(' y ')}`,
-    description: `Creado al instante combinando los ingredientes seleccionados en tu despensa: ${activeFruitsAndLiquids.join(', ')}.`,
-    caloriesApprox: `${160 + (activeFruitsAndLiquids.length * 40)} kcal`
-  } : null;
-
   const filteredMeals = customMeals.filter(meal => {
-    const userAllergies = profile.allergies || [];
-    if (meal.allergens.some(al => userAllergies.includes(al))) return false;
     if (selectedIngredients.length > 0) {
       return meal.ingredients.some(ing => selectedIngredients.includes(ing));
     }
     return true;
   });
 
-  const batidosList = filteredMeals.filter(m => m.type === 'Bebida / Batido');
   const solidMealsList = filteredMeals.filter(m => m.type !== 'Bebida / Batido');
+  const activeFruitsAndLiquids = selectedIngredients.filter(ing => 
+    ['Plátano', 'Manzana', 'Fresa', 'Pera', 'Naranja', 'Queso batido', 'Yogur griego', 'Leche', 'Bebida de almendras', 'Proteína en polvo', 'Cacao puro'].includes(ing)
+  );
+
+  const generatedSmartSmoothie = activeFruitsAndLiquids.length > 0 ? {
+    title: `Batido Smart Express de ${activeFruitsAndLiquids.slice(0, 2).join(' y ')}`,
+    description: `Creado combinando: ${activeFruitsAndLiquids.join(', ')}.`,
+    caloriesApprox: `${160 + (activeFruitsAndLiquids.length * 40)} kcal`
+  } : null;
 
   const t = isDarkMode ? {
     bg: '#0f172a', card: '#1e293b', text: '#f8fafc', textSec: '#94a3b8', primary: '#38bdf8', border: '#334155'
@@ -449,7 +396,6 @@ export default function App() {
         </button>
       </header>
 
-      {/* Widget flotante de Cronómetro de Descanso si está activo */}
       {isResting && (
         <div style={{ backgroundColor: '#0284c7', color: '#fff', padding: '10px 14px', borderRadius: '10px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold' }}>
           <span>⏱️ Descanso: {Math.floor(restTimerSeconds / 60)}:{('0' + (restTimerSeconds % 60)).slice(-2)} min</span>
@@ -461,25 +407,25 @@ export default function App() {
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* Selector Interactivo de Días */}
+          {/* Selector Interactivo Corregido */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>📅 ¿Qué días quieres entrenar?</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 8px 0' }}>Selecciona los días de la semana que prefieras:</p>
+            <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 8px 0' }}>Selecciona los días de la semana:</p>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              {DAYS_OF_WEEK.map(day => {
-                const isSelected = profile.selectedDays?.includes(day);
+              {DAYS_CONFIG.map(dayObj => {
+                const isSelected = profile.selectedDays?.includes(dayObj.key);
                 return (
                   <button
-                    key={day}
-                    onClick={() => handleToggleSpecificDay(day)}
+                    key={dayObj.key}
+                    onClick={() => handleToggleSpecificDay(dayObj.key)}
                     style={{
-                      padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
+                      padding: '8px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
                       backgroundColor: isSelected ? t.primary : t.bg,
                       color: isSelected ? '#fff' : t.text,
                       border: `1px solid ${isSelected ? t.primary : t.border}`
                     }}
                   >
-                    {day.slice(0, 3)}
+                    {dayObj.label}
                   </button>
                 );
               })}
@@ -489,7 +435,7 @@ export default function App() {
             </p>
           </div>
 
-          {/* Configuración de Recordatorio y Notificaciones */}
+          {/* Recordatorios */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h3 style={{ fontSize: '13px', marginTop: 0, marginBottom: '6px' }}>🔔 Recordatorio y Avisos Push</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -527,31 +473,6 @@ export default function App() {
               </div>
             ))}
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <h3 style={{ fontSize: '14px', margin: '4px 0' }}>⏱️ Cronómetro de Descanso Rápido</h3>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button onClick={() => startRestTimer(30)} style={{ flex: 1, padding: '8px', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>30s Descanso</button>
-              <button onClick={() => startRestTimer(60)} style={{ flex: 1, padding: '8px', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>60s Descanso</button>
-              <button onClick={() => startRestTimer(90)} style={{ flex: 1, padding: '8px', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>90s Descanso</button>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-            {filteredExercises.map(ex => (
-              <div key={ex.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <strong style={{ fontSize: '12px' }}>{ex.name}</strong>
-                  <span style={{ fontSize: '9px', backgroundColor: ex.location === 'Casa' ? '#0ea5e9' : '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{ex.location}</span>
-                </div>
-                <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 6px 0' }}>{ex.instructions}</p>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => handleSubstituteExercise(ex.name)} style={{ fontSize: '10px', fontWeight: '600', color: '#fff', backgroundColor: '#f59e0b', padding: '4px 8px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>🔄 Cambiar ejercicio</button>
-                  <button onClick={() => startRestTimer(60)} style={{ fontSize: '10px', fontWeight: '600', color: '#fff', backgroundColor: '#0284c7', padding: '4px 8px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>⏱️ Descanso 60s</button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
@@ -560,7 +481,7 @@ export default function App() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h2 style={{ fontSize: '14px', margin: 0 }}>💧 Hidratación Diaria</h2>
+              <h2 style={{ fontSize: '14px', margin: 0 }}>💧 Hidratación</h2>
               <span style={{ fontSize: '12px', fontWeight: 'bold', color: t.primary }}>{waterGlasses} / 8 vasos</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -573,7 +494,7 @@ export default function App() {
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 Selecciona tus Ingredientes / Frutas</h2>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 Selecciona tus Ingredientes</h2>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {customIngredients.map(ing => {
                 const isSelected = selectedIngredients.includes(ing);
@@ -595,16 +516,13 @@ export default function App() {
             </div>
           </div>
 
-          <h3 style={{ fontSize: '15px', margin: '4px 0' }}>🍳 Platos y Recetas Sólidas ({solidMealsList.length})</h3>
+          <h3 style={{ fontSize: '15px', margin: '4px 0' }}>🍳 Platos ({solidMealsList.length})</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {solidMealsList.map(meal => (
               <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
-                  <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {meal.caloriesApprox}</span>
-                </div>
+                <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
                 <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
-                <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
+                <p style={{ fontSize: '12px', color: t.textSec, margin: '0' }}>{meal.description}</p>
               </div>
             ))}
           </div>
@@ -615,39 +533,24 @@ export default function App() {
       {activeTab === 'batidos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, color: '#8b5cf6' }}>🪄 Batido Generado por tus Frutas</h2>
+            <h2 style={{ fontSize: '14px', marginTop: 0, color: '#8b5cf6' }}>🪄 Batido Generado</h2>
             {generatedSmartSmoothie ? (
               <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '8px', padding: '10px', marginTop: '8px' }}>
-                <span style={{ fontSize: '10px', backgroundColor: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>Automático</span>
-                <strong style={{ fontSize: '13px', display: 'block', margin: '6px 0 4px 0' }}>{generatedSmartSmoothie.title}</strong>
+                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{generatedSmartSmoothie.title}</strong>
                 <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{generatedSmartSmoothie.description}</p>
                 <span style={{ fontSize: '11px', fontWeight: 'bold', color: t.primary }}>⚡ {generatedSmartSmoothie.caloriesApprox}</span>
               </div>
             ) : (
-              <p style={{ fontSize: '12px', color: t.textSec, margin: '8px 0 0 0' }}>
-                💡 Selecciona frutas o líquidos en la pestaña de <strong>Nutrición</strong> para que la app te cree un batido inteligente al instante.
-              </p>
+              <p style={{ fontSize: '12px', color: t.textSec, margin: '8px 0 0 0' }}>Selecciona frutas o lácteos en <strong>Nutrición</strong>.</p>
             )}
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🥤 Crear Batido Personalizado</h3>
+            <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🥤 Crear Batido</h3>
             <form onSubmit={handleAddBatidoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-              <input 
-                type="text" 
-                placeholder="Nombre del batido..." 
-                value={newMealTitle}
-                onChange={e => setNewMealTitle(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-              />
-              <input 
-                type="text" 
-                placeholder="Calorías aproximadas (ej: 250 kcal)..." 
-                value={newMealCalories}
-                onChange={e => setNewMealCalories(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-              />
-              <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>Guardar Batido 🚀</button>
+              <input type="text" placeholder="Nombre..." value={newMealTitle} onChange={e => setNewMealTitle(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
+              <input type="text" placeholder="Calorías (ej: 250 kcal)..." value={newMealCalories} onChange={e => setNewMealCalories(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
+              <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Guardar Batido 🚀</button>
             </form>
           </div>
         </div>
@@ -656,15 +559,9 @@ export default function App() {
       {/* PESTAÑA: DESPENSA */}
       {activeTab === 'despensa' && (
         <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-          <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimento o Fruta</h2>
+          <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimento</h2>
           <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
-            <input 
-              type="text" 
-              placeholder="Ej: Fresa, Pera, Leche..." 
-              value={newIngName}
-              onChange={e => setNewIngName(e.target.value)}
-              style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
-            />
+            <input type="text" placeholder="Ej: Fresa, Leche..." value={newIngName} onChange={e => setNewIngName(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }} />
             <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
           </form>
         </div>
@@ -674,12 +571,12 @@ export default function App() {
       {activeTab === 'menu' && (
         <div style={{ textAlign: 'center' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
-            <h2 style={{ fontSize: '15px', marginTop: 0, marginBottom: '6px' }}>🍽️ Generador de Menú y Batidos</h2>
+            <h2 style={{ fontSize: '15px', marginTop: 0, marginBottom: '6px' }}>🍽️ Generador de Menú</h2>
             <button onClick={generateDailyMenu} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', width: '100%' }}>🎲 Generar Menú del Día</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
             {dailyMenu.desayuno && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🌅 Desayuno:</strong> {dailyMenu.desayuno.title}</div>}
-            {dailyMenu.bebida && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color:'#8b5cf6'}}>🥤 Batido del día:</strong> {dailyMenu.bebida.title}</div>}
+            {dailyMenu.bebida && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color:'#8b5cf6'}}>🥤 Batido:</strong> {dailyMenu.bebida.title}</div>}
             {dailyMenu.almuerzo && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>☀️ Almuerzo:</strong> {dailyMenu.almuerzo.title}</div>}
             {dailyMenu.cena && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🌙 Cena:</strong> {dailyMenu.cena.title}</div>}
           </div>
@@ -694,7 +591,7 @@ export default function App() {
             <select value={selectedExerciseName} onChange={e => setSelectedExerciseName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}>
               {EXERCISES.map(ex => (<option key={ex.id} value={ex.name}>{ex.name}</option>))}
             </select>
-            <input type="text" placeholder="Notas..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }} />
+            <input type="text" placeholder="Notas..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
             <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Guardar Avance 💾</button>
           </form>
         </div>
@@ -706,10 +603,10 @@ export default function App() {
           <h2 style={{ fontSize: '15px', marginTop: 0 }}>👤 Perfil: {profile.name}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', marginTop: '10px' }}>
             <label>Nombre:
-              <input type="text" value={profile.name} onChange={e => handleUpdateActiveProfile('name', e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }} />
+              <input type="text" value={profile.name} onChange={e => handleUpdateActiveProfile('name', e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
             </label>
             <label>Peso (kg):
-              <input type="number" value={profile.weight} onChange={e => handleUpdateActiveProfile('weight', Number(e.target.value))} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }} />
+              <input type="number" value={profile.weight} onChange={e => handleUpdateActiveProfile('weight', Number(e.target.value))} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
             </label>
           </div>
         </div>
