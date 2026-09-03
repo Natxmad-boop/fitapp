@@ -141,6 +141,13 @@ const styles = {
   },
 };
 
+interface SetItem {
+  name: string;
+  weight: number;
+  reps: number;
+  date: string;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker'>('dashboard');
 
@@ -152,7 +159,7 @@ export default function App() {
     ];
   });
 
-  const [history, setHistory] = useState(() => {
+  const [history, setHistory] = useState<SetItem[]>(() => {
     const saved = localStorage.getItem('fitapp_history');
     return saved ? JSON.parse(saved) : [];
   });
@@ -162,7 +169,7 @@ export default function App() {
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
 
-  // Estados del temporizador de descanso
+  // Temporizador
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
@@ -174,7 +181,6 @@ export default function App() {
     localStorage.setItem('fitapp_history', JSON.stringify(history));
   }, [history]);
 
-  // Lógica del temporizador
   useEffect(() => {
     let interval: any = null;
     if (isTimerRunning && timeLeft > 0) {
@@ -200,11 +206,21 @@ export default function App() {
   };
 
   const handleAddSet = () => {
-    if (!weight || !reps) return;
-    setHistory([{ name: exerciseName, weight, reps, date: new Date().toLocaleDateString() }, ...history]);
+    const parsedWeight = parseFloat(weight);
+    const parsedReps = parseInt(reps, 10);
+    if (isNaN(parsedWeight) || isNaN(parsedReps)) return;
+
+    const newSet: SetItem = {
+      name: exerciseName.trim() || 'Ejercicio',
+      weight: parsedWeight,
+      reps: parsedReps,
+      date: new Date().toLocaleDateString(),
+    };
+
+    setHistory([newSet, ...history]);
     setWeight('');
     setReps('');
-    startTimer(90); // Arranca automáticamente un descanso de 90 segundos al guardar serie
+    startTimer(90);
   };
 
   const clearHistory = () => {
@@ -213,6 +229,14 @@ export default function App() {
     }
   };
 
+  // Calcular el peso máximo (PR) por ejercicio de forma automática
+  const personalRecords = history.reduce((acc: { [key: string]: number }, item) => {
+    if (!acc[item.name] || item.weight > acc[item.name]) {
+      acc[item.name] = item.weight;
+    }
+    return acc;
+  }, {});
+
   return (
     <div style={styles.container}>
       <header style={styles.header}>
@@ -220,11 +244,11 @@ export default function App() {
         <p style={styles.subtitle}>Tu progreso diario bajo control</p>
       </header>
 
-      {/* VISTA 1: DASHBOARD */}
+      {/* VISTA 1: DASHBOARD Y PRs */}
       {activeTab === 'dashboard' && (
         <div>
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Resumen Semanal</h2>
+            <h2 style={styles.cardTitle}>Resumen General</h2>
             <div style={styles.grid}>
               <div style={styles.statBox}>
                 <p style={styles.statValue}>{history.length}</p>
@@ -238,10 +262,23 @@ export default function App() {
           </div>
 
           <div style={styles.card}>
+            <h2 style={styles.cardTitle}>🏆 Récords Personales (PRs)</h2>
+            {Object.keys(personalRecords).length === 0 ? (
+              <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                Aún no hay series registradas. ¡Empieza a entrenar para ver tus marcas máximas aquí!
+              </p>
+            ) : (
+              Object.entries(personalRecords).map(([ex, maxWeight]) => (
+                <div key={ex} style={styles.listItem}>
+                  <strong style={{ color: '#1e293b' }}>{ex}</strong>
+                  <span style={{ color: '#0284c7', fontWeight: '700' }}>{maxWeight} kg máx</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div style={styles.card}>
             <h2 style={styles.cardTitle}>Próximo Entrenamiento</h2>
-            <p style={{ fontSize: '14px', color: '#334155', margin: '0 0 12px 0' }}>
-              Registra tus series y controla tus tiempos de descanso al milímetro.
-            </p>
             <button style={styles.button} onClick={() => setActiveTab('tracker')}>
               Comenzar Entrenamiento
             </button>
@@ -285,7 +322,6 @@ export default function App() {
       {/* VISTA 3: TRACKER DE EJERCICIOS Y TEMPORIZADOR */}
       {activeTab === 'tracker' && (
         <div>
-          {/* Tarjeta de Temporizador */}
           <div style={{ ...styles.card, backgroundColor: timeLeft > 0 ? '#eff6ff' : '#ffffff', borderColor: timeLeft > 0 ? '#bfdbfe' : '#e2e8f0' }}>
             <h2 style={styles.cardTitle}>⏱️ Descanso entre Series</h2>
             <div style={{ textAlign: 'center', marginBottom: '12px' }}>
@@ -337,7 +373,7 @@ export default function App() {
                 <h2 style={{ ...styles.cardTitle, margin: 0 }}>Historial de Series</h2>
                 <button style={styles.dangerButton} onClick={clearHistory}>Limpiar</button>
               </div>
-              {history.map((item: { name: string; weight: string; reps: string; date: string }, index: number) => (
+              {history.map((item: SetItem, index: number) => (
                 <div key={index} style={styles.listItem}>
                   <div>
                     <strong style={{ color: '#1e293b', display: 'block' }}>{item.name}</strong>
