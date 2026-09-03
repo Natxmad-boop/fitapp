@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-// Interfaces actualizadas
 interface Exercise {
   id: string;
   name: string;
@@ -20,7 +19,7 @@ interface Meal {
   calories: number;
   protein: number;
   ingredients: string[];
-  isAllowed: boolean; // Control de restricciones de salud
+  isAllowed: boolean;
 }
 
 interface UserProfile {
@@ -34,10 +33,11 @@ interface UserProfile {
   pin: string;
   healthRestrictions: string[];
   equipment: string[];
+  streakDays: number;
+  points: number;
   createdAt: string;
 }
 
-// Biblioteca base de ejercicios (Fase 4)
 const EXERCISE_LIBRARY: Exercise[] = [
   {
     id: 'ex-1',
@@ -85,7 +85,6 @@ const EXERCISE_LIBRARY: Exercise[] = [
   }
 ];
 
-// Base de recetas / comidas con control de alérgenos
 const MEAL_LIBRARY: Meal[] = [
   {
     id: 'meal-1',
@@ -112,7 +111,7 @@ const MEAL_LIBRARY: Meal[] = [
     calories: 310,
     protein: 25,
     ingredients: ['Proteína Whey', 'Leche de vaca', 'Plátano'],
-    isAllowed: false // Contiene lactosa (ejemplo de control estricto)
+    isAllowed: false
   },
   {
     id: 'meal-4',
@@ -129,7 +128,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'nutricion' | 'progreso' | 'perfil'>('inicio');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
-  // Perfiles independientes
   const [profiles, setProfiles] = useState<UserProfile[]>([
     {
       id: 'prof-1',
@@ -142,17 +140,18 @@ export default function App() {
       pin: '1234',
       healthRestrictions: ['Sin lactosa'],
       equipment: ['Mancuernas', 'Esterilla'],
+      streakDays: 5,
+      points: 320,
       createdAt: new Date().toISOString()
     }
   ]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>('prof-1');
   const [isCreatingProfile, setIsCreatingProfile] = useState<boolean>(false);
 
-  // Estados de entrenamiento y nutrición
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
+  const [newWeightInput, setNewWeightInput] = useState<string>('');
 
-  // Formulario temporal para nuevo perfil
   const [newProfileData, setNewProfileData] = useState({
     name: '',
     age: 25,
@@ -195,7 +194,6 @@ export default function App() {
     danger: '#dc2626'
   };
 
-  // Selector de perfiles
   if (!activeProfileId) {
     return (
       <div style={{ fontFamily: '-apple-system, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', color: t.text, backgroundColor: t.bg, minHeight: '100vh', boxSizing: 'border-box' }}>
@@ -207,7 +205,7 @@ export default function App() {
             <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
-                <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {p.goal} | Restricciones: {p.healthRestrictions.join(', ') || 'Ninguna'}</p>
+                <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {p.goal} | 🔥 Racha: {p.streakDays} días</p>
               </div>
               <button 
                 onClick={() => setActiveProfileId(p.id)}
@@ -251,7 +249,7 @@ export default function App() {
                   </select>
                 </label>
                 <label>Restricción Médica / Alergia:
-                  <input type="text" value={newProfileData.healthRestrictions} onChange={e => setNewProfileData({...newProfileData, healthRestrictions: e.target.value})} placeholder="Ej. Sin lactosa, Sin gluten..." style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
+                  <input type="text" value={newProfileData.healthRestrictions} onChange={e => setNewProfileData({...newProfileData, healthRestrictions: e.target.value})} placeholder="Ej. Sin lactosa..." style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                   <button onClick={() => setIsCreatingProfile(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
@@ -268,6 +266,8 @@ export default function App() {
                       pin: '0000',
                       healthRestrictions: newProfileData.healthRestrictions ? [newProfileData.healthRestrictions] : [],
                       equipment: [newProfileData.equipment],
+                      streakDays: 1,
+                      points: 50,
                       createdAt: new Date().toISOString()
                     };
                     setProfiles([...profiles, newProf]);
@@ -295,14 +295,13 @@ export default function App() {
       minHeight: '100vh',
       boxSizing: 'border-box'
     }}>
-      {/* Cabecera superior con datos del perfil activo */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <h1 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>FitApp Pro 🏆</h1>
             <span style={{ fontSize: '11px', backgroundColor: t.primary, color: '#fff', padding: '2px 6px', borderRadius: '10px' }}>{activeProfile?.name}</span>
           </div>
-          <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Objetivo: <strong style={{ color: t.text }}>{activeProfile?.goal}</strong></p>
+          <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>🔥 Racha: <strong style={{ color: t.warning }}>{activeProfile?.streakDays} días</strong> | 🌟 {activeProfile?.points} pts</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button 
@@ -330,7 +329,7 @@ export default function App() {
               <span style={{ fontSize: '11px', color: t.primary }}>Sistema Inteligente</span>
             </h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Basado en tu objetivo de <strong>{activeProfile?.goal}</strong> y equipamiento (<em>{activeProfile?.equipment.join(', ')}</em>).
+              Objetivo: <strong>{activeProfile?.goal}</strong> | Equipamiento: (<em>{activeProfile?.equipment.join(', ')}</em>).
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -340,17 +339,17 @@ export default function App() {
             </button>
           </div>
 
-          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🥗 Resumen Nutricional Diario</h2>
-            <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '8px' }}>
-              Restricciones activas: <strong style={{ color: t.danger }}>{activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</strong>
-            </p>
-            <button 
-              onClick={() => setActiveTab('nutricion')}
-              style={{ width: '100%', backgroundColor: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '8px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '13px' }}
-            >
-              Ver Menús del Día ➔
-            </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ flex: 1, backgroundColor: t.cardBg, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
+              <span style={{ fontSize: '20px' }}>🔥</span>
+              <h3 style={{ fontSize: '14px', margin: '6px 0 2px 0' }}>{activeProfile?.streakDays} Días</h3>
+              <p style={{ fontSize: '11px', color: t.textSecondary, margin: 0 }}>Racha Activa</p>
+            </div>
+            <div style={{ flex: 1, backgroundColor: t.cardBg, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
+              <span style={{ fontSize: '20px' }}>⭐</span>
+              <h3 style={{ fontSize: '14px', margin: '6px 0 2px 0' }}>{activeProfile?.points} Pts</h3>
+              <p style={{ fontSize: '11px', color: t.textSecondary, margin: 0 }}>Disciplina</p>
+            </div>
           </div>
         </div>
       )}
@@ -358,7 +357,7 @@ export default function App() {
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Generador de Entrenamientos (Fase 3 y 4)</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Generador de Entrenamientos</h2>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {['Todos', 'Fuerza', 'Core'].map(cat => (
                 <button 
@@ -400,9 +399,9 @@ export default function App() {
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Nutrición y Menús Inteligentes (Fase 5)</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Nutrición e Ingredientes</h2>
             <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
-              Planes adaptados a tu objetivo (<strong>{activeProfile?.goal}</strong>) filtrados estrictamente por tus restricciones: <strong style={{ color: t.danger }}>{activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</strong>.
+              Restricciones activas: <strong style={{ color: t.danger }}>{activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</strong>
             </p>
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
@@ -421,9 +420,7 @@ export default function App() {
               {MEAL_LIBRARY
                 .filter(meal => selectedMealFilter === 'Todos' || meal.type === selectedMealFilter)
                 .map(meal => {
-                  // Validación estricta de restricciones de salud simulada
                   const hasAllergyConflict = !meal.isAllowed && activeProfile?.healthRestrictions.some(r => r.toLowerCase().includes('lactosa'));
-                  
                   return (
                     <div key={meal.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${hasAllergyConflict ? t.danger : t.border}`, opacity: hasAllergyConflict ? 0.7 : 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -431,13 +428,12 @@ export default function App() {
                         <span style={{ fontSize: '10px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{meal.type}</span>
                       </div>
                       <p style={{ fontSize: '11px', color: t.textSecondary, margin: '0 0 6px 0' }}>Ingredientes: {meal.ingredients.join(', ')}</p>
-                      
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginTop: '6px' }}>
                         <span>🔥 {meal.calories} kcal | 🥩 {meal.protein}g proteína</span>
                         {hasAllergyConflict ? (
-                          <span style={{ color: t.danger, fontWeight: '600' }}>⚠️ Alerta Alérgeno (Lactosa)</span>
+                          <span style={{ color: t.danger, fontWeight: '600' }}>⚠️ Alerta Alérgeno</span>
                         ) : (
-                          <span style={{ color: t.success, fontWeight: '600' }}>✅ Apto para ti</span>
+                          <span style={{ color: t.success, fontWeight: '600' }}>✅ Apto</span>
                         )}
                       </div>
                     </div>
@@ -449,9 +445,34 @@ export default function App() {
       )}
 
       {activeTab === 'progreso' && (
-        <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>📈 Progreso y Métricas</h2>
-          <p style={{ fontSize: '13px', color: t.textSecondary }}>Peso actual registrado: <strong>{activeProfile?.weight} kg</strong></p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>📈 Progreso y Métricas (Fase 7)</h2>
+            <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '16px' }}>
+              Peso actual registrado: <strong style={{ color: t.text }}>{activeProfile?.weight} kg</strong>
+            </p>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="number" 
+                placeholder="Nuevo peso (kg)" 
+                value={newWeightInput} 
+                onChange={e => setNewWeightInput(e.target.value)}
+                style={{ flex: 1, padding: '8px', fontSize: '13px', borderRadius: '8px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} 
+              />
+              <button 
+                onClick={() => {
+                  if(!newWeightInput) return;
+                  const val = Number(newWeightInput);
+                  setProfiles(profiles.map(p => p.id === activeProfileId ? { ...p, weight: val, points: p.points + 10 } : p));
+                  setNewWeightInput('');
+                }}
+                style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '13px' }}
+              >
+                Actualizar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
