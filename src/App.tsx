@@ -113,6 +113,19 @@ export default function App() {
   const t = isDarkMode ? themes.dark : themes.light;
   const pKey = currentProfile ? `_${currentProfile.id}` : '_default';
 
+  // Estados editables del Perfil (Fase 8)
+  const [editGoal, setEditGoal] = useState(currentProfile?.goal || 'Ganar músculo');
+  const [editLevel, setEditLevel] = useState(currentProfile?.level || 'Intermedio');
+  const [editEquipment, setEditEquipment] = useState<string[]>(currentProfile?.equipment || ['Mancuernas']);
+
+  useEffect(() => {
+    if (currentProfile) {
+      setEditGoal(currentProfile.goal);
+      setEditLevel(currentProfile.level);
+      setEditEquipment(currentProfile.equipment || ['Mancuernas']);
+    }
+  }, [currentProfile]);
+
   // 2. Biblioteca de Ejercicios (Fase 4)
   const defaultExercises: Exercise[] = [
     { id: 'ex_1', name: 'Press de Banca con Barra', category: 'Fuerza', targetMuscle: 'Pectorales, Tríceps', equipment: 'Barra', difficulty: 'Intermedio', instructions: 'Acuéstate en el banco, retrae omóplatos y baja la barra controladamente hasta el pecho.', commonErrors: 'Rebotar la barra en el pecho.' },
@@ -120,7 +133,7 @@ export default function App() {
   ];
 
   const [exerciseLibrary] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem(`fitapp_library_v7${pKey}`);
+    const saved = localStorage.getItem(`fitapp_library_v8${pKey}`);
     return saved ? JSON.parse(saved) : defaultExercises;
   });
 
@@ -133,7 +146,7 @@ export default function App() {
   ];
 
   const [dailyMeals, setDailyMeals] = useState<Meal[]>(() => {
-    const saved = localStorage.getItem(`fitapp_meals_v7${pKey}`);
+    const saved = localStorage.getItem(`fitapp_meals_v8${pKey}`);
     return saved ? JSON.parse(saved) : defaultDailyMeals;
   });
 
@@ -153,7 +166,7 @@ export default function App() {
   ];
 
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_shopping_v7${pKey}`);
+    const saved = localStorage.getItem(`fitapp_shopping_v8${pKey}`);
     return saved ? JSON.parse(saved) : defaultShoppingList;
   });
 
@@ -161,7 +174,7 @@ export default function App() {
   const [newCustomItemCat, setNewCustomItemCat] = useState<ShoppingItem['category']>('Despensa / Cereales');
   const [newCustomItemAmount, setNewCustomItemAmount] = useState('');
 
-  // 5. Historial y Progreso con Gráficos (Fase 7 del Guion)
+  // 5. Historial y Progreso (Fase 7)
   const defaultHistory: SetItem[] = [
     { name: 'Press de Banca con Barra', weight: 70, reps: 10, date: '10/05/2026' },
     { name: 'Press de Banca con Barra', weight: 75, reps: 8, date: '17/05/2026' },
@@ -171,7 +184,7 @@ export default function App() {
   ];
 
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history_v7${pKey}`);
+    const saved = localStorage.getItem(`fitapp_history_v8${pKey}`);
     return saved ? JSON.parse(saved) : defaultHistory;
   });
 
@@ -193,10 +206,10 @@ export default function App() {
   useEffect(() => {
     if (currentProfile) {
       localStorage.setItem('fitapp_active_profile', JSON.stringify(currentProfile));
-      localStorage.setItem(`fitapp_library_v7${pKey}`, JSON.stringify(exerciseLibrary));
-      localStorage.setItem(`fitapp_meals_v7${pKey}`, JSON.stringify(dailyMeals));
-      localStorage.setItem(`fitapp_shopping_v7${pKey}`, JSON.stringify(shoppingList));
-      localStorage.setItem(`fitapp_history_v7${pKey}`, JSON.stringify(history));
+      localStorage.setItem(`fitapp_library_v8${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_meals_v8${pKey}`, JSON.stringify(dailyMeals));
+      localStorage.setItem(`fitapp_shopping_v8${pKey}`, JSON.stringify(shoppingList));
+      localStorage.setItem(`fitapp_history_v8${pKey}`, JSON.stringify(history));
     }
   }, [currentProfile, exerciseLibrary, dailyMeals, shoppingList, history, pKey]);
 
@@ -246,6 +259,30 @@ export default function App() {
     setNewProfilePin('');
     setIsCreatingProfile(false);
     setCurrentProfile(newProf);
+  };
+
+  const handleSaveProfileSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentProfile) return;
+    const updatedProfile: UserProfile = {
+      ...currentProfile,
+      goal: editGoal,
+      level: editLevel,
+      equipment: editEquipment
+    };
+    setCurrentProfile(updatedProfile);
+    const updatedProfiles = profiles.map(p => p.id === updatedProfile.id ? updatedProfile : p);
+    setProfiles(updatedProfiles);
+    localStorage.setItem('fitapp_profiles', JSON.stringify(updatedProfiles));
+    alert('¡Preferencias de perfil actualizadas con éxito!');
+  };
+
+  const toggleEquipmentOption = (item: string) => {
+    if (editEquipment.includes(item)) {
+      setEditEquipment(editEquipment.filter(e => e !== item));
+    } else {
+      setEditEquipment([...editEquipment, item]);
+    }
   };
 
   const handleAddSet = () => {
@@ -458,7 +495,6 @@ export default function App() {
   const totalCalories = dailyMeals.reduce((acc, m) => acc + m.calories, 0);
   const totalProtein = dailyMeals.reduce((acc, m) => acc + m.protein, 0);
 
-  // Filtrar datos para gráficos del ejercicio seleccionado
   const exerciseHistoryFiltered = history.filter(h => h.name === selectedExerciseForGraph).reverse();
   const maxWeightRegistered = exerciseHistoryFiltered.length > 0 ? Math.max(...exerciseHistoryFiltered.map(h => h.weight)) : 0;
   const estimated1RM = exerciseHistoryFiltered.length > 0 ? Math.round(maxWeightRegistered * (1 + 0.0333 * Math.max(...exerciseHistoryFiltered.map(h => h.reps)))) : 0;
@@ -481,7 +517,7 @@ export default function App() {
           <div style={dynamicStyles.card}>
             <h2 style={dynamicStyles.cardTitle}>🎯 Panel de Control Diario</h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '12px' }}>
-              Tu menú diario activo suma <strong>{totalCalories} kcal</strong> y <strong>{totalProtein}g de proteína</strong>. Todo sincronizado para tu objetivo.
+              Tu menú diario activo suma <strong>{totalCalories} kcal</strong> y <strong>{totalProtein}g de proteína</strong>. Todo sincronizado para tu objetivo ({currentProfile.goal}).
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button style={dynamicStyles.button} onClick={() => setActiveTab('entrenar')}>Entrenar 🚀</button>
@@ -554,7 +590,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 🛒 5. LISTA DE LA COMPRA INTELIGENTE */}
+      {/* 🛒 5. LISTA DE LA COMPRA */}
       {activeTab === 'compra' && (
         <div style={dynamicStyles.card}>
           <h2 style={dynamicStyles.cardTitle}>🛒 Lista de la Compra Inteligente</h2>
@@ -599,61 +635,116 @@ export default function App() {
         </div>
       )}
 
-      {/* 📈 6. PROGRESO Y GRÁFICOS (Fase 7 del Guion) */}
+      {/* 📈 6. PROGRESO Y GRÁFICOS */}
       {activeTab === 'progreso' && (
-        <div>
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>📈 Gráficos de Evolución y 1RM</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
-              Analiza tu progresión de cargas y estima tu repetición máxima teórica (1RM).
-            </p>
+        <div style={dynamicStyles.card}>
+          <h2 style={dynamicStyles.cardTitle}>📈 Gráficos de Evolución y 1RM</h2>
+          <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
+            Analiza tu progresión de cargas y estima tu repetición máxima teórica (1RM).
+          </p>
 
-            <select value={selectedExerciseForGraph} onChange={(e) => setSelectedExerciseForGraph(e.target.value)} style={dynamicStyles.input}>
-              {Array.from(new Set(history.map(h => h.name))).map(exName => (
-                <option key={exName} value={exName}>{exName}</option>
-              ))}
-            </select>
+          <select value={selectedExerciseForGraph} onChange={(e) => setSelectedExerciseForGraph(e.target.value)} style={dynamicStyles.input}>
+            {Array.from(new Set(history.map(h => h.name))).map(exName => (
+              <option key={exName} value={exName}>{exName}</option>
+            ))}
+          </select>
 
-            {/* Tarjetas de Estadísticas Clave */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', margin: '14px 0' }}>
-              <div style={{ backgroundColor: t.statBg, padding: '12px', borderRadius: '8px', textAlign: 'center', border: `1px solid ${t.border}` }}>
-                <span style={{ fontSize: '18px', fontWeight: '700', color: t.primary }}>{maxWeightRegistered} kg</span>
-                <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Peso Máximo</p>
-              </div>
-              <div style={{ backgroundColor: t.statBg, padding: '12px', borderRadius: '8px', textAlign: 'center', border: `1px solid ${t.border}` }}>
-                <span style={{ fontSize: '18px', fontWeight: '700', color: '#10b981' }}>{estimated1RM} kg</span>
-                <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>1RM Estimado</p>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', margin: '14px 0' }}>
+            <div style={{ backgroundColor: t.statBg, padding: '12px', borderRadius: '8px', textAlign: 'center', border: `1px solid ${t.border}` }}>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: t.primary }}>{maxWeightRegistered} kg</span>
+              <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Peso Máximo</p>
             </div>
-
-            {/* Simulación Visual de Gráfico de Barras / Cargas */}
-            <h3 style={{ fontSize: '13px', fontWeight: '600', color: t.text, marginBottom: '8px' }}>Historial de Sesiones</h3>
-            {exerciseHistoryFiltered.length === 0 ? (
-              <p style={{ fontSize: '12px', color: t.textSecondary }}>No hay registros para este ejercicio.</p>
-            ) : (
-              exerciseHistoryFiltered.map((item, idx) => (
-                <div key={idx} style={{ padding: '10px 0', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontSize: '12px', color: t.textSecondary, display: 'block' }}>{item.date}</span>
-                    <strong style={{ fontSize: '14px', color: t.text }}>{item.weight} kg × {item.reps} reps</strong>
-                  </div>
-                  <span style={{ fontSize: '12px', fontWeight: '600', color: t.primary, backgroundColor: t.statBg, padding: '4px 8px', borderRadius: '4px' }}>
-                    Volumen: {item.weight * item.reps} kg
-                  </span>
-                </div>
-              ))
-            )}
+            <div style={{ backgroundColor: t.statBg, padding: '12px', borderRadius: '8px', textAlign: 'center', border: `1px solid ${t.border}` }}>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#10b981' }}>{estimated1RM} kg</span>
+              <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>1RM Estimado</p>
+            </div>
           </div>
+
+          <h3 style={{ fontSize: '13px', fontWeight: '600', color: t.text, marginBottom: '8px' }}>Historial de Sesiones</h3>
+          {exerciseHistoryFiltered.length === 0 ? (
+            <p style={{ fontSize: '12px', color: t.textSecondary }}>No hay registros para este ejercicio.</p>
+          ) : (
+            exerciseHistoryFiltered.map((item, idx) => (
+              <div key={idx} style={{ padding: '10px 0', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <span style={{ fontSize: '12px', color: t.textSecondary, display: 'block' }}>{item.date}</span>
+                  <strong style={{ fontSize: '14px', color: t.text }}>{item.weight} kg × {item.reps} reps</strong>
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: t.primary, backgroundColor: t.statBg, padding: '4px 8px', borderRadius: '4px' }}>
+                  Volumen: {item.weight * item.reps} kg
+                </span>
+              </div>
+            ))
+          )}
         </div>
       )}
 
-      {/* 👤 7. PERFIL */}
+      {/* 👤 7. PERFIL Y CONFIGURACIÓN AVANZADA (Fase 8 del Guion) */}
       {activeTab === 'perfil' && (
-        <div style={dynamicStyles.card}>
-          <h2 style={dynamicStyles.cardTitle}>👤 Perfil de Atleta</h2>
-          <p style={{ margin: '4px 0', fontSize: '14px' }}><strong>Nombre:</strong> {currentProfile.name}</p>
-          <p style={{ margin: '4px 0 16px 0', fontSize: '14px' }}><strong>Objetivo:</strong> {currentProfile.goal}</p>
-          <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>🚪 Cambiar Perfil</button>
+        <div>
+          <div style={dynamicStyles.card}>
+            <h2 style={dynamicStyles.cardTitle}>👤 Configuración de Atleta</h2>
+            
+            <form onSubmit={handleSaveProfileSettings}>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Nombre del Atleta</label>
+                <input type="text" value={currentProfile.name} disabled style={{ ...dynamicStyles.input, backgroundColor: t.statBg, opacity: 0.8 }} />
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Objetivo Principal</label>
+                <select value={editGoal} onChange={(e) => setEditGoal(e.target.value)} style={dynamicStyles.input}>
+                  <option value="Ganar músculo">Ganar músculo (Hipertrofia)</option>
+                  <option value="Perder grasa">Perder grasa (Definición)</option>
+                  <option value="Ganar fuerza">Ganar fuerza máxima</option>
+                  <option value="Resistencia y salud">Resistencia y salud general</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Nivel de Experiencia</label>
+                <select value={editLevel} onChange={(e) => setEditLevel(e.target.value)} style={dynamicStyles.input}>
+                  <option value="Principiante">Principiante</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: t.textSecondary, display: 'block', marginBottom: '6px' }}>Equipamiento Disponible</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {['Mancuernas', 'Barra', 'Bandas elásticas', 'Máquinas', 'Peso corporal'].map(eq => {
+                    const isSelected = editEquipment.includes(eq);
+                    return (
+                      <button
+                        type="button"
+                        key={eq}
+                        onClick={() => toggleEquipmentOption(eq)}
+                        style={{
+                          backgroundColor: isSelected ? t.primary : t.statBg,
+                          color: isSelected ? '#ffffff' : t.text,
+                          border: `1px solid ${isSelected ? t.primary : t.border}`,
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {isSelected ? '✓ ' : '+ '}{eq}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button type="submit" style={dynamicStyles.button}>Guardar Cambios de Perfil</button>
+            </form>
+
+            <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: `1px solid ${t.border}` }}>
+              <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>🚪 Cambiar de Perfil / Bloquear</button>
+            </div>
+          </div>
         </div>
       )}
 
