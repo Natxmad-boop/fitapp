@@ -53,7 +53,6 @@ interface Exercise {
   difficulty: 'Principiante' | 'Intermedio' | 'Avanzado';
   instructions: string;
   commonErrors: string;
-  isFavorite?: boolean;
 }
 
 interface Meal {
@@ -65,6 +64,14 @@ interface Meal {
   protein: number;
   carbs: number;
   fats: number;
+}
+
+interface ShoppingItem {
+  id: string;
+  name: string;
+  category: 'Frutas y Verduras' | 'Carnicería / Pescadería' | 'Lácteos y Huevos' | 'Despensa / Cereales' | 'Otros';
+  checked: boolean;
+  amount: string;
 }
 
 interface SetItem {
@@ -97,7 +104,7 @@ export default function App() {
   const [newProfileGoal, setNewProfileGoal] = useState('Ganar músculo');
   const [newProfileLevel, setNewProfileLevel] = useState('Intermedio');
 
-  const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'biblioteca' | 'nutricion' | 'progreso' | 'perfil'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'biblioteca' | 'nutricion' | 'compra' | 'progreso' | 'perfil'>('inicio');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('fitapp_dark_mode');
     return saved ? JSON.parse(saved) : false;
@@ -108,18 +115,16 @@ export default function App() {
 
   // 2. Biblioteca de Ejercicios (Fase 4)
   const defaultExercises: Exercise[] = [
-    { id: 'ex_1', name: 'Press de Banca con Barra', category: 'Fuerza', targetMuscle: 'Pectorales, Tríceps', equipment: 'Barra', difficulty: 'Intermedio', instructions: 'Acuéstate en el banco, retrae omóplatos y baja la barra controladamente hasta el pecho.', commonErrors: 'Rebotar la barra en el pecho o arquear en exceso la zona lumbar.' },
-    { id: 'ex_2', name: 'Sentadilla Goblet', category: 'Fuerza', targetMuscle: 'Cuádriceps, Glúteos', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Sostén la mancuerna verticalmente frente al pecho, baja la cadera manteniendo la espalda recta.', commonErrors: 'Levantar los talones del suelo o inclinar el tronco hacia adelante.' },
-    { id: 'ex_3', name: 'Remo con Mancuerna a 1 Mano', category: 'Fuerza', targetMuscle: 'Espalda, Bíceps', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Apoya una mano y rodilla en el banco, tira de la mancuerna hacia tu cadera apretando la espalda.', commonErrors: 'Rotar excesivamente el torso durante el tirón.' },
-    { id: 'ex_4', name: 'Plancha Abdominal Isométrica', category: 'Core', targetMuscle: 'Abdomen, Core', equipment: 'Esterilla', difficulty: 'Principiante', instructions: 'Apóyate sobre antebrazos y puntas de pies, mantén el cuerpo en línea recta contrayendo el abdomen.', commonErrors: 'Dejar caer la cadera hacia el suelo por fatiga.' },
+    { id: 'ex_1', name: 'Press de Banca con Barra', category: 'Fuerza', targetMuscle: 'Pectorales, Tríceps', equipment: 'Barra', difficulty: 'Intermedio', instructions: 'Acuéstate en el banco, retrae omóplatos y baja la barra controladamente hasta el pecho.', commonErrors: 'Rebotar la barra en el pecho.' },
+    { id: 'ex_2', name: 'Sentadilla Goblet', category: 'Fuerza', targetMuscle: 'Cuádriceps, Glúteos', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Sostén la mancuerna verticalmente frente al pecho, baja la cadera manteniendo la espalda recta.', commonErrors: 'Levantar los talones del suelo.' },
   ];
 
-  const [exerciseLibrary, setExerciseLibrary] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem(`fitapp_library_v5${pKey}`);
+  const [exerciseLibrary] = useState<Exercise[]>(() => {
+    const saved = localStorage.getItem(`fitapp_library_v6${pKey}`);
     return saved ? JSON.parse(saved) : defaultExercises;
   });
 
-  // 3. Nutrición y Menús Personalizados (Fase 5 del Guion)
+  // 3. Nutrición y Menús (Fase 5)
   const defaultDailyMeals: Meal[] = [
     { id: 'm_1', type: 'Desayuno', title: 'Avena Energética con Proteína', description: '60g de avena cocida en leche o bebida vegetal, 1 plátano en rodajas y 1 scoop de proteína de suero.', calories: 450, protein: 32, carbs: 65, fats: 8 },
     { id: 'm_2', type: 'Comida', title: 'Pechuga de Pollo con Arroz y Verduras', description: '200g de pechuga a la plancha, 180g de arroz cocido y brócoli al vapor con aceite de oliva.', calories: 620, protein: 52, carbs: 70, fats: 14 },
@@ -128,15 +133,37 @@ export default function App() {
   ];
 
   const [dailyMeals, setDailyMeals] = useState<Meal[]>(() => {
-    const saved = localStorage.getItem(`fitapp_meals_v5${pKey}`);
+    const saved = localStorage.getItem(`fitapp_meals_v6${pKey}`);
     return saved ? JSON.parse(saved) : defaultDailyMeals;
   });
 
   const [activeMealModal, setActiveMealModal] = useState<Meal | null>(null);
 
+  // 4. Lista de la Compra Inteligente (Fase 6 del Guion)
+  const defaultShoppingList: ShoppingItem[] = [
+    { id: 's_1', name: 'Avena en copos', category: 'Despensa / Cereales', checked: false, amount: '500g' },
+    { id: 's_2', name: 'Plátanos', category: 'Frutas y Verduras', checked: false, amount: '1 kg' },
+    { id: 's_3', name: 'Proteína de suero (Whey)', category: 'Despensa / Cereales', checked: true, amount: '1 bote' },
+    { id: 's_4', name: 'Pechuga de pollo fresca', category: 'Carnicería / Pescadería', checked: false, amount: '1 kg' },
+    { id: 's_5', name: 'Arroz blanco o integral', category: 'Despensa / Cereales', checked: false, amount: '1 kg' },
+    { id: 's_6', name: 'Brócoli fresco', category: 'Frutas y Verduras', checked: false, amount: '2 unidades' },
+    { id: 's_7', name: 'Yogur griego natural', category: 'Lácteos y Huevos', checked: false, amount: '1 pack (4 uds)' },
+    { id: 's_8', name: 'Filetes de salmón', category: 'Carnicería / Pescadería', checked: false, amount: '500g' },
+    { id: 's_9', name: 'Patatas', category: 'Frutas y Verduras', checked: false, amount: '1 kg' },
+  ];
+
+  const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(() => {
+    const saved = localStorage.getItem(`fitapp_shopping_v6${pKey}`);
+    return saved ? JSON.parse(saved) : defaultShoppingList;
+  });
+
+  const [newCustomItemName, setNewCustomItemName] = useState('');
+  const [newCustomItemCat, setNewCustomItemCat] = useState<ShoppingItem['category']>('Despensa / Cereales');
+  const [newCustomItemAmount, setNewCustomItemAmount] = useState('');
+
   // Estados de entrenamiento y progreso
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history_v5${pKey}`);
+    const saved = localStorage.getItem(`fitapp_history_v6${pKey}`);
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -157,11 +184,12 @@ export default function App() {
   useEffect(() => {
     if (currentProfile) {
       localStorage.setItem('fitapp_active_profile', JSON.stringify(currentProfile));
-      localStorage.setItem(`fitapp_library_v5${pKey}`, JSON.stringify(exerciseLibrary));
-      localStorage.setItem(`fitapp_meals_v5${pKey}`, JSON.stringify(dailyMeals));
-      localStorage.setItem(`fitapp_history_v5${pKey}`, JSON.stringify(history));
+      localStorage.setItem(`fitapp_library_v6${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_meals_v6${pKey}`, JSON.stringify(dailyMeals));
+      localStorage.setItem(`fitapp_shopping_v6${pKey}`, JSON.stringify(shoppingList));
+      localStorage.setItem(`fitapp_history_v6${pKey}`, JSON.stringify(history));
     }
-  }, [currentProfile, exerciseLibrary, dailyMeals, history, pKey]);
+  }, [currentProfile, exerciseLibrary, dailyMeals, shoppingList, history, pKey]);
 
   useEffect(() => {
     let interval: any = null;
@@ -200,7 +228,7 @@ export default function App() {
       pin: newProfilePin.trim(),
       goal: newProfileGoal,
       level: newProfileLevel,
-      equipment: ['Mancuernas', 'Esterilla']
+      equipment: ['Mancuernas']
     };
     const updated = [...profiles, newProf];
     setProfiles(updated);
@@ -232,31 +260,41 @@ export default function App() {
     startTimer(90);
   };
 
-  // Función de regeneración/sustitución inteligente de comida (Punto 8 del Guion)
+  const toggleShoppingItem = (id: string) => {
+    setShoppingList(shoppingList.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
+  };
+
+  const addCustomShoppingItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustomItemName.trim()) return;
+    const newItem: ShoppingItem = {
+      id: Date.now().toString(),
+      name: newCustomItemName,
+      category: newCustomItemCat,
+      checked: false,
+      amount: newCustomItemAmount.trim() || '1 ud'
+    };
+    setShoppingList([newItem, ...shoppingList]);
+    setNewCustomItemName('');
+    setNewCustomItemAmount('');
+  };
+
   const regenerateMeal = (mealId: string) => {
     const alternatives: Record<string, { title: string; desc: string; cal: number; p: number; c: number; f: number }> = {
       'Desayuno': { title: 'Tortilla Francesa con Tostada Integral', desc: '3 claras y 1 huevo entero en tortilla con pan integral tostado y aguacate.', cal: 420, p: 28, c: 40, f: 12 },
-      'Comida': { title: 'Ternera Magra con Patata Asada y Ensalada', desc: '180g de filete de ternera magra con patata al horno y ensalada verde variada.', cal: 590, p: 48, c: 60, f: 15 },
-      'Merienda': { title: 'Batido de Proteína con Frutos Secos', desc: 'Scoop de proteína con leche desnatada y 20g de almendras naturales.', cal: 310, p: 30, c: 14, f: 14 },
+      'Comida': { title: 'Ternera Magra con Patata Asada y Ensalada', desc: '180g de filete de ternera magra con patata al horno y ensalada verde.', cal: 590, p: 48, c: 60, f: 15 },
+      'Merienda': { title: 'Batido de Proteína con Frutos Secos', desc: 'Scoop de proteína con leche desnatada y 20g de almendras.', cal: 310, p: 30, c: 14, f: 14 },
       'Cena': { title: 'Merluza al Vapor con Verduras Salteadas', desc: '200g de lomos de merluza con wok de verduras y aceite de sésamo.', cal: 410, p: 42, c: 22, f: 10 }
     };
 
     setDailyMeals(dailyMeals.map(m => {
       if (m.id === mealId) {
         const alt = alternatives[m.type] || alternatives['Comida'];
-        return {
-          ...m,
-          title: alt.title,
-          description: alt.desc,
-          calories: alt.cal,
-          protein: alt.p,
-          carbs: alt.c,
-          fats: alt.f
-        };
+        return { ...m, title: alt.title, description: alt.desc, calories: alt.cal, protein: alt.p, carbs: alt.c, fats: alt.f };
       }
       return m;
     }));
-    alert('Comida regenerada manteniendo la coherencia nutricional de tus macros.');
+    alert('Comida regenerada y actualizada en tu plan nutricional.');
   };
 
   const dynamicStyles = {
@@ -351,7 +389,7 @@ export default function App() {
       borderTop: `1px solid ${t.border}`,
       display: 'flex',
       justifyContent: 'space-around',
-      padding: '10px 0',
+      padding: '8px 0',
       maxWidth: '480px',
       margin: '0 auto',
       zIndex: 100,
@@ -359,14 +397,14 @@ export default function App() {
     navItem: (active: boolean) => ({
       background: 'none',
       border: 'none',
-      fontSize: '10px',
+      fontSize: '9px',
       fontWeight: active ? '700' : '500',
       color: active ? t.navActive : t.navText,
       cursor: 'pointer',
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: 'center',
-      gap: '3px',
+      gap: '2px',
     }),
     listItem: {
       padding: '12px 0',
@@ -403,22 +441,11 @@ export default function App() {
               </div>
               {prof.pin ? (
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="password"
-                    placeholder="PIN 4 dígitos"
-                    value={inputPin}
-                    onChange={(e) => setInputPin(e.target.value)}
-                    style={{ ...dynamicStyles.input, margin: 0 }}
-                    maxLength={4}
-                  />
-                  <button style={{ ...dynamicStyles.button, width: '100px', margin: 0 }} onClick={() => handleLogin(prof)}>
-                    Acceder
-                  </button>
+                  <input type="password" placeholder="PIN 4 dígitos" value={inputPin} onChange={(e) => setInputPin(e.target.value)} style={{ ...dynamicStyles.input, margin: 0 }} maxLength={4} />
+                  <button style={{ ...dynamicStyles.button, width: '100px', margin: 0 }} onClick={() => handleLogin(prof)}>Acceder</button>
                 </div>
               ) : (
-                <button style={dynamicStyles.button} onClick={() => handleLogin(prof)}>
-                  Entrar
-                </button>
+                <button style={dynamicStyles.button} onClick={() => handleLogin(prof)}>Entrar</button>
               )}
             </div>
           ))}
@@ -426,27 +453,14 @@ export default function App() {
 
         <div style={dynamicStyles.card}>
           {!isCreatingProfile ? (
-            <button style={dynamicStyles.secondaryButton} onClick={() => setIsCreatingProfile(true)}>
-              + Crear Nuevo Perfil
-            </button>
+            <button style={dynamicStyles.secondaryButton} onClick={() => setIsCreatingProfile(true)}>+ Crear Nuevo Perfil</button>
           ) : (
             <form onSubmit={handleCreateProfile}>
               <h2 style={dynamicStyles.cardTitle}>Nuevo Perfil de Atleta</h2>
               <input type="text" placeholder="Nombre completo" value={newProfileName} onChange={(e) => setNewProfileName(e.target.value)} style={dynamicStyles.input} />
               <input type="password" placeholder="PIN de seguridad (4 dígitos)" value={newProfilePin} onChange={(e) => setNewProfilePin(e.target.value)} style={dynamicStyles.input} maxLength={4} />
-              
-              <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Objetivo Principal</label>
-              <select value={newProfileGoal} onChange={(e) => setNewProfileGoal(e.target.value)} style={{ ...dynamicStyles.input, marginBottom: '10px' }}>
-                <option value="Ganar músculo">Ganar músculo</option>
-                <option value="Perder grasa">Perder grasa</option>
-                <option value="Recomposición corporal">Recomposición corporal</option>
-                <option value="Mejorar fuerza">Mejorar fuerza</option>
-              </select>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button type="submit" style={dynamicStyles.button}>Crear Perfil</button>
-                <button type="button" style={dynamicStyles.secondaryButton} onClick={() => setIsCreatingProfile(false)}>Cancelar</button>
-              </div>
+              <button type="submit" style={dynamicStyles.button}>Crear Perfil</button>
+              <button type="button" style={dynamicStyles.secondaryButton} onClick={() => setIsCreatingProfile(false)}>Cancelar</button>
             </form>
           )}
         </div>
@@ -456,15 +470,13 @@ export default function App() {
 
   const totalCalories = dailyMeals.reduce((acc, m) => acc + m.calories, 0);
   const totalProtein = dailyMeals.reduce((acc, m) => acc + m.protein, 0);
-  const totalCarbs = dailyMeals.reduce((acc, m) => acc + m.carbs, 0);
-  const totalFats = dailyMeals.reduce((acc, m) => acc + m.fats, 0);
 
   return (
     <div style={dynamicStyles.container}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: t.text, margin: '0 0 2px 0' }}>FitApp Pro 💪</h1>
-          <p style={{ fontSize: '12px', color: t.primary, margin: 0, fontWeight: '600' }}>Atleta: {currentProfile.name} ({currentProfile.goal})</p>
+          <p style={{ fontSize: '12px', color: t.primary, margin: 0, fontWeight: '600' }}>Atleta: {currentProfile.name}</p>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
           {isDarkMode ? '☀️' : '🌙'}
@@ -475,13 +487,13 @@ export default function App() {
       {activeTab === 'inicio' && (
         <div>
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🎯 ¿Qué hago hoy?</h2>
+            <h2 style={dynamicStyles.cardTitle}>🎯 Panel de Control Diario</h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '12px' }}>
-              Tu plan nutricional diario suma <strong>{totalCalories} kcal</strong> con un aporte de <strong>{totalProtein}g de proteína</strong>.
+              Tu menú diario activo suma <strong>{totalCalories} kcal</strong> y <strong>{totalProtein}g de proteína</strong>. Todo sincronizado para tu objetivo.
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button style={dynamicStyles.button} onClick={() => setActiveTab('entrenar')}>Ir a Entrenar 🚀</button>
-              <button style={{ ...dynamicStyles.button, backgroundColor: '#10b981' }} onClick={() => setActiveTab('nutricion')}>Ver Menú 🍽️</button>
+              <button style={dynamicStyles.button} onClick={() => setActiveTab('entrenar')}>Entrenar 🚀</button>
+              <button style={{ ...dynamicStyles.button, backgroundColor: '#10b981' }} onClick={() => setActiveTab('compra')}>Lista Compra 🛒</button>
             </div>
           </div>
         </div>
@@ -501,176 +513,150 @@ export default function App() {
 
           <div style={dynamicStyles.card}>
             <h2 style={dynamicStyles.cardTitle}>🏋️ Registrar Serie y Rendimiento</h2>
-            <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Seleccionar Ejercicio</label>
             <select value={selectedExerciseForLog} onChange={(e) => setSelectedExerciseForLog(e.target.value)} style={dynamicStyles.input}>
               {exerciseLibrary.map(ex => (
-                <option key={ex.id} value={ex.name}>{ex.name} ({ex.category})</option>
+                <option key={ex.id} value={ex.name}>{ex.name}</option>
               ))}
             </select>
-
             <div style={{ display: 'flex', gap: '8px' }}>
               <input type="number" placeholder="Peso (kg)" value={weightInput} onChange={(e) => setWeightInput(e.target.value)} style={dynamicStyles.input} />
               <input type="number" placeholder="Reps" value={repsInput} onChange={(e) => setRepsInput(e.target.value)} style={dynamicStyles.input} />
             </div>
-
-            <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Dificultad Percibida (Feedback IA)</label>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-              {(['Fácil', 'Normal', 'Difícil'] as const).map((diff) => (
-                <button
-                  key={diff}
-                  type="button"
-                  onClick={() => setSelectedDifficulty(diff)}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    borderRadius: '6px',
-                    border: `1px solid ${selectedDifficulty === diff ? t.primary : t.inputBorder}`,
-                    backgroundColor: selectedDifficulty === diff ? t.primary : t.inputBg,
-                    color: selectedDifficulty === diff ? '#ffffff' : t.text,
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
-                >
-                  {diff}
-                </button>
-              ))}
-            </div>
-
-            <input type="text" placeholder="Observaciones técnicas" value={exerciseNote} onChange={(e) => setExerciseNote(e.target.value)} style={dynamicStyles.input} />
             <button style={dynamicStyles.button} onClick={handleAddSet}>Guardar Serie y Descansar</button>
           </div>
         </div>
       )}
 
-      {/* 📚 3. BIBLIOTECA DE EJERCICIOS */}
+      {/* 📚 3. BIBLIOTECA */}
       {activeTab === 'biblioteca' && (
-        <div>
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>📚 Biblioteca de Ejercicios Oficial</h2>
-            {exerciseLibrary.map((ex) => (
-              <div key={ex.id} style={dynamicStyles.listItem}>
-                <div>
-                  <strong style={{ fontSize: '14px', color: t.text }}>{ex.name}</strong>
-                  <span style={{ fontSize: '11px', color: t.primary, display: 'block' }}>{ex.category} • {ex.targetMuscle}</span>
-                </div>
-                <span style={{ fontSize: '11px', color: t.textSecondary }}>{ex.equipment}</span>
+        <div style={dynamicStyles.card}>
+          <h2 style={dynamicStyles.cardTitle}>📚 Biblioteca de Ejercicios</h2>
+          {exerciseLibrary.map((ex) => (
+            <div key={ex.id} style={dynamicStyles.listItem}>
+              <div>
+                <strong style={{ fontSize: '14px', color: t.text }}>{ex.name}</strong>
+                <span style={{ fontSize: '11px', color: t.primary, display: 'block' }}>{ex.category} • {ex.targetMuscle}</span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* 🍽️ 4. NUTRICIÓN Y MENÚS (Fase 5 del Guion) */}
+      {/* 🍽️ 4. NUTRICIÓN */}
       {activeTab === 'nutricion' && (
+        <div style={dynamicStyles.card}>
+          <h2 style={dynamicStyles.cardTitle}>🍽️ Menú Diario y Recetas</h2>
+          {dailyMeals.map((meal) => (
+            <div key={meal.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary }}>{meal.type}</span>
+                <span style={{ fontSize: '11px', color: t.textSecondary }}>{meal.calories} kcal</span>
+              </div>
+              <strong style={{ fontSize: '14px', color: t.text }}>{meal.title}</strong>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <button style={dynamicStyles.secondaryButton} onClick={() => setActiveMealModal(meal)}>Ver Receta 📖</button>
+                <button style={{ ...dynamicStyles.secondaryButton, backgroundColor: isDarkMode ? '#1e3a8a' : '#e0f2fe', color: t.primary }} onClick={() => regenerateMeal(meal.id)}>🔄 Cambiar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 🛒 5. LISTA DE LA COMPRA INTELIGENTE (Fase 6 del Guion) */}
+      {activeTab === 'compra' && (
         <div>
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>📊 Resumen de Macronutrientes</h2>
-            <div style={dynamicStyles.grid}>
-              <div style={dynamicStyles.statBox}>
-                <p style={dynamicStyles.statValue}>{totalCalories} kcal</p>
-                <p style={dynamicStyles.statLabel}>Calorías Totales</p>
-              </div>
-              <div style={dynamicStyles.statBox}>
-                <p style={dynamicStyles.statValue}>{totalProtein}g</p>
-                <p style={dynamicStyles.statLabel}>Proteínas</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '10px', fontSize: '12px', color: t.textSecondary }}>
-              <span>Carbos: <strong>{totalCarbs}g</strong></span>
-              <span>Grasas: <strong>{totalFats}g</strong></span>
-            </div>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🍽️ Menú Diario Personalizado</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
-              Adaptado a tu objetivo de <strong>{currentProfile.goal}</strong>. Puedes sustituir cualquier comida manteniendo los macronutrientes.
+            <h2 style={dynamicStyles.cardTitle}>🛒 Lista de la Compra Inteligente</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '14px' }}>
+              Generada automáticamente a partir de tu menú semanal. Organizada por secciones del supermercado.
             </p>
-            {dailyMeals.map((meal) => (
-              <div key={meal.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary, textTransform: 'uppercase' }}>{meal.type}</span>
-                  <span style={{ fontSize: '11px', color: t.textSecondary }}>{meal.calories} kcal | P: {meal.protein}g</span>
-                </div>
-                <strong style={{ fontSize: '14px', color: t.text }}>{meal.title}</strong>
-                <p style={{ fontSize: '12px', color: t.textSecondary, margin: 0 }}>{meal.description}</p>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                  <button style={dynamicStyles.secondaryButton} onClick={() => setActiveMealModal(meal)}>Ver Receta 📖</button>
-                  <button style={{ ...dynamicStyles.secondaryButton, backgroundColor: isDarkMode ? '#1e3a8a' : '#e0f2fe', color: t.primary }} onClick={() => regenerateMeal(meal.id)}>🔄 Cambiar Comida</button>
-                </div>
+
+            {/* Formulario para añadir ítem manual */}
+            <form onSubmit={addCustomShoppingItem} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${t.border}` }}>
+              <input type="text" placeholder="Añadir producto (ej. Tomates)..." value={newCustomItemName} onChange={(e) => setNewCustomItemName(e.target.value)} style={dynamicStyles.input} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input type="text" placeholder="Cantidad (ej. 500g)" value={newCustomItemAmount} onChange={(e) => setNewCustomItemAmount(e.target.value)} style={{ ...dynamicStyles.input, margin: 0 }} />
+                <select value={newCustomItemCat} onChange={(e) => setNewCustomItemCat(e.target.value as any)} style={{ ...dynamicStyles.input, margin: 0 }}>
+                  <option value="Frutas y Verduras">Frutas y Verduras</option>
+                  <option value="Carnicería / Pescadería">Carnicería / Pescadería</option>
+                  <option value="Lácteos y Huevos">Lácteos y Huevos</option>
+                  <option value="Despensa / Cereales">Despensa / Cereales</option>
+                </select>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+              <button type="submit" style={{ ...dynamicStyles.button, marginTop: '8px', backgroundColor: '#10b981' }}>+ Añadir a la Compra</button>
+            </form>
 
-      {/* 📈 5. PROGRESO */}
-      {activeTab === 'progreso' && (
-        <div>
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🏆 Historial de Rendimiento</h2>
-            {history.length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Aún no hay registros en este perfil.</p>
-            ) : (
-              history.map((item, idx) => (
-                <div key={idx} style={dynamicStyles.listItem}>
-                  <div>
-                    <strong style={{ color: t.text, display: 'block' }}>{item.name}</strong>
-                    <span style={{ fontSize: '11px', color: t.primary }}>Feedback: {item.difficulty || 'Normal'}</span>
-                  </div>
-                  <span style={{ color: t.text, fontWeight: '700' }}>{item.weight} kg × {item.reps} reps</span>
+            {/* Agrupado por Categorías */}
+            {(['Frutas y Verduras', 'Carnicería / Pescadería', 'Lácteos y Huevos', 'Despensa / Cereales'] as const).map(category => {
+              const itemsInCat = shoppingList.filter(item => item.category === category);
+              if (itemsInCat.length === 0) return null;
+              return (
+                <div key={category} style={{ marginBottom: '14px' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: '700', color: t.primary, marginBottom: '6px', textTransform: 'uppercase' }}>{category}</h3>
+                  {itemsInCat.map(item => (
+                    <div key={item.id} onClick={() => toggleShoppingItem(item.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: t.statBg, borderRadius: '6px', marginBottom: '6px', cursor: 'pointer', border: `1px solid ${t.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '16px' }}>{item.checked ? '✅' : '⬜'}</span>
+                        <span style={{ fontSize: '13px', textDecoration: item.checked ? 'line-through' : 'none', color: item.checked ? t.textSecondary : t.text, fontWeight: '500' }}>
+                          {item.name}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '12px', color: t.textSecondary, fontWeight: '600' }}>{item.amount}</span>
+                    </div>
+                  ))}
                 </div>
-              ))
-            )}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* 👤 6. PERFIL */}
+      {/* 📈 6. PROGRESO */}
+      {activeTab === 'progreso' && (
+        <div style={dynamicStyles.card}>
+          <h2 style={dynamicStyles.cardTitle}>🏆 Historial de Entrenamientos</h2>
+          {history.length === 0 ? (
+            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Sin registros todavía.</p>
+          ) : (
+            history.map((item, idx) => (
+              <div key={idx} style={dynamicStyles.listItem}>
+                <span>{item.name}</span>
+                <strong>{item.weight} kg × {item.reps} reps</strong>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* 👤 7. PERFIL */}
       {activeTab === 'perfil' && (
-        <div>
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>👤 Configuración del Perfil</h2>
-            <div style={{ fontSize: '14px', color: t.text, lineHeight: '1.6', marginBottom: '16px' }}>
-              <p style={{ margin: '4px 0' }}><strong>Nombre:</strong> {currentProfile.name}</p>
-              <p style={{ margin: '4px 0' }}><strong>Objetivo:</strong> {currentProfile.goal}</p>
-              <p style={{ margin: '4px 0' }}><strong>Nivel:</strong> {currentProfile.level}</p>
-            </div>
-            <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>
-              🚪 Cerrar Sesión / Cambiar Perfil
-            </button>
-          </div>
+        <div style={dynamicStyles.card}>
+          <h2 style={dynamicStyles.cardTitle}>👤 Perfil de Atleta</h2>
+          <p style={{ margin: '4px 0', fontSize: '14px' }}><strong>Nombre:</strong> {currentProfile.name}</p>
+          <p style={{ margin: '4px 0 16px 0', fontSize: '14px' }}><strong>Objetivo:</strong> {currentProfile.goal}</p>
+          <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>🚪 Cambiar Perfil</button>
         </div>
       )}
 
-      {/* Modal de Receta Nutricional */}
+      {/* Modal de Receta */}
       {activeMealModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 200 }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '20px', maxWidth: '400px', width: '100%', border: `1px solid ${t.border}` }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary, textTransform: 'uppercase' }}>{activeMealModal.type}</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary }}>{activeMealModal.type}</span>
             <h3 style={{ fontSize: '16px', fontWeight: '700', color: t.text, margin: '4px 0 10px 0' }}>{activeMealModal.title}</h3>
-            
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ fontSize: '12px', color: t.text, display: 'block', marginBottom: '2px' }}>Ingredientes y Preparación:</strong>
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0, lineHeight: '1.4' }}>{activeMealModal.description}</p>
-            </div>
-
-            <div style={{ backgroundColor: t.statBg, padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '12px', color: t.text }}>
-              <strong>Desglose de Macros:</strong> {activeMealModal.calories} kcal | Proteínas: {activeMealModal.protein}g | Carbos: {activeMealModal.carbs}g | Grasas: {activeMealModal.fats}g
-            </div>
-
-            <button style={dynamicStyles.button} onClick={() => setActiveMealModal(null)}>Cerrar Receta</button>
+            <p style={{ fontSize: '13px', color: t.textSecondary, margin: '0 0 16px 0', lineHeight: '1.4' }}>{activeMealModal.description}</p>
+            <button style={dynamicStyles.button} onClick={() => setActiveMealModal(null)}>Cerrar</button>
           </div>
         </div>
       )}
 
-      {/* Navegación Oficial de 5 Apartados + Nutrición */}
+      {/* Navegación Oficial de 7 Apartados */}
       <nav style={dynamicStyles.nav}>
         <button style={dynamicStyles.navItem(activeTab === 'inicio')} onClick={() => setActiveTab('inicio')}>🏠 Inicio</button>
-        <button style={dynamicStyles.navItem(activeTab === 'entrenar')} onClick={() => setActiveTab('entrenar')}>🏋️ Entrenar</button>
+        <button style={dynamicStyles.navItem(activeTab === 'entrenar')} onClick={() => setActiveTab('entrenar')}>🏋️ Entreno</button>
         <button style={dynamicStyles.navItem(activeTab === 'biblioteca')} onClick={() => setActiveTab('biblioteca')}>📚 Biblioteca</button>
-        <button style={dynamicStyles.navItem(activeTab === 'nutricion')} onClick={() => setActiveTab('nutricion')}>🍽️ Nutrición</button>
+        <button style={dynamicStyles.navItem(activeTab === 'nutricion')} onClick={() => setActiveTab('nutricion')}>🍽️ Menús</button>
+        <button style={dynamicStyles.navItem(activeTab === 'compra')} onClick={() => setActiveTab('compra')}>🛒 Compra</button>
         <button style={dynamicStyles.navItem(activeTab === 'progreso')} onClick={() => setActiveTab('progreso')}>📈 Progreso</button>
         <button style={dynamicStyles.navItem(activeTab === 'perfil')} onClick={() => setActiveTab('perfil')}>👤 Perfil</button>
       </nav>
