@@ -325,7 +325,6 @@ export default function App() {
   const [newMealDesc, setNewMealDesc] = useState<string>('');
   const [newMealCalories, setNewMealCalories] = useState<string>('');
 
-  // Estado para crear un NUEVO perfil
   const [newProfileName, setNewProfileName] = useState<string>('');
   const [newProfileWeight, setNewProfileWeight] = useState<string>('60');
 
@@ -384,6 +383,20 @@ export default function App() {
     setNewProfileName('');
     setNewProfileWeight('60');
     alert(`¡Perfil de ${createdUser.name} creado con éxito! 🎉`);
+  };
+
+  // Función para eliminar un perfil
+  const handleDeleteProfile = (idToDelete: string) => {
+    if (profilesList.length <= 1) {
+      alert('No puedes eliminar el único perfil existente.');
+      return;
+    }
+    const target = profilesList.find(p => p.id === idToDelete);
+    if (!window.confirm(`¿Seguro que deseas eliminar el perfil de "${target?.name}"?`)) return;
+
+    const remaining = profilesList.filter(p => p.id !== idToDelete);
+    setProfilesList(remaining);
+    setActiveUserId(remaining[0].id);
   };
 
   const handleToggleSpecificDay = (dayKey: string) => {
@@ -894,7 +907,16 @@ export default function App() {
           
           {/* Selector de perfiles existentes */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>👥 Cambiar de Perfil</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, margin: 0 }}>👥 Cambiar / Gestionar Perfiles</h2>
+              <button 
+                onClick={() => handleDeleteProfile(profile.id)} 
+                style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '8px', padding: '4px 8px', fontSize: '10px', fontWeight: '700', cursor: 'pointer' }}
+              >
+                🗑️ Eliminar este perfil
+              </button>
+            </div>
+            
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {profilesList.map(p => {
                 const isCurrent = p.id === activeUserId;
