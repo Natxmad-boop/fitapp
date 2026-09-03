@@ -132,7 +132,7 @@ const styles = {
   navItem: (active: boolean) => ({
     background: 'none',
     border: 'none',
-    fontSize: '10px',
+    fontSize: '9px',
     fontWeight: active ? '700' : '500',
     color: active ? '#0284c7' : '#64748b',
     cursor: 'pointer',
@@ -150,6 +150,18 @@ const styles = {
     fontSize: '14px',
   },
 };
+
+interface ExerciseInRoutine {
+  id: number;
+  name: string;
+  targetSets: string;
+}
+
+interface RoutineItem {
+  id: number;
+  name: string;
+  exercises: ExerciseInRoutine[];
+}
 
 interface SetItem {
   name: string;
@@ -176,15 +188,34 @@ interface WeightItem {
   date: string;
 }
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker' | 'nutrition' | 'body'>('dashboard');
+interface DailyNoteItem {
+  id: number;
+  text: string;
+  date: string;
+}
 
-  // Estados con persistencia en localStorage
-  const [routines, setRoutines] = useState(() => {
-    const saved = localStorage.getItem('fitapp_routines');
+export default function App() {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker' | 'nutrition' | 'body' | 'notes'>('dashboard');
+
+  // Estados persistentes
+  const [routines, setRoutines] = useState<RoutineItem[]>(() => {
+    const saved = localStorage.getItem('fitapp_routines_v2');
     return saved ? JSON.parse(saved) : [
-      { id: 1, name: 'Día 1: Full Body Fuerza', exercises: 5 },
-      { id: 2, name: 'Día 2: Hipertrofia Tren Superior', exercises: 6 },
+      {
+        id: 1,
+        name: 'Día 1: Full Body Fuerza',
+        exercises: [
+          { id: 101, name: 'Press de Banca', targetSets: '4 series x 6-8 reps' },
+          { id: 102, name: 'Sentadilla Libre', targetSets: '4 series x 6-8 reps' },
+        ],
+      },
+      {
+        id: 2,
+        name: 'Día 2: Tren Superior',
+        exercises: [
+          { id: 201, name: 'Dominadas', targetSets: '3 series x 8-10 reps' },
+        ],
+      },
     ];
   });
 
@@ -203,19 +234,28 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [dailyNotes, setDailyNotes] = useState<DailyNoteItem[]>(() => {
+    const saved = localStorage.getItem('fitapp_daily_notes');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [healthNotes, setHealthNotes] = useState(() => {
     return localStorage.getItem('fitapp_health') || 'Sin lesiones ni restricciones médicas registradas.';
   });
   const [isEditingHealth, setIsEditingHealth] = useState(false);
   const [tempHealth, setTempHealth] = useState(healthNotes);
 
+  // Formularios
   const [newRoutineName, setNewRoutineName] = useState('');
+  const [selectedRoutineId, setSelectedRoutineId] = useState<number | null>(null);
+  const [newExName, setNewExName] = useState('');
+  const [newExTarget, setNewExTarget] = useState('');
+
   const [exerciseName, setExerciseName] = useState('Press de Banca');
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [exerciseNote, setExerciseNote] = useState('');
 
-  // Nutrición
   const [mealCategory, setMealCategory] = useState('Desayuno');
   const [foodName, setFoodName] = useState('');
   const [calories, setCalories] = useState('');
@@ -223,15 +263,15 @@ export default function App() {
   const [carbs, setCarbs] = useState('');
   const [fats, setFats] = useState('');
 
-  // Peso Corporal
   const [newWeight, setNewWeight] = useState('');
+  const [newNoteText, setNewNoteText] = useState('');
 
   // Temporizador
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('fitapp_routines', JSON.stringify(routines));
+    localStorage.setItem('fitapp_routines_v2', JSON.stringify(routines));
   }, [routines]);
 
   useEffect(() => {
@@ -245,6 +285,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('fitapp_body_weights', JSON.stringify(bodyWeights));
   }, [bodyWeights]);
+
+  useEffect(() => {
+    localStorage.setItem('fitapp_daily_notes', JSON.stringify(dailyNotes));
+  }, [dailyNotes]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_health', healthNotes);
@@ -270,8 +314,29 @@ export default function App() {
   const handleAddRoutine = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRoutineName.trim()) return;
-    setRoutines([...routines, { id: Date.now(), name: newRoutineName, exercises: 4 }]);
+    setRoutines([...routines, { id: Date.now(), name: newRoutineName, exercises: [] }]);
     setNewRoutineName('');
+  };
+
+  const handleAddExerciseToRoutine = (routineId: number, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newExName.trim()) return;
+    setRoutines(
+      routines.map((r) => {
+        if (r.id === routineId) {
+          return {
+            ...r,
+            exercises: [
+              ...r.exercises,
+              { id: Date.now(), name: newExName, targetSets: newExTarget || '3 series x 10 reps' },
+            ],
+          };
+        }
+        return r;
+      })
+    );
+    setNewExName('');
+    setNewExTarget('');
   };
 
   const handleAddSet = () => {
@@ -322,22 +387,24 @@ export default function App() {
     const parsed = parseFloat(newWeight);
     if (isNaN(parsed)) return;
 
-    const entry: WeightItem = {
-      id: Date.now(),
-      weight: parsed,
-      date: new Date().toLocaleDateString(),
-    };
-
-    setBodyWeights([entry, ...bodyWeights]);
+    setBodyWeights([{ id: Date.now(), weight: parsed, date: new Date().toLocaleDateString() }, ...bodyWeights]);
     setNewWeight('');
   };
 
+  const handleAddDailyNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNoteText.trim()) return;
+
+    setDailyNotes([{ id: Date.now(), text: newNoteText, date: new Date().toLocaleDateString() }, ...dailyNotes]);
+    setNewNoteText('');
+  };
+
   const clearHistory = () => {
-    if (window.confirm('¿Seguro que quieres borrar el historial de series?')) setHistory([]);
+    if (window.confirm('¿Borrar historial de series?')) setHistory([]);
   };
 
   const clearMeals = () => {
-    if (window.confirm('¿Seguro que quieres borrar el registro de comidas?')) setMeals([]);
+    if (window.confirm('¿Borrar registro de comidas?')) setMeals([]);
   };
 
   const saveHealthNotes = () => {
@@ -345,7 +412,7 @@ export default function App() {
     setIsEditingHealth(false);
   };
 
-  // Cálculos rápidos
+  // Cálculos
   const personalRecords = history.reduce((acc: { [key: string]: number }, item) => {
     if (!acc[item.name] || item.weight > acc[item.name]) {
       acc[item.name] = item.weight;
@@ -363,7 +430,7 @@ export default function App() {
     <div style={styles.container}>
       <header style={styles.header}>
         <h1 style={styles.title}>FitApp 💪</h1>
-        <p style={styles.subtitle}>Centro de Control de Salud y Rendimiento</p>
+        <p style={styles.subtitle}>Ecosistema de Rendimiento Definitivo</p>
       </header>
 
       {/* VISTA 1: DASHBOARD */}
@@ -422,7 +489,7 @@ export default function App() {
             <h2 style={styles.cardTitle}>🏆 Récords Personales (PRs)</h2>
             {Object.keys(personalRecords).length === 0 ? (
               <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
-                Sin registros todavía. ¡Empieza a entrenar!
+                Sin registros todavía. ¡A entrenar duro!
               </p>
             ) : (
               Object.entries(personalRecords).map(([ex, maxWeight]) => (
@@ -436,7 +503,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VISTA 2: RUTINAS */}
+      {/* VISTA 2: RUTINAS DETALLADAS */}
       {activeTab === 'routines' && (
         <div>
           <div style={styles.card}>
@@ -455,14 +522,50 @@ export default function App() {
 
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>Mis Rutinas</h2>
-            {routines.map((routine: { id: number; name: string; exercises: number }) => (
-              <div key={routine.id} style={styles.listItem}>
-                <div>
-                  <strong style={{ color: '#1e293b' }}>{routine.name}</strong>
-                  <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0' }}>
-                    {routine.exercises} ejercicios configurados
-                  </p>
+            {routines.map((routine) => (
+              <div key={routine.id} style={{ ...styles.listItem, flexDirection: 'column', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                  <strong style={{ color: '#1e293b', fontSize: '15px' }}>{routine.name}</strong>
+                  <button
+                    style={styles.secondaryButton}
+                    onClick={() => setSelectedRoutineId(selectedRoutineId === routine.id ? null : routine.id)}
+                  >
+                    {selectedRoutineId === routine.id ? 'Ocultar' : 'Ver Ejercicios'}
+                  </button>
                 </div>
+
+                {selectedRoutineId === routine.id && (
+                  <div style={{ width: '100%', marginTop: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
+                    {routine.exercises.length === 0 ? (
+                      <p style={{ fontSize: '12px', color: '#64748b' }}>No hay ejercicios añadidos a esta rutina.</p>
+                    ) : (
+                      routine.exercises.map((ex) => (
+                        <div key={ex.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '6px 0', borderBottom: '1px dashed #f1f5f9' }}>
+                          <span style={{ color: '#334155' }}>{ex.name}</span>
+                          <span style={{ color: '#0284c7', fontWeight: '600' }}>{ex.targetSets}</span>
+                        </div>
+                      ))
+                    )}
+
+                    <form onSubmit={(e) => handleAddExerciseToRoutine(routine.id, e)} style={{ marginTop: '10px' }}>
+                      <input
+                        type="text"
+                        placeholder="Nombre ejercicio (ej. Press Militar)"
+                        value={newExName}
+                        onChange={(e) => setNewExName(e.target.value)}
+                        style={styles.input}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Series/Reps objetivo (ej. 3x10)"
+                        value={newExTarget}
+                        onChange={(e) => setNewExTarget(e.target.value)}
+                        style={styles.input}
+                      />
+                      <button type="submit" style={styles.secondaryButton}>+ Añadir Ejercicio</button>
+                    </form>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -530,7 +633,7 @@ export default function App() {
                 <h2 style={{ ...styles.cardTitle, margin: 0 }}>Historial de Series</h2>
                 <button style={styles.dangerButton} onClick={clearHistory}>Limpiar</button>
               </div>
-              {history.map((item: SetItem, index: number) => (
+              {history.map((item, index) => (
                 <div key={index} style={styles.listItem}>
                   <div>
                     <strong style={{ color: '#1e293b', display: 'block' }}>{item.name}</strong>
@@ -614,7 +717,7 @@ export default function App() {
                 No hay comidas registradas todavía.
               </p>
             ) : (
-              meals.map((meal: MealItem) => (
+              meals.map((meal) => (
                 <div key={meal.id} style={styles.listItem}>
                   <div>
                     <span style={{ fontSize: '11px', fontWeight: '600', color: '#0284c7', textTransform: 'uppercase' }}>
@@ -659,7 +762,7 @@ export default function App() {
                 Aún no has registrado ningún pesaje.
               </p>
             ) : (
-              bodyWeights.map((item: WeightItem) => (
+              bodyWeights.map((item) => (
                 <div key={item.id} style={styles.listItem}>
                   <span style={{ fontSize: '13px', color: '#64748b' }}>{item.date}</span>
                   <strong style={{ color: '#0284c7', fontSize: '16px' }}>{item.weight} kg</strong>
@@ -670,7 +773,41 @@ export default function App() {
         </div>
       )}
 
-      {/* Navegación Inferior */}
+      {/* VISTA 6: DIARIO / NOTAS DEL DÍA */}
+      {activeTab === 'notes' && (
+        <div>
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>📝 Diario y Sensaciones</h2>
+            <form onSubmit={handleAddDailyNote}>
+              <textarea
+                placeholder="¿Cómo te has sentido hoy? (ej. Malas sensaciones al dormir, alta energía en el entreno...)"
+                value={newNoteText}
+                onChange={(e) => setNewNoteText(e.target.value)}
+                style={{ ...styles.input, height: '80px', resize: 'none' }}
+              />
+              <button type="submit" style={styles.button}>Guardar Nota del Día</button>
+            </form>
+          </div>
+
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Historial de Notas</h2>
+            {dailyNotes.length === 0 ? (
+              <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                No hay notas registradas todavía.
+              </p>
+            ) : (
+              dailyNotes.map((note) => (
+                <div key={note.id} style={{ ...styles.listItem, flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: '600', marginBottom: '2px' }}>{note.date}</span>
+                  <p style={{ fontSize: '13px', color: '#334155', margin: 0, lineHeight: '1.4' }}>{note.text}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Navegación Inferior (6 opciones optimizadas) */}
       <nav style={styles.nav}>
         <button style={styles.navItem(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>
           📊 Panel
@@ -686,6 +823,9 @@ export default function App() {
         </button>
         <button style={styles.navItem(activeTab === 'body')} onClick={() => setActiveTab('body')}>
           ⚖️ Peso
+        </button>
+        <button style={styles.navItem(activeTab === 'notes')} onClick={() => setActiveTab('notes')}>
+          📝 Diario
         </button>
       </nav>
     </div>
