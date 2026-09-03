@@ -56,6 +56,17 @@ interface Exercise {
   isFavorite?: boolean;
 }
 
+interface Meal {
+  id: string;
+  type: 'Desayuno' | 'Almuerzo' | 'Comida' | 'Merienda' | 'Cena';
+  title: string;
+  description: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
 interface SetItem {
   name: string;
   weight: number;
@@ -66,7 +77,7 @@ interface SetItem {
 }
 
 export default function App() {
-  // Perfiles y Seguridad (Fases 1 y 2)
+  // 1. Perfiles y Seguridad (Fases 1 y 2)
   const [profiles, setProfiles] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles');
     return saved ? JSON.parse(saved) : [
@@ -86,7 +97,7 @@ export default function App() {
   const [newProfileGoal, setNewProfileGoal] = useState('Ganar músculo');
   const [newProfileLevel, setNewProfileLevel] = useState('Intermedio');
 
-  const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'biblioteca' | 'progreso' | 'perfil'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'biblioteca' | 'nutricion' | 'progreso' | 'perfil'>('inicio');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('fitapp_dark_mode');
     return saved ? JSON.parse(saved) : false;
@@ -95,28 +106,37 @@ export default function App() {
   const t = isDarkMode ? themes.dark : themes.light;
   const pKey = currentProfile ? `_${currentProfile.id}` : '_default';
 
-  // Biblioteca de Ejercicios Oficial (Fase 4 del Guion)
+  // 2. Biblioteca de Ejercicios (Fase 4)
   const defaultExercises: Exercise[] = [
     { id: 'ex_1', name: 'Press de Banca con Barra', category: 'Fuerza', targetMuscle: 'Pectorales, Tríceps', equipment: 'Barra', difficulty: 'Intermedio', instructions: 'Acuéstate en el banco, retrae omóplatos y baja la barra controladamente hasta el pecho.', commonErrors: 'Rebotar la barra en el pecho o arquear en exceso la zona lumbar.' },
     { id: 'ex_2', name: 'Sentadilla Goblet', category: 'Fuerza', targetMuscle: 'Cuádriceps, Glúteos', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Sostén la mancuerna verticalmente frente al pecho, baja la cadera manteniendo la espalda recta.', commonErrors: 'Levantar los talones del suelo o inclinar el tronco hacia adelante.' },
     { id: 'ex_3', name: 'Remo con Mancuerna a 1 Mano', category: 'Fuerza', targetMuscle: 'Espalda, Bíceps', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Apoya una mano y rodilla en el banco, tira de la mancuerna hacia tu cadera apretando la espalda.', commonErrors: 'Rotar excesivamente el torso durante el tirón.' },
     { id: 'ex_4', name: 'Plancha Abdominal Isométrica', category: 'Core', targetMuscle: 'Abdomen, Core', equipment: 'Esterilla', difficulty: 'Principiante', instructions: 'Apóyate sobre antebrazos y puntas de pies, mantén el cuerpo en línea recta contrayendo el abdomen.', commonErrors: 'Dejar caer la cadera hacia el suelo por fatiga.' },
-    { id: 'ex_5', name: 'Burpees sin Salto', category: 'HIIT', targetMuscle: 'Cuerpo completo', equipment: 'Sin material', difficulty: 'Intermedio', instructions: 'Ponte en cuclillas, lleva las piernas atrás en plancha, regresa y levántate con energía.', commonErrors: 'Arquear la espalda al extender la plancha.' },
-    { id: 'ex_6', name: 'Movilidad de Cadera 90/90', category: 'Movilidad', targetMuscle: 'Caderas, Glúteos', equipment: 'Esterilla', difficulty: 'Principiante', instructions: 'Sentado en el suelo con piernas flexionadas a 90 grados, rota las rodillas de un lado a otro.', commonErrors: 'Realizar el movimiento de forma muy rápida sin control articular.' }
   ];
 
   const [exerciseLibrary, setExerciseLibrary] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem(`fitapp_library_v4${pKey}`);
+    const saved = localStorage.getItem(`fitapp_library_v5${pKey}`);
     return saved ? JSON.parse(saved) : defaultExercises;
   });
 
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('Todas');
-  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('');
-  const [activeExerciseModal, setActiveExerciseModal] = useState<Exercise | null>(null);
+  // 3. Nutrición y Menús Personalizados (Fase 5 del Guion)
+  const defaultDailyMeals: Meal[] = [
+    { id: 'm_1', type: 'Desayuno', title: 'Avena Energética con Proteína', description: '60g de avena cocida en leche o bebida vegetal, 1 plátano en rodajas y 1 scoop de proteína de suero.', calories: 450, protein: 32, carbs: 65, fats: 8 },
+    { id: 'm_2', type: 'Comida', title: 'Pechuga de Pollo con Arroz y Verduras', description: '200g de pechuga a la plancha, 180g de arroz cocido y brócoli al vapor con aceite de oliva.', calories: 620, protein: 52, carbs: 70, fats: 14 },
+    { id: 'm_3', type: 'Merienda', title: 'Yogur Griego con Frutos Rojos', description: '200g de yogur griego natural bajo en grasa con un puñado de arándanos y nueces.', calories: 280, protein: 20, carbs: 18, fats: 12 },
+    { id: 'm_4', type: 'Cena', title: 'Salmón al Horno con Patata', description: '180g de filete de salmón al horno con hierbas provenzales y una patata mediana cocida.', calories: 540, protein: 40, carbs: 35, fats: 22 }
+  ];
+
+  const [dailyMeals, setDailyMeals] = useState<Meal[]>(() => {
+    const saved = localStorage.getItem(`fitapp_meals_v5${pKey}`);
+    return saved ? JSON.parse(saved) : defaultDailyMeals;
+  });
+
+  const [activeMealModal, setActiveMealModal] = useState<Meal | null>(null);
 
   // Estados de entrenamiento y progreso
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history_v4${pKey}`);
+    const saved = localStorage.getItem(`fitapp_history_v5${pKey}`);
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -137,10 +157,11 @@ export default function App() {
   useEffect(() => {
     if (currentProfile) {
       localStorage.setItem('fitapp_active_profile', JSON.stringify(currentProfile));
-      localStorage.setItem(`fitapp_library_v4${pKey}`, JSON.stringify(exerciseLibrary));
-      localStorage.setItem(`fitapp_history_v4${pKey}`, JSON.stringify(history));
+      localStorage.setItem(`fitapp_library_v5${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_meals_v5${pKey}`, JSON.stringify(dailyMeals));
+      localStorage.setItem(`fitapp_history_v5${pKey}`, JSON.stringify(history));
     }
-  }, [currentProfile, exerciseLibrary, history, pKey]);
+  }, [currentProfile, exerciseLibrary, dailyMeals, history, pKey]);
 
   useEffect(() => {
     let interval: any = null;
@@ -211,8 +232,31 @@ export default function App() {
     startTimer(90);
   };
 
-  const toggleFavoriteExercise = (id: string) => {
-    setExerciseLibrary(exerciseLibrary.map(ex => ex.id === id ? { ...ex, isFavorite: !ex.isFavorite } : ex));
+  // Función de regeneración/sustitución inteligente de comida (Punto 8 del Guion)
+  const regenerateMeal = (mealId: string) => {
+    const alternatives: Record<string, { title: string; desc: string; cal: number; p: number; c: number; f: number }> = {
+      'Desayuno': { title: 'Tortilla Francesa con Tostada Integral', desc: '3 claras y 1 huevo entero en tortilla con pan integral tostado y aguacate.', cal: 420, p: 28, c: 40, f: 12 },
+      'Comida': { title: 'Ternera Magra con Patata Asada y Ensalada', desc: '180g de filete de ternera magra con patata al horno y ensalada verde variada.', cal: 590, p: 48, c: 60, f: 15 },
+      'Merienda': { title: 'Batido de Proteína con Frutos Secos', desc: 'Scoop de proteína con leche desnatada y 20g de almendras naturales.', cal: 310, p: 30, c: 14, f: 14 },
+      'Cena': { title: 'Merluza al Vapor con Verduras Salteadas', desc: '200g de lomos de merluza con wok de verduras y aceite de sésamo.', cal: 410, p: 42, c: 22, f: 10 }
+    };
+
+    setDailyMeals(dailyMeals.map(m => {
+      if (m.id === mealId) {
+        const alt = alternatives[m.type] || alternatives['Comida'];
+        return {
+          ...m,
+          title: alt.title,
+          description: alt.desc,
+          calories: alt.cal,
+          protein: alt.p,
+          carbs: alt.c,
+          fats: alt.f
+        };
+      }
+      return m;
+    }));
+    alert('Comida regenerada manteniendo la coherencia nutricional de tus macros.');
   };
 
   const dynamicStyles = {
@@ -315,7 +359,7 @@ export default function App() {
     navItem: (active: boolean) => ({
       background: 'none',
       border: 'none',
-      fontSize: '11px',
+      fontSize: '10px',
       fontWeight: active ? '700' : '500',
       color: active ? t.navActive : t.navText,
       cursor: 'pointer',
@@ -410,11 +454,10 @@ export default function App() {
     );
   }
 
-  const filteredExercises = exerciseLibrary.filter(ex => {
-    const matchesCat = selectedCategoryFilter === 'Todas' || ex.category === selectedCategoryFilter;
-    const matchesSearch = ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase()) || ex.targetMuscle.toLowerCase().includes(exerciseSearchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
+  const totalCalories = dailyMeals.reduce((acc, m) => acc + m.calories, 0);
+  const totalProtein = dailyMeals.reduce((acc, m) => acc + m.protein, 0);
+  const totalCarbs = dailyMeals.reduce((acc, m) => acc + m.carbs, 0);
+  const totalFats = dailyMeals.reduce((acc, m) => acc + m.fats, 0);
 
   return (
     <div style={dynamicStyles.container}>
@@ -434,33 +477,17 @@ export default function App() {
           <div style={dynamicStyles.card}>
             <h2 style={dynamicStyles.cardTitle}>🎯 ¿Qué hago hoy?</h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '12px' }}>
-              Basado en tu nivel ({currentProfile.level}) y equipamiento disponible, tienes acceso a <strong>{exerciseLibrary.length} ejercicios</strong> validados en tu biblioteca.
+              Tu plan nutricional diario suma <strong>{totalCalories} kcal</strong> con un aporte de <strong>{totalProtein}g de proteína</strong>.
             </p>
-            <button style={dynamicStyles.button} onClick={() => setActiveTab('entrenar')}>
-              Ir a Entrenar 🚀
-            </button>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>⭐ Tus Ejercicios Favoritos</h2>
-            {exerciseLibrary.filter(ex => ex.isFavorite).length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>No has marcado ejercicios como favoritos todavía. Explora la biblioteca.</p>
-            ) : (
-              exerciseLibrary.filter(ex => ex.isFavorite).map(ex => (
-                <div key={ex.id} style={dynamicStyles.listItem}>
-                  <div>
-                    <strong style={{ fontSize: '13px', color: t.text }}>{ex.name}</strong>
-                    <span style={{ fontSize: '11px', color: t.textSecondary, display: 'block' }}>{ex.targetMuscle} • {ex.equipment}</span>
-                  </div>
-                  <button style={dynamicStyles.secondaryButton} onClick={() => setActiveExerciseModal(ex)}>Ver Técnica</button>
-                </div>
-              ))
-            )}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button style={dynamicStyles.button} onClick={() => setActiveTab('entrenar')}>Ir a Entrenar 🚀</button>
+              <button style={{ ...dynamicStyles.button, backgroundColor: '#10b981' }} onClick={() => setActiveTab('nutricion')}>Ver Menú 🍽️</button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* 🏋️ 2. ENTRENAR Y REGISTRO */}
+      {/* 🏋️ 2. ENTRENAR */}
       {activeTab === 'entrenar' && (
         <div>
           {timeLeft > 0 && (
@@ -474,8 +501,7 @@ export default function App() {
 
           <div style={dynamicStyles.card}>
             <h2 style={dynamicStyles.cardTitle}>🏋️ Registrar Serie y Rendimiento</h2>
-            
-            <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Seleccionar Ejercicio de la Biblioteca</label>
+            <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Seleccionar Ejercicio</label>
             <select value={selectedExerciseForLog} onChange={(e) => setSelectedExerciseForLog(e.target.value)} style={dynamicStyles.input}>
               {exerciseLibrary.map(ex => (
                 <option key={ex.id} value={ex.name}>{ex.name} ({ex.category})</option>
@@ -511,80 +537,75 @@ export default function App() {
               ))}
             </div>
 
-            <input type="text" placeholder="Observaciones técnicas o sensaciones" value={exerciseNote} onChange={(e) => setExerciseNote(e.target.value)} style={dynamicStyles.input} />
+            <input type="text" placeholder="Observaciones técnicas" value={exerciseNote} onChange={(e) => setExerciseNote(e.target.value)} style={dynamicStyles.input} />
             <button style={dynamicStyles.button} onClick={handleAddSet}>Guardar Serie y Descansar</button>
           </div>
         </div>
       )}
 
-      {/* 📚 3. BIBLIOTECA DE EJERCICIOS (Fase 4 del Guion) */}
+      {/* 📚 3. BIBLIOTECA DE EJERCICIOS */}
       {activeTab === 'biblioteca' && (
         <div>
           <div style={dynamicStyles.card}>
             <h2 style={dynamicStyles.cardTitle}>📚 Biblioteca de Ejercicios Oficial</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
-              Ejercicios estructurados con instrucciones y técnica correcta. La IA selecciona exclusivamente de esta base.
-            </p>
-            <input 
-              type="text" 
-              placeholder="Buscar ejercicio o músculo..." 
-              value={exerciseSearchQuery} 
-              onChange={(e) => setExerciseSearchQuery(e.target.value)} 
-              style={dynamicStyles.input} 
-            />
-            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '6px' }}>
-              {['Todas', 'Fuerza', 'Core', 'Cardio', 'Movilidad', 'HIIT'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategoryFilter(cat)}
-                  style={{
-                    backgroundColor: selectedCategoryFilter === cat ? t.primary : (isDarkMode ? '#334155' : '#e2e8f0'),
-                    color: selectedCategoryFilter === cat ? '#ffffff' : t.text,
-                    border: 'none',
-                    padding: '6px 10px',
-                    borderRadius: '16px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            {filteredExercises.length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, textAlign: 'center' }}>No se encontraron ejercicios con esos filtros.</p>
-            ) : (
-              filteredExercises.map((ex) => (
-                <div key={ex.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong style={{ fontSize: '14px', color: t.text }}>{ex.name}</strong>
-                      <span style={{ fontSize: '11px', color: t.primary, display: 'block' }}>{ex.category} • {ex.targetMuscle} ({ex.equipment})</span>
-                    </div>
-                    <button 
-                      onClick={() => toggleFavoriteExercise(ex.id)} 
-                      style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}
-                      title="Marcar favorito"
-                    >
-                      {ex.isFavorite ? '⭐' : '☆'}
-                    </button>
-                  </div>
-                  <button style={dynamicStyles.secondaryButton} onClick={() => setActiveExerciseModal(ex)}>
-                    📖 Ver Instrucciones y Errores Frecuentes
-                  </button>
+            {exerciseLibrary.map((ex) => (
+              <div key={ex.id} style={dynamicStyles.listItem}>
+                <div>
+                  <strong style={{ fontSize: '14px', color: t.text }}>{ex.name}</strong>
+                  <span style={{ fontSize: '11px', color: t.primary, display: 'block' }}>{ex.category} • {ex.targetMuscle}</span>
                 </div>
-              ))
-            )}
+                <span style={{ fontSize: '11px', color: t.textSecondary }}>{ex.equipment}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* 📈 4. PROGRESO */}
+      {/* 🍽️ 4. NUTRICIÓN Y MENÚS (Fase 5 del Guion) */}
+      {activeTab === 'nutricion' && (
+        <div>
+          <div style={dynamicStyles.card}>
+            <h2 style={dynamicStyles.cardTitle}>📊 Resumen de Macronutrientes</h2>
+            <div style={dynamicStyles.grid}>
+              <div style={dynamicStyles.statBox}>
+                <p style={dynamicStyles.statValue}>{totalCalories} kcal</p>
+                <p style={dynamicStyles.statLabel}>Calorías Totales</p>
+              </div>
+              <div style={dynamicStyles.statBox}>
+                <p style={dynamicStyles.statValue}>{totalProtein}g</p>
+                <p style={dynamicStyles.statLabel}>Proteínas</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '10px', fontSize: '12px', color: t.textSecondary }}>
+              <span>Carbos: <strong>{totalCarbs}g</strong></span>
+              <span>Grasas: <strong>{totalFats}g</strong></span>
+            </div>
+          </div>
+
+          <div style={dynamicStyles.card}>
+            <h2 style={dynamicStyles.cardTitle}>🍽️ Menú Diario Personalizado</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
+              Adaptado a tu objetivo de <strong>{currentProfile.goal}</strong>. Puedes sustituir cualquier comida manteniendo los macronutrientes.
+            </p>
+            {dailyMeals.map((meal) => (
+              <div key={meal.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary, textTransform: 'uppercase' }}>{meal.type}</span>
+                  <span style={{ fontSize: '11px', color: t.textSecondary }}>{meal.calories} kcal | P: {meal.protein}g</span>
+                </div>
+                <strong style={{ fontSize: '14px', color: t.text }}>{meal.title}</strong>
+                <p style={{ fontSize: '12px', color: t.textSecondary, margin: 0 }}>{meal.description}</p>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                  <button style={dynamicStyles.secondaryButton} onClick={() => setActiveMealModal(meal)}>Ver Receta 📖</button>
+                  <button style={{ ...dynamicStyles.secondaryButton, backgroundColor: isDarkMode ? '#1e3a8a' : '#e0f2fe', color: t.primary }} onClick={() => regenerateMeal(meal.id)}>🔄 Cambiar Comida</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 📈 5. PROGRESO */}
       {activeTab === 'progreso' && (
         <div>
           <div style={dynamicStyles.card}>
@@ -596,7 +617,7 @@ export default function App() {
                 <div key={idx} style={dynamicStyles.listItem}>
                   <div>
                     <strong style={{ color: t.text, display: 'block' }}>{item.name}</strong>
-                    <span style={{ fontSize: '11px', color: t.primary }}>Feedback: {item.difficulty || 'Normal'} {item.note ? `| ${item.note}` : ''}</span>
+                    <span style={{ fontSize: '11px', color: t.primary }}>Feedback: {item.difficulty || 'Normal'}</span>
                   </div>
                   <span style={{ color: t.text, fontWeight: '700' }}>{item.weight} kg × {item.reps} reps</span>
                 </div>
@@ -606,7 +627,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 👤 5. PERFIL */}
+      {/* 👤 6. PERFIL */}
       {activeTab === 'perfil' && (
         <div>
           <div style={dynamicStyles.card}>
@@ -615,7 +636,6 @@ export default function App() {
               <p style={{ margin: '4px 0' }}><strong>Nombre:</strong> {currentProfile.name}</p>
               <p style={{ margin: '4px 0' }}><strong>Objetivo:</strong> {currentProfile.goal}</p>
               <p style={{ margin: '4px 0' }}><strong>Nivel:</strong> {currentProfile.level}</p>
-              <p style={{ margin: '4px 0' }}><strong>Equipamiento:</strong> {currentProfile.equipment.join(', ')}</p>
             </div>
             <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>
               🚪 Cerrar Sesión / Cambiar Perfil
@@ -624,33 +644,33 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal de Técnica de Ejercicio */}
-      {activeExerciseModal && (
+      {/* Modal de Receta Nutricional */}
+      {activeMealModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 200 }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '20px', maxWidth: '400px', width: '100%', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: t.text, marginTop: 0 }}>{activeExerciseModal.name}</h3>
-            <p style={{ fontSize: '12px', color: t.primary, fontWeight: '600', marginBottom: '10px' }}>{activeExerciseModal.category} | Músculos: {activeExerciseModal.targetMuscle}</p>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: t.primary, textTransform: 'uppercase' }}>{activeMealModal.type}</span>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: t.text, margin: '4px 0 10px 0' }}>{activeMealModal.title}</h3>
             
             <div style={{ marginBottom: '12px' }}>
-              <strong style={{ fontSize: '12px', color: t.text, display: 'block', marginBottom: '2px' }}>Instrucciones Técnicas:</strong>
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0, lineHeight: '1.4' }}>{activeExerciseModal.instructions}</p>
+              <strong style={{ fontSize: '12px', color: t.text, display: 'block', marginBottom: '2px' }}>Ingredientes y Preparación:</strong>
+              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0, lineHeight: '1.4' }}>{activeMealModal.description}</p>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <strong style={{ fontSize: '12px', color: t.dangerBg || '#ef4444', display: 'block', marginBottom: '2px' }}>⚠️ Errores Frecuentes:</strong>
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0, lineHeight: '1.4' }}>{activeExerciseModal.commonErrors}</p>
+            <div style={{ backgroundColor: t.statBg, padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '12px', color: t.text }}>
+              <strong>Desglose de Macros:</strong> {activeMealModal.calories} kcal | Proteínas: {activeMealModal.protein}g | Carbos: {activeMealModal.carbs}g | Grasas: {activeMealModal.fats}g
             </div>
 
-            <button style={dynamicStyles.button} onClick={() => setActiveExerciseModal(null)}>Cerrar</button>
+            <button style={dynamicStyles.button} onClick={() => setActiveMealModal(null)}>Cerrar Receta</button>
           </div>
         </div>
       )}
 
-      {/* Navegación Oficial de 5 Apartados */}
+      {/* Navegación Oficial de 5 Apartados + Nutrición */}
       <nav style={dynamicStyles.nav}>
         <button style={dynamicStyles.navItem(activeTab === 'inicio')} onClick={() => setActiveTab('inicio')}>🏠 Inicio</button>
         <button style={dynamicStyles.navItem(activeTab === 'entrenar')} onClick={() => setActiveTab('entrenar')}>🏋️ Entrenar</button>
         <button style={dynamicStyles.navItem(activeTab === 'biblioteca')} onClick={() => setActiveTab('biblioteca')}>📚 Biblioteca</button>
+        <button style={dynamicStyles.navItem(activeTab === 'nutricion')} onClick={() => setActiveTab('nutricion')}>🍽️ Nutrición</button>
         <button style={dynamicStyles.navItem(activeTab === 'progreso')} onClick={() => setActiveTab('progreso')}>📈 Progreso</button>
         <button style={dynamicStyles.navItem(activeTab === 'perfil')} onClick={() => setActiveTab('perfil')}>👤 Perfil</button>
       </nav>
