@@ -108,6 +108,45 @@ const EXERCISE_LIBRARY: Exercise[] = [
   }
 ];
 
+const MEAL_LIBRARY: Meal[] = [
+  {
+    id: 'm-1',
+    title: 'Tostada integral con aguacate y huevo revuelto',
+    type: 'Desayuno',
+    calories: 380,
+    protein: 18,
+    ingredients: ['Pan integral', 'Aguacate', 'Huevo', 'Aceite de oliva'],
+    isAllowed: true
+  },
+  {
+    id: 'm-2',
+    title: 'Salmón al horno con espárragos trigueros',
+    type: 'Cena',
+    calories: 450,
+    protein: 35,
+    ingredients: ['Salmón', 'Espárragos', 'Limón', 'Especias'],
+    isAllowed: true
+  },
+  {
+    id: 'm-3',
+    title: 'Pechuga de pollo a la plancha con arroz y brócoli',
+    type: 'Almuerzo',
+    calories: 520,
+    protein: 42,
+    ingredients: ['Pechuga de pollo', 'Arroz integral', 'Brócoli', 'Aceite de oliva'],
+    isAllowed: true
+  },
+  {
+    id: 'm-4',
+    title: 'Yogur griego con frutos rojos y nueces',
+    type: 'Snack',
+    calories: 250,
+    protein: 15,
+    ingredients: ['Yogur griego', 'Frutos rojos', 'Nueces'],
+    isAllowed: true
+  }
+];
+
 async function hashPin(pin: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin + 'fitapp_salt_secure_2026');
@@ -138,11 +177,10 @@ export default function App() {
   const [lockoutUntil, setLockoutUntil] = useState<number>(0);
 
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
+  const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
   const [newDislikedInput, setNewDislikedInput] = useState<string>('');
   const [activeDemoExerciseId, setActiveDemoExerciseId] = useState<string | null>(null);
 
-  const [customMealIdea, setCustomMealIdea] = useState<string>('');
-  const [savedMeals, setSavedMeals] = useState<string[]>([]);
   const [trainingGoalChoice, setTrainingGoalChoice] = useState<string>('Hipertrofia');
   const [daysAvailableChoice, setDaysAvailableChoice] = useState<number>(3);
 
@@ -530,6 +568,19 @@ export default function App() {
     return true;
   });
 
+  const filteredMeals = MEAL_LIBRARY.filter(meal => {
+    if (selectedMealFilter !== 'Todos' && meal.type !== selectedMealFilter) return false;
+    const hasDisliked = meal.ingredients.some(ing => 
+      activeProfile?.dislikedIngredients.some(dis => ing.toLowerCase().includes(dis.toLowerCase()))
+    );
+    if (hasDisliked) return false;
+    return true;
+  });
+
+  const automatedShoppingList = Array.from(
+    new Set(filteredMeals.flatMap(meal => meal.ingredients))
+  );
+
   const displayGoals = Array.isArray(activeProfile?.goal) 
     ? activeProfile?.goal.join(', ') 
     : (typeof activeProfile?.goal === 'string' ? activeProfile?.goal : '');
@@ -644,31 +695,62 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. SECCIÓN NUTRICIÓN */}
+      {/* 3. SECCIÓN NUTRICIÓN (Menús Inteligentes y Lista de Compra Automática) */}
       {activeTab === 'nutricion' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>💡 Ideas de Menús Personalizados</h2>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-              <input 
-                type="text" 
-                placeholder="Ej. Bol de avena..." 
-                value={customMealIdea}
-                onChange={e => setCustomMealIdea(e.target.value)}
-                style={{ flex: 1, padding: '8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
-              />
-              <button 
-                onClick={async () => {
-                  if (!customMealIdea.trim() || !activeProfile) return;
-                  const updatedSavedMeals = [...savedMeals, customMealIdea.trim()];
-                  setSavedMeals(updatedSavedMeals);
-                  setCustomMealIdea('');
-                }}
-                style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-              >
-                Guardar Menú 💾
-              </button>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>🍽️ Menús Inteligentes y Gustos</h2>
+            
+            {/* Filtros por tipo de comida */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+              {['Todos', 'Desayuno', 'Almuerzo', 'Snack', 'Cena'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedMealFilter(cat)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: `1px solid ${selectedMealFilter === cat ? t.primary : t.border}`,
+                    backgroundColor: selectedMealFilter === cat ? t.primary : t.bg,
+                    color: selectedMealFilter === cat ? '#fff' : t.text,
+                    fontSize: '12px',
+                    fontWeight: selectedMealFilter === cat ? '600' : '400',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
+
+            {/* Listado de Menús Filtrados */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {filteredMeals.map(meal => (
+                <div key={meal.id} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                    <strong style={{ fontSize: '14px', flex: 1, paddingRight: '8px' }}>{meal.title}</strong>
+                    <span style={{ fontSize: '10px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px', color: t.textSecondary, whiteSpace: 'nowrap' }}>{meal.type}</span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>
+                    Ingredientes: {meal.ingredients.join(', ')}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                    <span style={{ color: t.warning, fontWeight: '500' }}>🔥 {meal.calories} kcal | 🥩 {meal.protein}g proteína</span>
+                    <span style={{ color: t.success, fontWeight: '600', backgroundColor: '#dcfce7', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>✅ Apto</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Lista de la Compra Automática */}
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '10px' }}>🛒 Lista de la Compra Automática</h2>
+            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: t.textSecondary, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {automatedShoppingList.map((item, index) => (
+                <li key={index} style={{ color: t.text }}>{item}</li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
