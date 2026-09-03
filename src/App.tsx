@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// Definición de temas de colores (Modo Claro / Modo Oscuro)
 const themes = {
   light: {
     bg: '#f8fafc',
@@ -39,57 +38,40 @@ const themes = {
 interface UserProfile {
   id: string;
   name: string;
-  pin: string; // Seguridad basada en PIN según el guion
+  pin: string;
+  goal: string;
+  level: string;
+  equipment: string[];
 }
 
-interface ExerciseInRoutine {
-  id: number;
+interface Exercise {
+  id: string;
   name: string;
-  targetSets: string;
-}
-
-interface RoutineItem {
-  id: number;
-  name: string;
-  exercises: ExerciseInRoutine[];
+  category: 'Fuerza' | 'Core' | 'Cardio' | 'Movilidad' | 'HIIT' | 'Resistencia';
+  targetMuscle: string;
+  equipment: string;
+  difficulty: 'Principiante' | 'Intermedio' | 'Avanzado';
+  instructions: string;
+  commonErrors: string;
+  isFavorite?: boolean;
 }
 
 interface SetItem {
   name: string;
   weight: number;
   reps: number;
+  difficulty?: 'Fácil' | 'Normal' | 'Difícil';
   note?: string;
   date: string;
 }
 
-interface MealItem {
-  id: number;
-  category: string;
-  food: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  date: string;
-}
-
-interface WeightItem {
-  id: number;
-  weight: number;
-  date: string;
-}
-
-interface DailyNoteItem {
-  id: number;
-  text: string;
-  date: string;
-}
-
 export default function App() {
-  // --- FASE 1 DEL GUION: GESTIÓN DE PERFILES Y SEGURIDAD CON PIN ---
+  // Perfiles y Seguridad (Fases 1 y 2)
   const [profiles, setProfiles] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles');
-    return saved ? JSON.parse(saved) : [{ id: '1', name: 'Atleta Principal', pin: '1234' }];
+    return saved ? JSON.parse(saved) : [
+      { id: '1', name: 'Atleta Principal', pin: '1234', goal: 'Ganar músculo', level: 'Intermedio', equipment: ['Mancuernas', 'Barra'] }
+    ];
   });
   
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(() => {
@@ -98,104 +80,56 @@ export default function App() {
   });
 
   const [inputPin, setInputPin] = useState('');
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfilePin, setNewProfilePin] = useState('');
-  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [newProfileGoal, setNewProfileGoal] = useState('Ganar músculo');
+  const [newProfileLevel, setNewProfileLevel] = useState('Intermedio');
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker' | 'nutrition' | 'body' | 'notes'>('dashboard');
-  
-  // Estado de Tema Oscuro / Claro
+  const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'biblioteca' | 'progreso' | 'perfil'>('inicio');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('fitapp_dark_mode');
     return saved ? JSON.parse(saved) : false;
   });
 
   const t = isDarkMode ? themes.dark : themes.light;
-
-  // Claves de almacenamiento aisladas por perfil (Aislamiento de datos del Guion)
   const pKey = currentProfile ? `_${currentProfile.id}` : '_default';
 
-  // Estados persistentes por perfil
-  const [routines, setRoutines] = useState<RoutineItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_routines_v2${pKey}`);
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 1,
-        name: 'Día 1: Full Body Fuerza',
-        exercises: [
-          { id: 101, name: 'Press de Banca', targetSets: '4 series x 6-8 reps' },
-          { id: 102, name: 'Sentadilla Libre', targetSets: '4 series x 6-8 reps' },
-        ],
-      },
-    ];
+  // Biblioteca de Ejercicios Oficial (Fase 4 del Guion)
+  const defaultExercises: Exercise[] = [
+    { id: 'ex_1', name: 'Press de Banca con Barra', category: 'Fuerza', targetMuscle: 'Pectorales, Tríceps', equipment: 'Barra', difficulty: 'Intermedio', instructions: 'Acuéstate en el banco, retrae omóplatos y baja la barra controladamente hasta el pecho.', commonErrors: 'Rebotar la barra en el pecho o arquear en exceso la zona lumbar.' },
+    { id: 'ex_2', name: 'Sentadilla Goblet', category: 'Fuerza', targetMuscle: 'Cuádriceps, Glúteos', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Sostén la mancuerna verticalmente frente al pecho, baja la cadera manteniendo la espalda recta.', commonErrors: 'Levantar los talones del suelo o inclinar el tronco hacia adelante.' },
+    { id: 'ex_3', name: 'Remo con Mancuerna a 1 Mano', category: 'Fuerza', targetMuscle: 'Espalda, Bíceps', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Apoya una mano y rodilla en el banco, tira de la mancuerna hacia tu cadera apretando la espalda.', commonErrors: 'Rotar excesivamente el torso durante el tirón.' },
+    { id: 'ex_4', name: 'Plancha Abdominal Isométrica', category: 'Core', targetMuscle: 'Abdomen, Core', equipment: 'Esterilla', difficulty: 'Principiante', instructions: 'Apóyate sobre antebrazos y puntas de pies, mantén el cuerpo en línea recta contrayendo el abdomen.', commonErrors: 'Dejar caer la cadera hacia el suelo por fatiga.' },
+    { id: 'ex_5', name: 'Burpees sin Salto', category: 'HIIT', targetMuscle: 'Cuerpo completo', equipment: 'Sin material', difficulty: 'Intermedio', instructions: 'Ponte en cuclillas, lleva las piernas atrás en plancha, regresa y levántate con energía.', commonErrors: 'Arquear la espalda al extender la plancha.' },
+    { id: 'ex_6', name: 'Movilidad de Cadera 90/90', category: 'Movilidad', targetMuscle: 'Caderas, Glúteos', equipment: 'Esterilla', difficulty: 'Principiante', instructions: 'Sentado en el suelo con piernas flexionadas a 90 grados, rota las rodillas de un lado a otro.', commonErrors: 'Realizar el movimiento de forma muy rápida sin control articular.' }
+  ];
+
+  const [exerciseLibrary, setExerciseLibrary] = useState<Exercise[]>(() => {
+    const saved = localStorage.getItem(`fitapp_library_v4${pKey}`);
+    return saved ? JSON.parse(saved) : defaultExercises;
   });
 
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('Todas');
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState('');
+  const [activeExerciseModal, setActiveExerciseModal] = useState<Exercise | null>(null);
+
+  // Estados de entrenamiento y progreso
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history${pKey}`);
+    const saved = localStorage.getItem(`fitapp_history_v4${pKey}`);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [meals, setMeals] = useState<MealItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_meals${pKey}`);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [bodyWeights, setBodyWeights] = useState<WeightItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_body_weights${pKey}`);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [dailyNotes, setDailyNotes] = useState<DailyNoteItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_daily_notes${pKey}`);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [healthNotes, setHealthNotes] = useState(() => {
-    return localStorage.getItem(`fitapp_health${pKey}`) || 'Sin lesiones ni restricciones médicas registradas.';
-  });
-  const [isEditingHealth, setIsEditingHealth] = useState(false);
-  const [tempHealth, setTempHealth] = useState(healthNotes);
-
-  const [targetCalories, setTargetCalories] = useState<number>(() => {
-    const saved = localStorage.getItem(`fitapp_target_cal${pKey}`);
-    return saved ? JSON.parse(saved) : 2500;
-  });
-  const [targetProtein, setTargetProtein] = useState<number>(() => {
-    const saved = localStorage.getItem(`fitapp_target_pro${pKey}`);
-    return saved ? JSON.parse(saved) : 160;
-  });
-  const [isEditingGoals, setIsEditingGoals] = useState(false);
-  const [tempCal, setTempCal] = useState(String(targetCalories));
-  const [tempPro, setTempPro] = useState(String(targetProtein));
-
-  // Formularios y estados locales
-  const [newRoutineName, setNewRoutineName] = useState('');
-  const [selectedRoutineId, setSelectedRoutineId] = useState<number | null>(null);
-  const [newExName, setNewExName] = useState('');
-  const [newExTarget, setNewExTarget] = useState('');
-
-  const [exerciseName, setExerciseName] = useState('Press de Banca');
-  const [weight, setWeight] = useState('');
-  const [reps, setReps] = useState('');
+  const [weightInput, setWeightInput] = useState('');
+  const [repsInput, setRepsInput] = useState('');
+  const [selectedExerciseForLog, setSelectedExerciseForLog] = useState('Press de Banca con Barra');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'Fácil' | 'Normal' | 'Difícil'>('Normal');
   const [exerciseNote, setExerciseNote] = useState('');
 
-  const [mealCategory, setMealCategory] = useState('Desayuno');
-  const [foodName, setFoodName] = useState('');
-  const [calories, setCalories] = useState('');
-  const [protein, setProtein] = useState('');
-  const [carbs, setCarbs] = useState('');
-  const [fats, setFats] = useState('');
-
-  const [newWeight, setNewWeight] = useState('');
-  const [newNoteText, setNewNoteText] = useState('');
-
-  const [rmWeight, setRmWeight] = useState('');
-  const [rmReps, setRmReps] = useState('');
-
+  // Temporizador
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Sincronización de efectos con aislamiento por perfil
   useEffect(() => {
     localStorage.setItem('fitapp_dark_mode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
@@ -203,29 +137,15 @@ export default function App() {
   useEffect(() => {
     if (currentProfile) {
       localStorage.setItem('fitapp_active_profile', JSON.stringify(currentProfile));
-    } else {
-      localStorage.removeItem('fitapp_active_profile');
+      localStorage.setItem(`fitapp_library_v4${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_history_v4${pKey}`, JSON.stringify(history));
     }
-  }, [currentProfile]);
-
-  useEffect(() => {
-    if (!currentProfile) return;
-    localStorage.setItem(`fitapp_routines_v2${pKey}`, JSON.stringify(routines));
-    localStorage.setItem(`fitapp_history${pKey}`, JSON.stringify(history));
-    localStorage.setItem(`fitapp_meals${pKey}`, JSON.stringify(meals));
-    localStorage.setItem(`fitapp_body_weights${pKey}`, JSON.stringify(bodyWeights));
-    localStorage.setItem(`fitapp_daily_notes${pKey}`, JSON.stringify(dailyNotes));
-    localStorage.setItem(`fitapp_health${pKey}`, healthNotes);
-    localStorage.setItem(`fitapp_target_cal${pKey}`, JSON.stringify(targetCalories));
-    localStorage.setItem(`fitapp_target_pro${pKey}`, JSON.stringify(targetProtein));
-  }, [routines, history, meals, bodyWeights, dailyNotes, healthNotes, targetCalories, targetProtein, currentProfile, pKey]);
+  }, [currentProfile, exerciseLibrary, history, pKey]);
 
   useEffect(() => {
     let interval: any = null;
     if (isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
+      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     } else if (timeLeft === 0) {
       setIsTimerRunning(false);
     }
@@ -237,16 +157,16 @@ export default function App() {
     setIsTimerRunning(true);
   };
 
-  const handleLogin = (profile: UserProfile) => {
-    if (profile.pin && profile.pin.length > 0) {
-      if (inputPin === profile.pin) {
-        setCurrentProfile(profile);
+  const handleLogin = (prof: UserProfile) => {
+    if (prof.pin && prof.pin.length > 0) {
+      if (inputPin === prof.pin) {
+        setCurrentProfile(prof);
         setInputPin('');
       } else {
-        alert('PIN incorrecto.');
+        alert('PIN incorrecto. Inténtalo de nuevo.');
       }
     } else {
-      setCurrentProfile(profile);
+      setCurrentProfile(prof);
     }
   };
 
@@ -257,6 +177,9 @@ export default function App() {
       id: Date.now().toString(),
       name: newProfileName,
       pin: newProfilePin.trim(),
+      goal: newProfileGoal,
+      level: newProfileLevel,
+      equipment: ['Mancuernas', 'Esterilla']
     };
     const updated = [...profiles, newProf];
     setProfiles(updated);
@@ -267,151 +190,30 @@ export default function App() {
     setCurrentProfile(newProf);
   };
 
-  // Handlers funcionales de la app
-  const handleAddRoutine = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRoutineName.trim()) return;
-    setRoutines([...routines, { id: Date.now(), name: newRoutineName, exercises: [] }]);
-    setNewRoutineName('');
-  };
-
-  const handleAddExerciseToRoutine = (routineId: number, e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newExName.trim()) return;
-    setRoutines(
-      routines.map((r) => {
-        if (r.id === routineId) {
-          return {
-            ...r,
-            exercises: [
-              ...r.exercises,
-              { id: Date.now(), name: newExName, targetSets: newExTarget || '3 series x 10 reps' },
-            ],
-          };
-        }
-        return r;
-      })
-    );
-    setNewExName('');
-    setNewExTarget('');
-  };
-
   const handleAddSet = () => {
-    const parsedWeight = parseFloat(weight);
-    const parsedReps = parseInt(reps, 10);
-    if (isNaN(parsedWeight) || isNaN(parsedReps)) return;
+    const w = parseFloat(weightInput);
+    const r = parseInt(repsInput, 10);
+    if (isNaN(w) || isNaN(r)) return;
 
     const newSet: SetItem = {
-      name: exerciseName.trim() || 'Ejercicio',
-      weight: parsedWeight,
-      reps: parsedReps,
-      note: exerciseNote.trim(),
-      date: new Date().toLocaleDateString(),
+      name: selectedExerciseForLog,
+      weight: w,
+      reps: r,
+      difficulty: selectedDifficulty,
+      note: exerciseNote,
+      date: new Date().toLocaleDateString()
     };
 
     setHistory([newSet, ...history]);
-    setWeight('');
-    setReps('');
+    setWeightInput('');
+    setRepsInput('');
     setExerciseNote('');
     startTimer(90);
   };
 
-  const handleAddMeal = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!foodName.trim()) return;
-
-    const newMeal: MealItem = {
-      id: Date.now(),
-      category: mealCategory,
-      food: foodName,
-      calories: parseInt(calories, 10) || 0,
-      protein: parseFloat(protein) || 0,
-      carbs: parseFloat(carbs) || 0,
-      fats: parseFloat(fats) || 0,
-      date: new Date().toLocaleDateString(),
-    };
-
-    setMeals([newMeal, ...meals]);
-    setFoodName('');
-    setCalories('');
-    setProtein('');
-    setCarbs('');
-    setFats('');
+  const toggleFavoriteExercise = (id: string) => {
+    setExerciseLibrary(exerciseLibrary.map(ex => ex.id === id ? { ...ex, isFavorite: !ex.isFavorite } : ex));
   };
-
-  const handleAddWeight = (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = parseFloat(newWeight);
-    if (isNaN(parsed)) return;
-
-    setBodyWeights([{ id: Date.now(), weight: parsed, date: new Date().toLocaleDateString() }, ...bodyWeights]);
-    setNewWeight('');
-  };
-
-  const handleAddDailyNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newNoteText.trim()) return;
-
-    setDailyNotes([{ id: Date.now(), text: newNoteText, date: new Date().toLocaleDateString() }, ...dailyNotes]);
-    setNewNoteText('');
-  };
-
-  const clearHistory = () => {
-    if (window.confirm('¿Borrar historial de series?')) setHistory([]);
-  };
-
-  const clearMeals = () => {
-    if (window.confirm('¿Borrar registro de comidas?')) setMeals([]);
-  };
-
-  const saveHealthNotes = () => {
-    setHealthNotes(tempHealth);
-    setIsEditingHealth(false);
-  };
-
-  const saveGoals = () => {
-    const c = parseInt(tempCal, 10);
-    const p = parseFloat(tempPro);
-    if (!isNaN(c)) setTargetCalories(c);
-    if (!isNaN(p)) setTargetProtein(p);
-    setIsEditingGoals(false);
-  };
-
-  const exportData = () => {
-    const data = { routines, history, meals, bodyWeights, dailyNotes, healthNotes, targetCalories, targetProtein };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `fitapp_${currentProfile?.name}_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-  };
-
-  // Cálculos
-  const personalRecords = history.reduce((acc: { [key: string]: number }, item) => {
-    if (!acc[item.name] || item.weight > acc[item.name]) {
-      acc[item.name] = item.weight;
-    }
-    return acc;
-  }, {});
-
-  const exerciseCounts = history.reduce((acc: { [key: string]: number }, item) => {
-    acc[item.name] = (acc[item.name] || 0) + 1;
-    return acc;
-  }, {});
-
-  const totalCaloriesToday = meals.reduce((acc, m) => acc + m.calories, 0);
-  const totalProteinToday = meals.reduce((acc, m) => acc + m.protein, 0);
-  const latestWeight = bodyWeights.length > 0 ? bodyWeights[0].weight : '--';
-
-  const calc1RM = () => {
-    const w = parseFloat(rmWeight);
-    const r = parseInt(rmReps, 10);
-    if (isNaN(w) || isNaN(r) || r <= 0) return 0;
-    if (r === 1) return w;
-    return Math.round(w * (1 + r / 30));
-  };
-  const estimated1RM = calc1RM();
 
   const dynamicStyles = {
     container: {
@@ -423,7 +225,6 @@ export default function App() {
       color: t.text,
       backgroundColor: t.bg,
       minHeight: '100vh',
-      transition: 'background-color 0.3s ease, color 0.3s ease',
     },
     card: {
       backgroundColor: t.cardBg,
@@ -486,28 +287,7 @@ export default function App() {
       cursor: 'pointer',
       fontSize: '12px',
     },
-    dangerButton: {
-      backgroundColor: t.dangerBg,
-      color: '#ffffff',
-      border: 'none',
-      padding: '6px 10px',
-      borderRadius: '6px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      fontSize: '12px',
-    },
     input: {
-      width: '100%',
-      padding: '10px',
-      borderRadius: '8px',
-      border: `1px solid ${t.inputBorder}`,
-      backgroundColor: t.inputBg,
-      color: t.text,
-      fontSize: '14px',
-      marginBottom: '10px',
-      boxSizing: 'border-box' as const,
-    },
-    select: {
       width: '100%',
       padding: '10px',
       borderRadius: '8px',
@@ -527,7 +307,7 @@ export default function App() {
       borderTop: `1px solid ${t.border}`,
       display: 'flex',
       justifyContent: 'space-around',
-      padding: '8px 0',
+      padding: '10px 0',
       maxWidth: '480px',
       margin: '0 auto',
       zIndex: 100,
@@ -535,14 +315,14 @@ export default function App() {
     navItem: (active: boolean) => ({
       background: 'none',
       border: 'none',
-      fontSize: '9px',
+      fontSize: '11px',
       fontWeight: active ? '700' : '500',
       color: active ? t.navActive : t.navText,
       cursor: 'pointer',
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: 'center',
-      gap: '2px',
+      gap: '3px',
     }),
     listItem: {
       padding: '12px 0',
@@ -554,14 +334,13 @@ export default function App() {
     },
   };
 
-  // --- PANTALLA DE SELECCIÓN DE PERFIL / SEGURIDAD (Fase 1 del Guion) ---
   if (!currentProfile) {
     return (
       <div style={dynamicStyles.container}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', color: t.text, margin: '0 0 4px 0' }}>FitApp Pro 💪</h1>
-            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Selecciona tu perfil de acceso</p>
+            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Selecciona tu perfil de atleta</p>
           </div>
           <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
             {isDarkMode ? '☀️' : '🌙'}
@@ -569,29 +348,32 @@ export default function App() {
         </div>
 
         <div style={dynamicStyles.card}>
-          <h2 style={dynamicStyles.cardTitle}>🔐 Perfiles Registrados</h2>
+          <h2 style={dynamicStyles.cardTitle}>🔐 Perfiles Seguros</h2>
           {profiles.map((prof) => (
             <div key={prof.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ fontSize: '15px', color: t.text }}>{prof.name}</strong>
+                <div>
+                  <strong style={{ fontSize: '15px', color: t.text }}>{prof.name}</strong>
+                  <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Objetivo: {prof.goal} ({prof.level})</p>
+                </div>
               </div>
               {prof.pin ? (
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="password"
-                    placeholder="Introduce PIN"
+                    placeholder="PIN 4 dígitos"
                     value={inputPin}
                     onChange={(e) => setInputPin(e.target.value)}
                     style={{ ...dynamicStyles.input, margin: 0 }}
                     maxLength={4}
                   />
-                  <button style={{ ...dynamicStyles.button, width: '120px', margin: 0 }} onClick={() => handleLogin(prof)}>
-                    Entrar
+                  <button style={{ ...dynamicStyles.button, width: '100px', margin: 0 }} onClick={() => handleLogin(prof)}>
+                    Acceder
                   </button>
                 </div>
               ) : (
                 <button style={dynamicStyles.button} onClick={() => handleLogin(prof)}>
-                  Entrar sin PIN
+                  Entrar
                 </button>
               )}
             </div>
@@ -605,24 +387,20 @@ export default function App() {
             </button>
           ) : (
             <form onSubmit={handleCreateProfile}>
-              <h2 style={dynamicStyles.cardTitle}>Nuevo Perfil</h2>
-              <input
-                type="text"
-                placeholder="Nombre del atleta"
-                value={newProfileName}
-                onChange={(e) => setNewProfileName(e.target.value)}
-                style={dynamicStyles.input}
-              />
-              <input
-                type="password"
-                placeholder="PIN de seguridad (opcional)"
-                value={newProfilePin}
-                onChange={(e) => setNewProfilePin(e.target.value)}
-                style={dynamicStyles.input}
-                maxLength={4}
-              />
+              <h2 style={dynamicStyles.cardTitle}>Nuevo Perfil de Atleta</h2>
+              <input type="text" placeholder="Nombre completo" value={newProfileName} onChange={(e) => setNewProfileName(e.target.value)} style={dynamicStyles.input} />
+              <input type="password" placeholder="PIN de seguridad (4 dígitos)" value={newProfilePin} onChange={(e) => setNewProfilePin(e.target.value)} style={dynamicStyles.input} maxLength={4} />
+              
+              <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Objetivo Principal</label>
+              <select value={newProfileGoal} onChange={(e) => setNewProfileGoal(e.target.value)} style={{ ...dynamicStyles.input, marginBottom: '10px' }}>
+                <option value="Ganar músculo">Ganar músculo</option>
+                <option value="Perder grasa">Perder grasa</option>
+                <option value="Recomposición corporal">Recomposición corporal</option>
+                <option value="Mejorar fuerza">Mejorar fuerza</option>
+              </select>
+
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button type="submit" style={dynamicStyles.button}>Crear y Acceder</button>
+                <button type="submit" style={dynamicStyles.button}>Crear Perfil</button>
                 <button type="button" style={dynamicStyles.secondaryButton} onClick={() => setIsCreatingProfile(false)}>Cancelar</button>
               </div>
             </form>
@@ -632,310 +410,173 @@ export default function App() {
     );
   }
 
-  // --- APLICACIÓN PRINCIPAL (Con el perfil ya autenticado y aislado) ---
+  const filteredExercises = exerciseLibrary.filter(ex => {
+    const matchesCat = selectedCategoryFilter === 'Todas' || ex.category === selectedCategoryFilter;
+    const matchesSearch = ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase()) || ex.targetMuscle.toLowerCase().includes(exerciseSearchQuery.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
   return (
     <div style={dynamicStyles.container}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: '700', color: t.text, margin: '0 0 2px 0' }}>FitApp 💪</h1>
-          <p style={{ fontSize: '12px', color: t.primary, margin: 0, fontWeight: '600' }}>Atleta: {currentProfile.name}</p>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: t.text, margin: '0 0 2px 0' }}>FitApp Pro 💪</h1>
+          <p style={{ fontSize: '12px', color: t.primary, margin: 0, fontWeight: '600' }}>Atleta: {currentProfile.name} ({currentProfile.goal})</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button onClick={() => setCurrentProfile(null)} style={{ ...dynamicStyles.secondaryButton, fontSize: '11px' }}>
-            Cambiar Perfil
-          </button>
-          <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
-        </div>
+        <button onClick={() => setIsDarkMode(!isDarkMode)} style={dynamicStyles.secondaryButton}>
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
       </header>
 
-      {/* VISTA 1: DASHBOARD, ESTADÍSTICAS Y GRÁFICOS */}
-      {activeTab === 'dashboard' && (
+      {/* 🏠 1. INICIO */}
+      {activeTab === 'inicio' && (
         <div>
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>Resumen General</h2>
-            <div style={dynamicStyles.grid}>
-              <div style={dynamicStyles.statBox}>
-                <p style={dynamicStyles.statValue}>{latestWeight} kg</p>
-                <p style={dynamicStyles.statLabel}>Peso Corporal</p>
-              </div>
-              <div style={dynamicStyles.statBox}>
-                <p style={dynamicStyles.statValue}>{totalCaloriesToday} kcal</p>
-                <p style={dynamicStyles.statLabel}>Calorías Hoy</p>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '14px', borderTop: `1px solid ${t.border}`, paddingTop: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                <span style={{ color: t.textSecondary }}>Calorías (Meta: {targetCalories} kcal)</span>
-                <span style={{ fontWeight: '600', color: t.text }}>{Math.min(Math.round((totalCaloriesToday / targetCalories) * 100), 100)}%</span>
-              </div>
-              <div style={{ width: '100%', height: '8px', backgroundColor: t.statBg, borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
-                <div style={{ width: `${Math.min((totalCaloriesToday / targetCalories) * 100, 100)}%`, height: '100%', backgroundColor: t.primary, borderRadius: '4px' }}></div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
-                <span style={{ color: t.textSecondary }}>Proteína (Meta: {targetProtein}g)</span>
-                <span style={{ fontWeight: '600', color: t.text }}>{totalProteinToday}g</span>
-              </div>
-              <div style={{ width: '100%', height: '8px', backgroundColor: t.statBg, borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min((totalProteinToday / targetProtein) * 100, 100)}%`, height: '100%', backgroundColor: '#10b981', borderRadius: '4px' }}></div>
-              </div>
-            </div>
+            <h2 style={dynamicStyles.cardTitle}>🎯 ¿Qué hago hoy?</h2>
+            <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '12px' }}>
+              Basado en tu nivel ({currentProfile.level}) y equipamiento disponible, tienes acceso a <strong>{exerciseLibrary.length} ejercicios</strong> validados en tu biblioteca.
+            </p>
+            <button style={dynamicStyles.button} onClick={() => setActiveTab('entrenar')}>
+              Ir a Entrenar 🚀
+            </button>
           </div>
 
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>📈 Gráfico de Evolución de Peso</h2>
-            {bodyWeights.length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Registra tu peso en la pestaña "Peso" para ver la evolución.</p>
+            <h2 style={dynamicStyles.cardTitle}>⭐ Tus Ejercicios Favoritos</h2>
+            {exerciseLibrary.filter(ex => ex.isFavorite).length === 0 ? (
+              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>No has marcado ejercicios como favoritos todavía. Explora la biblioteca.</p>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'flex-end', height: '100px', gap: '8px', paddingBottom: '10px', borderBottom: `1px solid ${t.border}` }}>
-                {bodyWeights.slice().reverse().map((item, idx) => {
-                  const minW = Math.min(...bodyWeights.map(w => w.weight)) - 2;
-                  const maxW = Math.max(...bodyWeights.map(w => w.weight)) + 2;
-                  const heightPercent = Math.max(15, Math.min(100, ((item.weight - minW) / (maxW - minW || 1)) * 100));
-                  return (
-                    <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                      <span style={{ fontSize: '10px', color: t.primary, marginBottom: '2px', fontWeight: '600' }}>{item.weight}</span>
-                      <div style={{ width: '100%', height: `${heightPercent}%`, backgroundColor: t.primary, borderRadius: '4px 4px 0 0' }}></div>
-                      <span style={{ fontSize: '9px', color: t.textSecondary, marginTop: '4px' }}>{item.date.slice(0, 5)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>📊 Estadísticas de Entrenamiento</h2>
-            <div style={dynamicStyles.grid}>
-              <div style={dynamicStyles.statBox}>
-                <p style={dynamicStyles.statValue}>{history.length}</p>
-                <p style={dynamicStyles.statLabel}>Series Totales</p>
-              </div>
-              <div style={dynamicStyles.statBox}>
-                <p style={dynamicStyles.statValue}>{Object.keys(exerciseCounts).length}</p>
-                <p style={dynamicStyles.statLabel}>Ejercicios Únicos</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h2 style={{ ...dynamicStyles.cardTitle, margin: 0 }}>🩺 Estado de Salud</h2>
-              {!isEditingHealth && (
-                <button style={dynamicStyles.secondaryButton} onClick={() => { setTempHealth(healthNotes); setIsEditingHealth(true); }}>Editar</button>
-              )}
-            </div>
-            {isEditingHealth ? (
-              <div>
-                <textarea value={tempHealth} onChange={(e) => setTempHealth(e.target.value)} style={{ ...dynamicStyles.input, height: '70px', resize: 'none' }} />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button style={dynamicStyles.button} onClick={saveHealthNotes}>Guardar</button>
-                  <button style={dynamicStyles.secondaryButton} onClick={() => setIsEditingHealth(false)}>Cancelar</button>
-                </div>
-              </div>
-            ) : (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0, lineHeight: '1.4' }}>{healthNotes}</p>
-            )}
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🏆 Récords Personales (PRs)</h2>
-            {Object.keys(personalRecords).length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Sin registros todavía.</p>
-            ) : (
-              Object.entries(personalRecords).map(([ex, maxWeight]) => (
-                <div key={ex} style={dynamicStyles.listItem}>
-                  <strong style={{ color: t.text }}>{ex}</strong>
-                  <span style={{ color: t.primary, fontWeight: '700' }}>{maxWeight} kg máx</span>
+              exerciseLibrary.filter(ex => ex.isFavorite).map(ex => (
+                <div key={ex.id} style={dynamicStyles.listItem}>
+                  <div>
+                    <strong style={{ fontSize: '13px', color: t.text }}>{ex.name}</strong>
+                    <span style={{ fontSize: '11px', color: t.textSecondary, display: 'block' }}>{ex.targetMuscle} • {ex.equipment}</span>
+                  </div>
+                  <button style={dynamicStyles.secondaryButton} onClick={() => setActiveExerciseModal(ex)}>Ver Técnica</button>
                 </div>
               ))
             )}
           </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>💾 Copia de Seguridad</h2>
-            <button style={dynamicStyles.secondaryButton} onClick={exportData}>Exportar Respaldo del Atleta (.json)</button>
-          </div>
         </div>
       )}
 
-      {/* VISTA 2: RUTINAS DETALLADAS */}
-      {activeTab === 'routines' && (
+      {/* 🏋️ 2. ENTRENAR Y REGISTRO */}
+      {activeTab === 'entrenar' && (
         <div>
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>Crear Nueva Rutina</h2>
-            <form onSubmit={handleAddRoutine}>
-              <input type="text" placeholder="Ej: Día 3: Pierna" value={newRoutineName} onChange={(e) => setNewRoutineName(e.target.value)} style={dynamicStyles.input} />
-              <button type="submit" style={dynamicStyles.button}>Añadir Rutina</button>
-            </form>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>Mis Rutinas</h2>
-            {routines.map((routine) => (
-              <div key={routine.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                  <strong style={{ color: t.text, fontSize: '15px' }}>{routine.name}</strong>
-                  <button style={dynamicStyles.secondaryButton} onClick={() => setSelectedRoutineId(selectedRoutineId === routine.id ? null : routine.id)}>
-                    {selectedRoutineId === routine.id ? 'Ocultar' : 'Ver Ejercicios'}
-                  </button>
-                </div>
-
-                {selectedRoutineId === routine.id && (
-                  <div style={{ width: '100%', marginTop: '12px', borderTop: `1px solid ${t.border}`, paddingTop: '8px' }}>
-                    {routine.exercises.length === 0 ? (
-                      <p style={{ fontSize: '12px', color: t.textSecondary }}>No hay ejercicios añadidos.</p>
-                    ) : (
-                      routine.exercises.map((ex) => (
-                        <div key={ex.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '6px 0', borderBottom: `1px dashed ${t.border}` }}>
-                          <span style={{ color: t.text }}>{ex.name}</span>
-                          <span style={{ color: t.primary, fontWeight: '600' }}>{ex.targetSets}</span>
-                        </div>
-                      ))
-                    )}
-
-                    <form onSubmit={(e) => handleAddExerciseToRoutine(routine.id, e)} style={{ marginTop: '10px' }}>
-                      <input type="text" placeholder="Nombre ejercicio" value={newExName} onChange={(e) => setNewExName(e.target.value)} style={dynamicStyles.input} />
-                      <input type="text" placeholder="Series/Reps (ej. 3x10)" value={newExTarget} onChange={(e) => setNewExTarget(e.target.value)} style={dynamicStyles.input} />
-                      <button type="submit" style={dynamicStyles.secondaryButton}>+ Añadir Ejercicio</button>
-                    </form>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* VISTA 3: TRACKER DE ENTRENAMIENTO Y 1RM */}
-      {activeTab === 'tracker' && (
-        <div>
-          <div style={{ ...dynamicStyles.card, backgroundColor: timeLeft > 0 ? (isDarkMode ? '#032541' : '#eff6ff') : t.cardBg }}>
-            <h2 style={dynamicStyles.cardTitle}>⏱️ Descanso entre Series</h2>
-            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '32px', fontWeight: '700', color: timeLeft > 0 ? t.primary : t.textSecondary }}>
+          {timeLeft > 0 && (
+            <div style={{ ...dynamicStyles.card, backgroundColor: isDarkMode ? '#032541' : '#eff6ff', textAlign: 'center' }}>
+              <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 4px 0' }}>⏱️ Descanso Automático</p>
+              <span style={{ fontSize: '28px', fontWeight: '700', color: t.primary }}>
                 {Math.floor(timeLeft / 60)}:{('0' + (timeLeft % 60)).slice(-2)}
               </span>
             </div>
-            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-              <button style={dynamicStyles.secondaryButton} onClick={() => startTimer(60)}>1 min</button>
-              <button style={dynamicStyles.secondaryButton} onClick={() => startTimer(90)}>1:30 min</button>
-              <button style={dynamicStyles.secondaryButton} onClick={() => startTimer(120)}>2 min</button>
-              {isTimerRunning && (
-                <button style={{ ...dynamicStyles.secondaryButton, backgroundColor: '#fee2e2', color: '#991b1b' }} onClick={() => { setIsTimerRunning(false); setTimeLeft(0); }}>Parar</button>
-              )}
-            </div>
-          </div>
+          )}
 
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>Registrar Serie</h2>
-            <input type="text" placeholder="Nombre del ejercicio" value={exerciseName} onChange={(e) => setExerciseName(e.target.value)} style={dynamicStyles.input} />
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input type="number" placeholder="Peso (kg)" value={weight} onChange={(e) => setWeight(e.target.value)} style={dynamicStyles.input} />
-              <input type="number" placeholder="Reps" value={reps} onChange={(e) => setReps(e.target.value)} style={dynamicStyles.input} />
-            </div>
-            <input type="text" placeholder="Notas (RPE...)" value={exerciseNote} onChange={(e) => setExerciseNote(e.target.value)} style={dynamicStyles.input} />
-            <button style={dynamicStyles.button} onClick={handleAddSet}>Guardar Serie y Descansar</button>
-          </div>
+            <h2 style={dynamicStyles.cardTitle}>🏋️ Registrar Serie y Rendimiento</h2>
+            
+            <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Seleccionar Ejercicio de la Biblioteca</label>
+            <select value={selectedExerciseForLog} onChange={(e) => setSelectedExerciseForLog(e.target.value)} style={dynamicStyles.input}>
+              {exerciseLibrary.map(ex => (
+                <option key={ex.id} value={ex.name}>{ex.name} ({ex.category})</option>
+              ))}
+            </select>
 
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🔢 Calculadora de 1RM</h2>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <input type="number" placeholder="Peso (kg)" value={rmWeight} onChange={(e) => setRmWeight(e.target.value)} style={dynamicStyles.input} />
-              <input type="number" placeholder="Reps" value={rmReps} onChange={(e) => setRmReps(e.target.value)} style={dynamicStyles.input} />
+              <input type="number" placeholder="Peso (kg)" value={weightInput} onChange={(e) => setWeightInput(e.target.value)} style={dynamicStyles.input} />
+              <input type="number" placeholder="Reps" value={repsInput} onChange={(e) => setRepsInput(e.target.value)} style={dynamicStyles.input} />
             </div>
-            <div style={{ textAlign: 'center', marginTop: '6px', padding: '10px', backgroundColor: t.statBg, borderRadius: '8px' }}>
-              <span style={{ fontSize: '13px', color: t.textSecondary }}>1RM Estimado: </span>
-              <span style={{ fontSize: '18px', fontWeight: '700', color: t.primary }}>{estimated1RM} kg</span>
-            </div>
-          </div>
 
-          {history.length > 0 && (
-            <div style={dynamicStyles.card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h2 style={{ ...dynamicStyles.cardTitle, margin: 0 }}>Historial</h2>
-                <button style={dynamicStyles.dangerButton} onClick={clearHistory}>Limpiar</button>
-              </div>
-              {history.map((item, index) => (
-                <div key={index} style={dynamicStyles.listItem}>
-                  <div>
-                    <strong style={{ color: t.text, display: 'block' }}>{item.name}</strong>
-                    {item.note && <span style={{ fontSize: '11px', color: t.primary, display: 'block' }}>{item.note}</span>}
-                    <span style={{ fontSize: '11px', color: t.textSecondary }}>{item.date}</span>
-                  </div>
-                  <span style={{ color: t.primary, fontWeight: '600' }}>{item.weight} kg × {item.reps} reps</span>
-                </div>
+            <label style={{ fontSize: '12px', color: t.textSecondary, display: 'block', marginBottom: '4px' }}>Dificultad Percibida (Feedback IA)</label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              {(['Fácil', 'Normal', 'Difícil'] as const).map((diff) => (
+                <button
+                  key={diff}
+                  type="button"
+                  onClick={() => setSelectedDifficulty(diff)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: `1px solid ${selectedDifficulty === diff ? t.primary : t.inputBorder}`,
+                    backgroundColor: selectedDifficulty === diff ? t.primary : t.inputBg,
+                    color: selectedDifficulty === diff ? '#ffffff' : t.text,
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  {diff}
+                </button>
               ))}
             </div>
-          )}
+
+            <input type="text" placeholder="Observaciones técnicas o sensaciones" value={exerciseNote} onChange={(e) => setExerciseNote(e.target.value)} style={dynamicStyles.input} />
+            <button style={dynamicStyles.button} onClick={handleAddSet}>Guardar Serie y Descansar</button>
+          </div>
         </div>
       )}
 
-      {/* VISTA 4: NUTRICIÓN */}
-      {activeTab === 'nutrition' && (
+      {/* 📚 3. BIBLIOTECA DE EJERCICIOS (Fase 4 del Guion) */}
+      {activeTab === 'biblioteca' && (
         <div>
           <div style={dynamicStyles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h2 style={{ ...dynamicStyles.cardTitle, margin: 0 }}>🎯 Objetivos Diarios</h2>
-              {!isEditingGoals && (
-                <button style={dynamicStyles.secondaryButton} onClick={() => { setTempCal(String(targetCalories)); setTempPro(String(targetProtein)); setIsEditingGoals(true); }}>Configurar</button>
-              )}
+            <h2 style={dynamicStyles.cardTitle}>📚 Biblioteca de Ejercicios Oficial</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
+              Ejercicios estructurados con instrucciones y técnica correcta. La IA selecciona exclusivamente de esta base.
+            </p>
+            <input 
+              type="text" 
+              placeholder="Buscar ejercicio o músculo..." 
+              value={exerciseSearchQuery} 
+              onChange={(e) => setExerciseSearchQuery(e.target.value)} 
+              style={dynamicStyles.input} 
+            />
+            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '6px' }}>
+              {['Todas', 'Fuerza', 'Core', 'Cardio', 'Movilidad', 'HIIT'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategoryFilter(cat)}
+                  style={{
+                    backgroundColor: selectedCategoryFilter === cat ? t.primary : (isDarkMode ? '#334155' : '#e2e8f0'),
+                    color: selectedCategoryFilter === cat ? '#ffffff' : t.text,
+                    border: 'none',
+                    padding: '6px 10px',
+                    borderRadius: '16px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
-            {isEditingGoals ? (
-              <div>
-                <input type="number" placeholder="Calorías objetivo" value={tempCal} onChange={(e) => setTempCal(e.target.value)} style={dynamicStyles.input} />
-                <input type="number" placeholder="Proteína objetivo (g)" value={tempPro} onChange={(e) => setTempPro(e.target.value)} style={dynamicStyles.input} />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button style={dynamicStyles.button} onClick={saveGoals}>Guardar Metas</button>
-                  <button style={dynamicStyles.secondaryButton} onClick={() => setIsEditingGoals(false)}>Cancelar</button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ fontSize: '13px', color: t.textSecondary }}>
-                Meta actual: <strong>{targetCalories} kcal</strong> | Proteína: <strong>{targetProtein}g</strong>
-              </div>
-            )}
           </div>
 
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🥗 Registrar Comida</h2>
-            <form onSubmit={handleAddMeal}>
-              <select value={mealCategory} onChange={(e) => setMealCategory(e.target.value)} style={dynamicStyles.select}>
-                <option value="Desayuno">Desayuno</option>
-                <option value="Almuerzo">Almuerzo</option>
-                <option value="Cena">Cena</option>
-                <option value="Snack / Extra">Snack / Extra</option>
-              </select>
-              <input type="text" placeholder="Ej: Arroz con pollo" value={foodName} onChange={(e) => setFoodName(e.target.value)} style={dynamicStyles.input} />
-              <input type="number" placeholder="Calorías (kcal)" value={calories} onChange={(e) => setCalories(e.target.value)} style={dynamicStyles.input} />
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <input type="number" placeholder="Proteína (g)" value={protein} onChange={(e) => setProtein(e.target.value)} style={dynamicStyles.input} />
-                <input type="number" placeholder="Carbos (g)" value={carbs} onChange={(e) => setCarbs(e.target.value)} style={dynamicStyles.input} />
-                <input type="number" placeholder="Grasas (g)" value={fats} onChange={(e) => setFats(e.target.value)} style={dynamicStyles.input} />
-              </div>
-              <button type="submit" style={dynamicStyles.button}>Añadir al Registro</button>
-            </form>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h2 style={{ ...dynamicStyles.cardTitle, margin: 0 }}>Historial de Nutrición</h2>
-              {meals.length > 0 && <button style={dynamicStyles.dangerButton} onClick={clearMeals}>Limpiar</button>}
-            </div>
-            {meals.length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>No hay comidas registradas.</p>
+            {filteredExercises.length === 0 ? (
+              <p style={{ fontSize: '13px', color: t.textSecondary, textAlign: 'center' }}>No se encontraron ejercicios con esos filtros.</p>
             ) : (
-              meals.map((meal) => (
-                <div key={meal.id} style={dynamicStyles.listItem}>
-                  <div>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: t.primary, textTransform: 'uppercase' }}>{meal.category}</span>
-                    <strong style={{ color: t.text, display: 'block' }}>{meal.food}</strong>
-                    <span style={{ fontSize: '11px', color: t.textSecondary }}>P: {meal.protein}g | C: {meal.carbs}g | G: {meal.fats}g</span>
+              filteredExercises.map((ex) => (
+                <div key={ex.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'stretch', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ fontSize: '14px', color: t.text }}>{ex.name}</strong>
+                      <span style={{ fontSize: '11px', color: t.primary, display: 'block' }}>{ex.category} • {ex.targetMuscle} ({ex.equipment})</span>
+                    </div>
+                    <button 
+                      onClick={() => toggleFavoriteExercise(ex.id)} 
+                      style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}
+                      title="Marcar favorito"
+                    >
+                      {ex.isFavorite ? '⭐' : '☆'}
+                    </button>
                   </div>
-                  <span style={{ color: t.text, fontWeight: '600' }}>{meal.calories} kcal</span>
+                  <button style={dynamicStyles.secondaryButton} onClick={() => setActiveExerciseModal(ex)}>
+                    📖 Ver Instrucciones y Errores Frecuentes
+                  </button>
                 </div>
               ))
             )}
@@ -943,26 +584,21 @@ export default function App() {
         </div>
       )}
 
-      {/* VISTA 5: PESO CORPORAL */}
-      {activeTab === 'body' && (
+      {/* 📈 4. PROGRESO */}
+      {activeTab === 'progreso' && (
         <div>
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>⚖️ Registrar Peso Corporal</h2>
-            <form onSubmit={handleAddWeight}>
-              <input type="number" step="0.1" placeholder="Peso actual (ej. 75.5)" value={newWeight} onChange={(e) => setNewWeight(e.target.value)} style={dynamicStyles.input} />
-              <button type="submit" style={dynamicStyles.button}>Guardar Peso</button>
-            </form>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>Historial de Pesajes</h2>
-            {bodyWeights.length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Aún no hay pesajes.</p>
+            <h2 style={dynamicStyles.cardTitle}>🏆 Historial de Rendimiento</h2>
+            {history.length === 0 ? (
+              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Aún no hay registros en este perfil.</p>
             ) : (
-              bodyWeights.map((item) => (
-                <div key={item.id} style={dynamicStyles.listItem}>
-                  <span style={{ fontSize: '13px', color: t.textSecondary }}>{item.date}</span>
-                  <strong style={{ color: t.primary, fontSize: '16px' }}>{item.weight} kg</strong>
+              history.map((item, idx) => (
+                <div key={idx} style={dynamicStyles.listItem}>
+                  <div>
+                    <strong style={{ color: t.text, display: 'block' }}>{item.name}</strong>
+                    <span style={{ fontSize: '11px', color: t.primary }}>Feedback: {item.difficulty || 'Normal'} {item.note ? `| ${item.note}` : ''}</span>
+                  </div>
+                  <span style={{ color: t.text, fontWeight: '700' }}>{item.weight} kg × {item.reps} reps</span>
                 </div>
               ))
             )}
@@ -970,41 +606,53 @@ export default function App() {
         </div>
       )}
 
-      {/* VISTA 6: DIARIO */}
-      {activeTab === 'notes' && (
+      {/* 👤 5. PERFIL */}
+      {activeTab === 'perfil' && (
         <div>
           <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>📝 Diario y Sensaciones</h2>
-            <form onSubmit={handleAddDailyNote}>
-              <textarea placeholder="¿Cómo ha ido el día? ¿Estrés, energía, sueño...?" value={newNoteText} onChange={(e) => setNewNoteText(e.target.value)} style={{ ...dynamicStyles.input, height: '80px', resize: 'none' }} />
-              <button type="submit" style={dynamicStyles.button}>Guardar Nota</button>
-            </form>
-          </div>
-
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>Historial del Diario</h2>
-            {dailyNotes.length === 0 ? (
-              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Sin notas registradas.</p>
-            ) : (
-              dailyNotes.map((note) => (
-                <div key={note.id} style={{ ...dynamicStyles.listItem, flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '11px', color: t.primary, fontWeight: '600', marginBottom: '2px' }}>{note.date}</span>
-                  <p style={{ fontSize: '13px', color: t.text, margin: 0, lineHeight: '1.4' }}>{note.text}</p>
-                </div>
-              ))
-            )}
+            <h2 style={dynamicStyles.cardTitle}>👤 Configuración del Perfil</h2>
+            <div style={{ fontSize: '14px', color: t.text, lineHeight: '1.6', marginBottom: '16px' }}>
+              <p style={{ margin: '4px 0' }}><strong>Nombre:</strong> {currentProfile.name}</p>
+              <p style={{ margin: '4px 0' }}><strong>Objetivo:</strong> {currentProfile.goal}</p>
+              <p style={{ margin: '4px 0' }}><strong>Nivel:</strong> {currentProfile.level}</p>
+              <p style={{ margin: '4px 0' }}><strong>Equipamiento:</strong> {currentProfile.equipment.join(', ')}</p>
+            </div>
+            <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>
+              🚪 Cerrar Sesión / Cambiar Perfil
+            </button>
           </div>
         </div>
       )}
 
-      {/* Navegación Inferior */}
+      {/* Modal de Técnica de Ejercicio */}
+      {activeExerciseModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', zIndex: 200 }}>
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '20px', maxWidth: '400px', width: '100%', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: t.text, marginTop: 0 }}>{activeExerciseModal.name}</h3>
+            <p style={{ fontSize: '12px', color: t.primary, fontWeight: '600', marginBottom: '10px' }}>{activeExerciseModal.category} | Músculos: {activeExerciseModal.targetMuscle}</p>
+            
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ fontSize: '12px', color: t.text, display: 'block', marginBottom: '2px' }}>Instrucciones Técnicas:</strong>
+              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0, lineHeight: '1.4' }}>{activeExerciseModal.instructions}</p>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ fontSize: '12px', color: t.dangerBg || '#ef4444', display: 'block', marginBottom: '2px' }}>⚠️ Errores Frecuentes:</strong>
+              <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0, lineHeight: '1.4' }}>{activeExerciseModal.commonErrors}</p>
+            </div>
+
+            <button style={dynamicStyles.button} onClick={() => setActiveExerciseModal(null)}>Cerrar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Navegación Oficial de 5 Apartados */}
       <nav style={dynamicStyles.nav}>
-        <button style={dynamicStyles.navItem(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>📊 Panel</button>
-        <button style={dynamicStyles.navItem(activeTab === 'routines')} onClick={() => setActiveTab('routines')}>📋 Rutinas</button>
-        <button style={dynamicStyles.navItem(activeTab === 'tracker')} onClick={() => setActiveTab('tracker')}>⚡ Entrenar</button>
-        <button style={dynamicStyles.navItem(activeTab === 'nutrition')} onClick={() => setActiveTab('nutrition')}>🥗 Nutrición</button>
-        <button style={dynamicStyles.navItem(activeTab === 'body')} onClick={() => setActiveTab('body')}>⚖️ Peso</button>
-        <button style={dynamicStyles.navItem(activeTab === 'notes')} onClick={() => setActiveTab('notes')}>📝 Diario</button>
+        <button style={dynamicStyles.navItem(activeTab === 'inicio')} onClick={() => setActiveTab('inicio')}>🏠 Inicio</button>
+        <button style={dynamicStyles.navItem(activeTab === 'entrenar')} onClick={() => setActiveTab('entrenar')}>🏋️ Entrenar</button>
+        <button style={dynamicStyles.navItem(activeTab === 'biblioteca')} onClick={() => setActiveTab('biblioteca')}>📚 Biblioteca</button>
+        <button style={dynamicStyles.navItem(activeTab === 'progreso')} onClick={() => setActiveTab('progreso')}>📈 Progreso</button>
+        <button style={dynamicStyles.navItem(activeTab === 'perfil')} onClick={() => setActiveTab('perfil')}>👤 Perfil</button>
       </nav>
     </div>
   );
