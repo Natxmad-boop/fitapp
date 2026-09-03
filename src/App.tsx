@@ -30,6 +30,7 @@ interface UserProfile {
   selectedDays: string[];
   workoutLocation: 'Casa' | 'Gimnasio';
   homeEquipment: string[];
+  gymEquipment: string[];
 }
 
 interface MealIdea {
@@ -54,20 +55,45 @@ const INITIAL_INGREDIENTS = [
   'Fresa', 'Queso batido', 'Yogur griego', 'Leche', 'Proteína en polvo'
 ];
 
-const AVAILABLE_HOME_TOOLS = [
+const DEFAULT_HOME_TOOLS = [
   'Bandas elásticas', 'Mancuernas', 'Silla / Banco', 'Esterilla', 'Barra dominadas'
 ];
 
+const DEFAULT_GYM_TOOLS = [
+  'Barra olímpica', 'Mancuernas', 'Poleas', 'Máquinas guiadas', 'Kettlebells'
+];
+
 const EXERCISES: Exercise[] = [
+  // CASA / CALISTENIA
   { 
     id: 'c_emp_1', 
     name: 'Flexiones Declinadas', 
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Bandas elásticas y silla', 
-    homeSubstitute: 'Si no tienes bandas, haz flexiones normales en el suelo apoyando las rodillas si es necesario.',
-    instructions: 'Pies elevados en silla, manos en el suelo a la altura de los hombros. Baja el pecho de forma controlada.',
+    homeSubstitute: 'Flexiones normales en el suelo apoyando rodillas.',
+    instructions: 'Pies elevados en silla, manos en el suelo. Baja el pecho de forma controlada.',
     videoUrl: 'https://www.youtube.com/results?search_query=flexiones+declinadas+correctas'
+  },
+  { 
+    id: 'c_emp_2', 
+    name: 'Flexiones Diamante', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Peso corporal', 
+    homeSubstitute: 'Flexiones con manos juntas enfocadas a tríceps.',
+    instructions: 'Manos juntas formando un diamante con índices y pulgares. Baja el pecho hacia las manos.',
+    videoUrl: 'https://www.youtube.com/results?search_query=flexiones+diamante+tecnica'
+  },
+  { 
+    id: 'c_emp_3', 
+    name: 'Flexiones en Pica (Hombro)', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Peso corporal', 
+    homeSubstitute: 'Press militar con mancuernas si tienes.',
+    instructions: 'Cadera arriba formando una V invertida. Baja la coronilla hacia el suelo flexionando brazos.',
+    videoUrl: 'https://www.youtube.com/results?search_query=flexiones+en+pica+hombros'
   },
   { 
     id: 'c_trac_1', 
@@ -75,9 +101,19 @@ const EXERCISES: Exercise[] = [
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Bandas elásticas', 
-    homeSubstitute: 'Si no tienes bandas, usa una mochila cargada con libros y haz remo inclinado a una mano.',
-    instructions: 'Pisa la banda con ambos pies, cruza los extremos para más tensión y tira hacia las costillas apretando la espalda.',
+    homeSubstitute: 'Mochila cargada con libros haciendo remo a una mano.',
+    instructions: 'Pisa la banda con ambos pies y tira hacia las costillas apretando la espalda.',
     videoUrl: 'https://www.youtube.com/results?search_query=remo+con+banda+elastica+espalda'
+  },
+  { 
+    id: 'c_trac_2', 
+    name: 'Dominadas en Barra / Invertidas', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Barra dominadas', 
+    homeSubstitute: 'Remo invertido bajo una mesa resistente.',
+    instructions: 'Sujeción prona o supina, eleva la barbilla por encima de la barra de forma estricta.',
+    videoUrl: 'https://www.youtube.com/results?search_query=dominadas+tecnica+correcta'
   },
   { 
     id: 'c_leg_1', 
@@ -85,9 +121,29 @@ const EXERCISES: Exercise[] = [
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Silla / Banco', 
-    homeSubstitute: 'Si te cuesta el equilibrio, apóyate ligeramente a una pared o haz zancadas estáticas normales.',
-    instructions: 'Coloca el empeine de un pie en una silla detrás de ti y baja la cadera manteniendo el torso erguido.',
+    homeSubstitute: 'Zancadas estáticas en el suelo.',
+    instructions: 'Empeine de un pie en la silla detrás, baja la cadera manteniendo torso erguido.',
     videoUrl: 'https://www.youtube.com/results?search_query=sentadillas+bulgaras+tecnica'
+  },
+  { 
+    id: 'c_leg_2', 
+    name: 'Sentadillas Pistol (Un pierna)', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Peso corporal', 
+    homeSubstitute: 'Sentadillas normales profundas a dos piernas.',
+    instructions: 'Baja sobre una pierna manteniendo la otra extendida al frente sin tocar el suelo.',
+    videoUrl: 'https://www.youtube.com/results?search_query=pistol+squats+progreso'
+  },
+  { 
+    id: 'c_leg_3', 
+    name: 'Puente de Glúteos a Una Pierna', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Esterilla', 
+    homeSubstitute: 'Puente de glúteos normal a dos piernas.',
+    instructions: 'Tumbada boca arriba, eleva una pierna y empuja con el talón opuesto para subir la cadera.',
+    videoUrl: 'https://www.youtube.com/results?search_query=puente+de+gluteos+una+pierna'
   },
   { 
     id: 'c_core_1', 
@@ -95,19 +151,51 @@ const EXERCISES: Exercise[] = [
     location: 'Casa', 
     category: 'Core', 
     equipment: 'Esterilla', 
-    homeSubstitute: 'Si te molestan las muñecas, mantén una plancha estática sobre antebrazos.',
-    instructions: 'En posición de plancha alta, eleva una mano para tocar el hombro opuesto intentando no rotar la cadera.',
+    homeSubstitute: 'Plancha estática sobre antebrazos.',
+    instructions: 'En plancha alta, eleva una mano para tocar el hombro opuesto sin rotar la cadera.',
     videoUrl: 'https://www.youtube.com/results?search_query=plancha+con+toque+de+hombros'
   },
+  { 
+    id: 'c_core_2', 
+    name: 'Elevaciones de Piernas en Suelo', 
+    location: 'Casa', 
+    category: 'Core', 
+    equipment: 'Esterilla', 
+    homeSubstitute: 'Encogimientos abdominales clásicos (crunch).',
+    instructions: 'Manos bajo los glúteos, eleva las piernas rectas sin arquear la zona lumbar.',
+    videoUrl: 'https://www.youtube.com/results?search_query=elevacion+de+piernas+suelo+abdomen'
+  },
+  { 
+    id: 'c_core_3', 
+    name: 'Bichos Muertos (Dead Bug)', 
+    location: 'Casa', 
+    category: 'Core', 
+    equipment: 'Esterilla', 
+    homeSubstitute: 'Plancha abdominal isométrica.',
+    instructions: 'Boca arriba, extiende brazo derecho y pierna izquierda de forma alterna manteniendo lumbar pegada.',
+    videoUrl: 'https://www.youtube.com/results?search_query=dead+bug+ejercicio+core'
+  },
+
+  // GIMNASIO
   { 
     id: 'g_emp_1', 
     name: 'Press de Banca con Barra', 
     location: 'Gimnasio', 
     category: 'Fuerza', 
     equipment: 'Banco y Barra con discos', 
-    homeSubstitute: 'Sustituible por press con mancuernas o flexiones pesadas en casa.',
-    instructions: 'Tumbado en el banco, baja la barra de forma controlada hacia la línea media del pecho y empuja hacia arriba.',
+    homeSubstitute: 'Press con mancuernas o flexiones pesadas en casa.',
+    instructions: 'Tumbada en banco, baja la barra hacia el pecho y empuja hacia arriba.',
     videoUrl: 'https://www.youtube.com/results?search_query=press+de+banca+con+barra+tecnica'
+  },
+  { 
+    id: 'g_emp_2', 
+    name: 'Press Militar con Mancuernas', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Mancuernas y Banco', 
+    homeSubstitute: 'Flexiones en pica en casa.',
+    instructions: 'Sentada o de pie, eleva las mancuernas por encima de la cabeza de forma controlada.',
+    videoUrl: 'https://www.youtube.com/results?search_query=press+militar+con+mancuernas'
   },
   { 
     id: 'g_trac_1', 
@@ -116,8 +204,38 @@ const EXERCISES: Exercise[] = [
     category: 'Fuerza', 
     equipment: 'Máquina de polea alta', 
     homeSubstitute: 'Dominadas asistidas o remo con bandas en casa.',
-    instructions: 'Sujeta la barra con las manos un poco más abiertas que los hombros y tira hacia la parte alta del pecho.',
+    instructions: 'Sujeta la barra un poco más abierta que los hombros y tira hacia la parte alta del pecho.',
     videoUrl: 'https://www.youtube.com/results?search_query=jalon+al+pecho+en+polea+tecnica'
+  },
+  { 
+    id: 'g_trac_2', 
+    name: 'Remo en Polea Baja (T-Bar / Agarradera)', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Polea baja', 
+    homeSubstitute: 'Remo con bandas elásticas en casa.',
+    instructions: 'Espalda recta, tira del manillar hacia el abdomen contrarayendo escápulas.',
+    videoUrl: 'https://www.youtube.com/results?search_query=remo+en+polea+baja+espalda'
+  },
+  { 
+    id: 'g_leg_1', 
+    name: 'Sentadilla Libre con Barra', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Jaula y Barra olímpica', 
+    homeSubstitute: 'Sentadillas búlgaras o con mochila en casa.',
+    instructions: 'Barra en trapecios, baja la cadera manteniendo el pecho alto y empuja con toda la planta.',
+    videoUrl: 'https://www.youtube.com/results?search_query=sentadilla+libre+con+barra+tecnica'
+  },
+  { 
+    id: 'g_leg_2', 
+    name: 'Peso Muerto Rumano', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Barra o Mancuernas', 
+    homeSubstitute: 'Peso muerto con bandas o garrafas en casa.',
+    instructions: 'Bisagra de cadera hacia atrás sintiendo el estiramiento en femoral y glúteo.',
+    videoUrl: 'https://www.youtube.com/results?search_query=peso muerto rumano tecnica'
   }
 ];
 
@@ -126,7 +244,7 @@ const INITIAL_MEALS: MealIdea[] = [
     id: 'm1', 
     type: 'Almuerzo', 
     title: 'Pechuga de pollo a la plancha con arroz y brócoli', 
-    description: 'Pechuga marinada a la plancha acompañada de arroz blanco y brócoli al vapor.', 
+    description: 'Pechuga marinada acompañada de arroz blanco y brócoli al vapor.', 
     caloriesApprox: '450 kcal',
     ingredients: ['Pollo', 'Arroz', 'Brócoli'],
     allergens: [] 
@@ -158,7 +276,8 @@ export default function App() {
         reminderTime: '09:00', 
         selectedDays: ['Lun', 'Mié', 'Vie'],
         workoutLocation: 'Casa',
-        homeEquipment: ['Bandas elásticas', 'Silla / Banco', 'Esterilla']
+        homeEquipment: DEFAULT_HOME_TOOLS,
+        gymEquipment: DEFAULT_GYM_TOOLS
       }
     ];
   });
@@ -194,8 +313,8 @@ export default function App() {
     return 0;
   });
 
-  const [waterReminderActive, setWaterReminderActive] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
+  // Pestañas ampliadas con "herramientas"
+  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'herramientas' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>(['Plátano', 'Yogur griego', 'Avena']);
@@ -205,13 +324,14 @@ export default function App() {
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>(EXERCISES[0].name);
   const [weightUsedInput, setWeightUsedInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
+  
   const [newIngName, setNewIngName] = useState<string>('');
+  const [newHomeToolName, setNewHomeToolName] = useState<string>('');
+  const [newGymToolName, setNewGymToolName] = useState<string>('');
+
   const [newMealTitle, setNewMealTitle] = useState<string>('');
   const [newMealDesc, setNewMealDesc] = useState<string>('');
   const [newMealCalories, setNewMealCalories] = useState<string>('');
-
-  const [restTimerSeconds, setRestTimerSeconds] = useState<number>(0);
-  const [isResting, setIsResting] = useState<boolean>(false);
 
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
@@ -260,17 +380,39 @@ export default function App() {
     handleUpdateActiveProfile('homeEquipment', updatedTools);
   };
 
+  const handleAddCustomHomeTool = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newHomeToolName.trim();
+    if (!clean) return;
+    const currentTools = profile.homeEquipment || [];
+    if (!currentTools.includes(clean)) {
+      handleUpdateActiveProfile('homeEquipment', [...currentTools, clean]);
+    }
+    setNewHomeToolName('');
+  };
+
+  const handleAddCustomGymTool = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newGymToolName.trim();
+    if (!clean) return;
+    const currentTools = profile.gymEquipment || DEFAULT_GYM_TOOLS;
+    if (!currentTools.includes(clean)) {
+      handleUpdateActiveProfile('gymEquipment', [...currentTools, clean]);
+    }
+    setNewGymToolName('');
+  };
+
   const getAutoGeneratedRoutine = (): AutoRoutineDay[] => {
     const days = profile.selectedDays || [];
     const locationFilter = profile.workoutLocation || 'Casa';
     const poolExercises = EXERCISES.filter(ex => ex.location === locationFilter);
 
     return days.map((day, index) => {
-      let focus = locationFilter === 'Casa' ? 'Full Body en Casa' : 'Fuerza Gimnasio';
+      let focus = locationFilter === 'Casa' ? 'Full Body Calistenia' : 'Fuerza Gimnasio';
       let routineExs = poolExercises.length > 0 ? poolExercises : EXERCISES;
       
-      if (index % 2 === 1 && poolExercises.length > 1) {
-        routineExs = [poolExercises[1], poolExercises[0], poolExercises[poolExercises.length - 1] || poolExercises[0]];
+      if (index % 2 === 1 && poolExercises.length > 2) {
+        routineExs = [poolExercises[1], poolExercises[2], poolExercises[0]];
       }
 
       return { day, focus, exercises: routineExs.slice(0, 3) };
@@ -278,6 +420,7 @@ export default function App() {
   };
 
   const autoRoutine = getAutoGeneratedRoutine();
+  const filteredExercisesForLog = EXERCISES.filter(ex => ex.location === (profile.workoutLocation || 'Casa'));
 
   const handleToggleIngredient = (ingredient: string) => {
     setSelectedIngredients(prev => 
@@ -360,9 +503,9 @@ export default function App() {
   };
 
   const t = isDarkMode ? {
-    bg: '#090d16', card: '#111827', text: '#f9fafb', textSec: '#9ca3af', primary: '#3b82f6', border: '#1f2937', accentGrad: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', navBg: 'rgba(17, 24, 39, 0.85)'
+    bg: '#090d16', card: '#111827', text: '#f9fafb', textSec: '#9ca3af', primary: '#3b82f6', border: '#1f2937', accentGrad: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', navBg: 'rgba(17, 24, 39, 0.90)'
   } : {
-    bg: '#f3f4f6', card: '#ffffff', text: '#111827', textSec: '#4b5563', primary: '#2563eb', border: '#e5e7eb', accentGrad: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', navBg: 'rgba(255, 255, 255, 0.85)'
+    bg: '#f3f4f6', card: '#ffffff', text: '#111827', textSec: '#4b5563', primary: '#2563eb', border: '#e5e7eb', accentGrad: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', navBg: 'rgba(255, 255, 255, 0.90)'
   };
 
   return (
@@ -412,7 +555,7 @@ export default function App() {
               <div>
                 <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 8px 0' }}>Material disponible en casa:</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {AVAILABLE_HOME_TOOLS.map(tool => {
+                  {(profile.homeEquipment || DEFAULT_HOME_TOOLS).map(tool => {
                     const hasTool = profile.homeEquipment?.includes(tool);
                     return (
                       <button
@@ -498,15 +641,15 @@ export default function App() {
             )}
           </div>
 
-          {/* Registro Modo Libre */}
+          {/* Registro Modo Libre (Con gran variedad filtrada según Casa o Gimnasio) */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚡ Registro Modo Libre</h3>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚡ Registro Modo Libre ({profile.workoutLocation})</h3>
             <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
               <select value={selectedExerciseName} onChange={e => setSelectedExerciseName(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }}>
-                {EXERCISES.map(ex => (<option key={ex.id} value={ex.name}>{ex.name}</option>))}
+                {filteredExercisesForLog.map(ex => (<option key={ex.id} value={ex.name}>{ex.name} ({ex.category})</option>))}
               </select>
-              <input type="text" placeholder="Peso utilizado (ej: 10 kg)..." value={weightUsedInput} onChange={e => setWeightUsedInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
-              <input type="text" placeholder="Notas..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="text" placeholder="Peso utilizado (ej: 10 kg o PC)..." value={weightUsedInput} onChange={e => setWeightUsedInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="text" placeholder="Notas de la serie..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
               <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>Guardar Serie 🚀</button>
             </form>
           </div>
@@ -592,6 +735,34 @@ export default function App() {
         </div>
       )}
 
+      {/* NUEVA PESTAÑA: HERRAMIENTAS (Gestión de material en casa y gimnasio) */}
+      {activeTab === 'herramientas' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🛠️ Añadir Herramienta / Material en Casa</h2>
+            <form onSubmit={handleAddCustomHomeTool} style={{ display: 'flex', gap: '8px' }}>
+              <input type="text" placeholder="Ej: TRX, Rueda abdominal..." value={newHomeToolName} onChange={e => setNewHomeToolName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
+              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
+            </form>
+          </div>
+
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🏋️ Equipamiento en Gimnasio</h2>
+            <form onSubmit={handleAddCustomGymTool} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <input type="text" placeholder="Ej: Multipower, Prensa 45°..." value={newGymToolName} onChange={e => setNewGymToolName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
+              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
+            </form>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {(profile.gymEquipment || DEFAULT_GYM_TOOLS).map(eq => (
+                <span key={eq} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }}>
+                  🏋️ {eq}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PESTAÑA: DESPENSA */}
       {activeTab === 'despensa' && (
         <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
@@ -657,12 +828,13 @@ export default function App() {
         </div>
       )}
 
-      {/* Barra de Navegación Inferior */}
+      {/* Barra de Navegación Inferior (Con Herramientas Integrada) */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.navBg, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 16px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
         {[
           { id: 'entreno', label: 'Entreno', icon: '🏋️' },
           { id: 'nutricion', label: 'Nutrición', icon: '🥗' },
           { id: 'batidos', label: 'Batidos', icon: '🥤' },
+          { id: 'herramientas', label: 'Utilidades', icon: '🛠️' },
           { id: 'despensa', label: 'Despensa', icon: '🛒' },
           { id: 'menu', label: 'Menú', icon: '🍽️' },
           { id: 'progreso', label: 'Progreso', icon: '📈' },
@@ -674,7 +846,7 @@ export default function App() {
             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: activeTab === tab.id ? 1 : 0.6 }}
           >
             <span style={{ fontSize: '18px' }}>{tab.icon}</span>
-            <span style={{ fontSize: '9px', fontWeight: activeTab === tab.id ? '800' : '500', color: activeTab === tab.id ? t.primary : t.textSec }}>{tab.label}</span>
+            <span style={{ fontSize: '8px', fontWeight: activeTab === tab.id ? '800' : '500', color: activeTab === tab.id ? t.primary : t.textSec }}>{tab.label}</span>
           </button>
         ))}
       </nav>
