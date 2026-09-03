@@ -26,6 +26,7 @@ interface UserProfile {
   goal: string[];
   allergies: string[];
   trainingDaysPerWeek: number;
+  reminderTime: string;
 }
 
 interface MealIdea {
@@ -123,15 +124,6 @@ const INITIAL_MEALS: MealIdea[] = [
     caloriesApprox: '280 kcal',
     ingredients: ['Queso batido', 'Plátano', 'Leche', 'Avena'],
     allergens: ['Lactosa', 'Gluten'] 
-  },
-  { 
-    id: 'b2', 
-    type: 'Bebida / Batido', 
-    title: 'Smoothie Verde Detox con Espinacas y Manzana', 
-    description: 'Bebida refrescante cargada de micronutrientes, antioxidantes y fibra digestiva.', 
-    caloriesApprox: '150 kcal',
-    ingredients: ['Espinacas', 'Manzana', 'Plátano'],
-    allergens: [] 
   }
 ];
 
@@ -139,7 +131,7 @@ export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
-      { id: 'user_1', name: 'Nacho', weight: 70, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3 }
+      { id: 'user_1', name: 'Eli', weight: 50, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3, reminderTime: '09:00' }
     ];
   });
 
@@ -199,8 +191,27 @@ export default function App() {
   const [newMealDesc, setNewMealDesc] = useState<string>('');
   const [newMealCalories, setNewMealCalories] = useState<string>('');
 
-  const [newRoutineName, setNewRoutineName] = useState<string>('');
-  const [newRoutineSelectedExs, setNewRoutineSelectedExs] = useState<string[]>([]);
+  // Estados para Cronómetro de Descanso
+  const [restTimerSeconds, setRestTimerSeconds] = useState<number>(0);
+  const [isResting, setIsResting] = useState<boolean>(false);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (isResting && restTimerSeconds > 0) {
+      interval = setInterval(() => {
+        setRestTimerSeconds(prev => prev - 1);
+      }, 1000);
+    } else if (restTimerSeconds === 0 && isResting) {
+      setIsResting(false);
+      alert('⏰ ¡Tiempo de descanso finalizado! A por la siguiente serie 💪');
+    }
+    return () => clearInterval(interval);
+  }, [isResting, restTimerSeconds]);
+
+  const startRestTimer = (seconds: number) => {
+    setRestTimerSeconds(seconds);
+    setIsResting(true);
+  };
 
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
@@ -297,31 +308,6 @@ export default function App() {
     alert(`🔄 Ejercicio sustituto sugerido:\n\n⭐ En lugar de "${currentExName}", prueba hoy:\n👉 "${randomAlternative.name}"`);
   };
 
-  const handleCreateRoutineSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRoutineName.trim() || newRoutineSelectedExs.length === 0) {
-      alert('⚠️ Ponle un nombre a tu rutina y selecciona al menos un ejercicio.');
-      return;
-    }
-
-    const newRoutine: CustomWorkoutRoutine = {
-      id: 'rut_' + Date.now(),
-      name: newRoutineName.trim(),
-      exercises: newRoutineSelectedExs
-    };
-
-    setCustomRoutines([...customRoutines, newRoutine]);
-    setNewRoutineName('');
-    setNewRoutineSelectedExs([]);
-    alert('¡Rutina personalizada guardada! 💪');
-  };
-
-  const handleDeleteCustomRoutine = (routineId: string) => {
-    if (window.confirm('¿Seguro que deseas eliminar esta rutina?')) {
-      setCustomRoutines(customRoutines.filter(r => r.id !== routineId));
-    }
-  };
-
   const handleAddLog = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedExerciseName) return;
@@ -359,13 +345,22 @@ export default function App() {
     });
   };
 
+  const getAssignedDaysText = (daysCount: number) => {
+    switch (daysCount) {
+      case 2: return '📅 Días asignados: Martes y Jueves';
+      case 3: return '📅 Días asignados: Lunes, Miércoles y Viernes';
+      case 4: return '📅 Días asignados: Lunes, Martes, Jueves y Viernes';
+      case 5: return '📅 Días asignados: Lunes a Viernes';
+      default: return '📅 Días asignados: Flexibles';
+    }
+  };
+
   const filteredExercises = EXERCISES.filter(ex => {
     if (selectedLocation !== 'Todos' && ex.location !== selectedLocation) return false;
     if (selectedCategory !== 'Todos' && ex.category !== selectedCategory) return false;
     return true;
   });
 
-  // Generador automático inteligente de batidos según las frutas/ingredientes marcados
   const activeFruitsAndLiquids = selectedIngredients.filter(ing => 
     ['Plátano', 'Manzana', 'Fresa', 'Pera', 'Naranja', 'Queso batido', 'Yogur griego', 'Leche', 'Bebida de almendras', 'Proteína en polvo', 'Cacao puro'].includes(ing)
   );
@@ -407,12 +402,20 @@ export default function App() {
         </button>
       </header>
 
+      {/* Widget flotante de Cronómetro de Descanso si está activo */}
+      {isResting && (
+        <div style={{ backgroundColor: '#0284c7', color: '#fff', padding: '10px 14px', borderRadius: '10px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold' }}>
+          <span>⏱️ Descanso: {Math.floor(restTimerSeconds / 60)}:{('0' + (restTimerSeconds % 60)).slice(-2)} min</span>
+          <button onClick={() => setIsResting(false)} style={{ background: '#fff', color: '#0284c7', border: 'none', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '10px' }}>Saltar ⏹️</button>
+        </div>
+      )}
+
       {/* PESTAÑA: ENTRENAMIENTO */}
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>📅 Días de Entrenamiento</h2>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               {[2, 3, 4, 5].map(days => (
                 <button
                   key={days}
@@ -428,16 +431,31 @@ export default function App() {
                 </button>
               ))}
             </div>
+            <p style={{ fontSize: '11px', color: t.primary, margin: '4px 0 0 0', fontWeight: '600' }}>
+              {getAssignedDaysText(profile.trainingDaysPerWeek || 3)}
+            </p>
+          </div>
+
+          {/* Configuración de Recordatorio */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', marginTop: 0, marginBottom: '6px' }}>🔔 Recordatorio Diario de Entrenamiento</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '11px', color: t.textSec }}>Avisar a las:</span>
+              <input 
+                type="time" 
+                value={profile.reminderTime || '09:00'} 
+                onChange={e => handleUpdateActiveProfile('reminderTime', e.target.value)}
+                style={{ padding: '6px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
+              />
+              <button onClick={() => alert(`✅ ¡Recordatorio configurado con éxito para las ${profile.reminderTime || '09:00'}h!`)} style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Aviso ⏰</button>
+            </div>
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h3 style={{ fontSize: '14px', margin: '0 0 8px 0' }}>📂 Tus Rutinas ({customRoutines.length})</h3>
             {customRoutines.map(rut => (
               <div key={rut.id} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <strong style={{ fontSize: '12px', color: t.primary }}>⭐ {rut.name}</strong>
-                  <button onClick={() => handleDeleteCustomRoutine(rut.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '11px', cursor: 'pointer' }}>🗑️ Borrar</button>
-                </div>
+                <strong style={{ fontSize: '12px', color: t.primary, display: 'block', marginBottom: '4px' }}>⭐ {rut.name}</strong>
                 <ul style={{ margin: '4px 0 0 16px', padding: 0, fontSize: '11px', color: t.textSec }}>
                   {rut.exercises.map((exName, idx) => (
                     <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '2px 0' }}>
@@ -451,6 +469,15 @@ export default function App() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <h3 style={{ fontSize: '14px', margin: '4px 0' }}>⏱️ Cronómetro de Descanso Rápido</h3>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button onClick={() => startRestTimer(30)} style={{ flex: 1, padding: '8px', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>30s Descanso</button>
+              <button onClick={() => startRestTimer(60)} style={{ flex: 1, padding: '8px', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>60s Descanso</button>
+              <button onClick={() => startRestTimer(90)} style={{ flex: 1, padding: '8px', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>90s Descanso</button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
             {filteredExercises.map(ex => (
               <div key={ex.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -458,7 +485,10 @@ export default function App() {
                   <span style={{ fontSize: '9px', backgroundColor: ex.location === 'Casa' ? '#0ea5e9' : '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{ex.location}</span>
                 </div>
                 <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 6px 0' }}>{ex.instructions}</p>
-                <button onClick={() => handleSubstituteExercise(ex.name)} style={{ fontSize: '10px', fontWeight: '600', color: '#fff', backgroundColor: '#f59e0b', padding: '4px 8px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>🔄 Cambiar ejercicio</button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => handleSubstituteExercise(ex.name)} style={{ fontSize: '10px', fontWeight: '600', color: '#fff', backgroundColor: '#f59e0b', padding: '4px 8px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>🔄 Cambiar ejercicio</button>
+                  <button onClick={() => startRestTimer(60)} style={{ fontSize: '10px', fontWeight: '600', color: '#fff', backgroundColor: '#0284c7', padding: '4px 8px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>⏱️ Descanso 60s</button>
+                </div>
               </div>
             ))}
           </div>
@@ -468,7 +498,6 @@ export default function App() {
       {/* PESTAÑA: NUTRICIÓN */}
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ fontSize: '14px', margin: 0 }}>💧 Hidratación Diaria</h2>
@@ -522,10 +551,9 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: BATIDOS (Con Generador Automático por Frutas) */}
+      {/* PESTAÑA: BATIDOS */}
       {activeTab === 'batidos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, color: '#8b5cf6' }}>🪄 Batido Generado por tus Frutas</h2>
             {generatedSmartSmoothie ? (
@@ -547,7 +575,7 @@ export default function App() {
             <form onSubmit={handleAddBatidoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
               <input 
                 type="text" 
-                placeholder="Nombre del batido (ej: Batido post-entreno)..." 
+                placeholder="Nombre del batido..." 
                 value={newMealTitle}
                 onChange={e => setNewMealTitle(e.target.value)}
                 style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
@@ -559,50 +587,26 @@ export default function App() {
                 onChange={e => setNewMealCalories(e.target.value)}
                 style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
               />
-              <textarea 
-                placeholder="Descripción..." 
-                value={newMealDesc}
-                onChange={e => setNewMealDesc(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box', height: '50px' }}
-              />
               <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>Guardar Batido 🚀</button>
             </form>
           </div>
-
-          <h3 style={{ fontSize: '15px', margin: '4px 0' }}>📋 Tus Batidos Guardados ({batidosList.length})</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {batidosList.map(meal => (
-              <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '10px', backgroundColor: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>Bebida / Batido</span>
-                  <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {meal.caloriesApprox}</span>
-                </div>
-                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
-                <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
-                <div style={{ fontSize: '10px', color: t.primary }}>Ingredientes: {meal.ingredients.join(', ')}</div>
-              </div>
-            ))}
-          </div>
-
         </div>
       )}
 
       {/* PESTAÑA: DESPENSA */}
       {activeTab === 'despensa' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimento o Fruta</h2>
-            <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="text" 
-                placeholder="Ej: Fresa, Pera, Leche..." 
-                value={newIngName}
-                onChange={e => setNewIngName(e.target.value)}
-                style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
-              />
-              <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
-            </form>
-          </div>
+        <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+          <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimento o Fruta</h2>
+          <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="text" 
+              placeholder="Ej: Fresa, Pera, Leche..." 
+              value={newIngName}
+              onChange={e => setNewIngName(e.target.value)}
+              style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
+            />
+            <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
+          </form>
         </div>
       )}
 
@@ -613,7 +617,6 @@ export default function App() {
             <h2 style={{ fontSize: '15px', marginTop: 0, marginBottom: '6px' }}>🍽️ Generador de Menú y Batidos</h2>
             <button onClick={generateDailyMenu} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', width: '100%' }}>🎲 Generar Menú del Día</button>
           </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
             {dailyMenu.desayuno && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🌅 Desayuno:</strong> {dailyMenu.desayuno.title}</div>}
             {dailyMenu.bebida && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color:'#8b5cf6'}}>🥤 Batido del día:</strong> {dailyMenu.bebida.title}</div>}
