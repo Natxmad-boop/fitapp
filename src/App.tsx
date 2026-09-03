@@ -32,8 +32,10 @@ interface UserProfile {
   weight: number;
   goal: string;
   pin: string;
-  healthRestrictions: string[];
-  equipment: string[]; // Materiales disponibles para entrenar
+  healthRestrictions: string[]; // Alergias / Intolerancias
+  medications: string[];      // Medicación actual
+  diseasesOrConditions: string[]; // Enfermedades o lesiones crónicas
+  equipment: string[];         // Materiales disponibles
   injuries: string[];
   dislikedIngredients: string[];
   streakDays: number;
@@ -158,6 +160,8 @@ export default function App() {
       goal: 'Ganar músculo',
       pin: '1234',
       healthRestrictions: ['Sin lactosa'],
+      medications: ['Ninguna'],
+      diseasesOrConditions: ['Hipertensión leve'],
       equipment: ['Mancuernas', 'Esterilla', 'Ninguno'],
       injuries: ['Espalda baja'],
       dislikedIngredients: ['Brócoli'],
@@ -179,8 +183,10 @@ export default function App() {
   const [newDislikedInput, setNewDislikedInput] = useState<string>('');
   const [activeDemoExerciseId, setActiveDemoExerciseId] = useState<string | null>(null);
 
-  // Estado para añadir nuevo material en el perfil
+  // Estados para añadir en Perfil
   const [newEquipmentInput, setNewEquipmentInput] = useState<string>('');
+  const [newMedicationInput, setNewMedicationInput] = useState<string>('');
+  const [newDiseaseInput, setNewDiseaseInput] = useState<string>('');
 
   const [newProfileData, setNewProfileData] = useState({
     name: '',
@@ -189,11 +195,7 @@ export default function App() {
     height: 175,
     weight: 70,
     goal: 'Perder grasa',
-    pin: '0000',
-    healthRestrictions: 'Sin lactosa',
-    equipment: 'Mancuernas',
-    injuries: 'Ninguna',
-    disliked: ''
+    pin: '0000'
   });
 
   const activeProfile = profiles.find(p => p.id === activeProfileId);
@@ -327,6 +329,8 @@ export default function App() {
                       goal: newProfileData.goal,
                       pin: '0000',
                       healthRestrictions: [],
+                      medications: [],
+                      diseasesOrConditions: [],
                       equipment: ['Mancuernas', 'Ninguno'],
                       injuries: [],
                       dislikedIngredients: [],
@@ -347,17 +351,15 @@ export default function App() {
     );
   }
 
-  // Filtrado estricto de ejercicios basado en los materiales que el usuario ha indicado que posee
+  // Filtrado de ejercicios por equipo y contraindicaciones de lesiones/condiciones
   const filteredExercises = EXERCISE_LIBRARY.filter(ex => {
     if (selectedWorkoutFilter !== 'Todos' && ex.category !== selectedWorkoutFilter) return false;
     
-    // Comprueba si el usuario tiene el equipo necesario registrado en su perfil
     const hasEquipment = activeProfile?.equipment.some(eq => 
       ex.equipmentNeeded.toLowerCase() === 'ninguno' || eq.toLowerCase().includes(ex.equipmentNeeded.toLowerCase())
     );
     if (!hasEquipment) return false;
 
-    // Comprueba si hay conflicto de lesiones
     const hasInjuryConflict = activeProfile?.injuries.some(injury => ex.contraindications?.includes(injury));
     if (hasInjuryConflict) return false;
 
@@ -420,10 +422,10 @@ export default function App() {
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0, display: 'flex', justifyContent: 'space-between' }}>
               <span>🎯 Panel Personalizado</span>
-              <span style={{ fontSize: '11px', color: t.primary }}>Materiales Configurados</span>
+              <span style={{ fontSize: '11px', color: t.primary }}>Salud y Materiales</span>
             </h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Objetivo: <strong>{activeProfile?.goal}</strong>. Tus materiales disponibles (<em>{activeProfile?.equipment.join(', ') || 'Ninguno'}</em>) filtran los entrenamientos de forma automática.
+              Objetivo: <strong>{activeProfile?.goal}</strong>. Tus condiciones médicas y medicación registradas adaptan tus recomendaciones preventivas.
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -451,7 +453,7 @@ export default function App() {
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados a tu Material</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados a tu Perfil</h2>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {['Todos', 'Fuerza', 'Core'].map(cat => (
                 <button 
@@ -467,7 +469,7 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {filteredExercises.length === 0 ? (
                 <p style={{ fontSize: '13px', color: t.danger, textAlign: 'center', margin: '20px 0' }}>
-                  No hay ejercicios para el material seleccionado. Ve a <strong>Perfil</strong> y añade tu equipamiento disponible.
+                  No hay ejercicios disponibles para tu selección o tus condiciones médicas actuales. Revisa tu <strong>Perfil</strong>.
                 </p>
               ) : (
                 filteredExercises.map(ex => (
@@ -504,7 +506,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal de Demostración Técnica */}
+      {/* Modal de Demostración */}
       {currentDemoExercise && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}`, maxHeight: '85vh', overflowY: 'auto' }}>
@@ -624,17 +626,85 @@ export default function App() {
       {activeTab === 'perfil' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>👤 Configuración, Materiales y Gustos</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>👤 Configuración, Salud y Materiales</h2>
+            
+            {/* Aviso médico obligatorio */}
+            <div style={{ backgroundColor: isDarkMode ? '#1e1b4b' : '#eff6ff', border: `1px solid ${isDarkMode ? '#3730a3' : '#bfdbfe'}`, padding: '10px', borderRadius: '8px', marginBottom: '14px' }}>
+              <p style={{ fontSize: '11px', color: isDarkMode ? '#93c5fd' : '#1e40af', margin: 0, lineHeight: '1.4' }}>
+                ⚠️ <strong>Aviso Médico:</strong> Cualquier recomendación de ejercicio o nutrición debe ser consultada con un especialista médico o nutricionista antes de llevarla a la práctica.
+              </p>
+            </div>
+
             <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary, marginBottom: '16px' }}>
               <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
               <p style={{ margin: 0 }}><strong>Objetivo:</strong> {activeProfile?.goal}</p>
               <p style={{ margin: 0 }}><strong>Materiales Disponibles:</strong> <span style={{ color: t.primary, fontWeight: '600' }}>{activeProfile?.equipment.join(', ') || 'Ninguno'}</span></p>
+              <p style={{ margin: 0 }}><strong>Enfermedades o Condiciones:</strong> <span style={{ color: t.warning }}>{activeProfile?.diseasesOrConditions.join(', ') || 'Ninguna'}</span></p>
+              <p style={{ margin: 0 }}><strong>Medicación Actual:</strong> <span style={{ color: t.warning }}>{activeProfile?.medications.join(', ') || 'Ninguna'}</span></p>
               <p style={{ margin: 0 }}><strong>Alimentos que NO te gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
             </div>
 
-            {/* Sección para añadir o quitar Materiales */}
+            {/* Gestión de Enfermedades / Condiciones */}
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir material disponible (Ej. Bandas, Mancuernas):</h4>
+              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Registrar Enfermedad o Condición:</h4>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Ej. Hipertensión, Asma..." 
+                  value={newDiseaseInput}
+                  onChange={e => setNewDiseaseInput(e.target.value)}
+                  style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+                />
+                <button 
+                  onClick={() => {
+                    if (!newDiseaseInput) return;
+                    setProfiles(profiles.map(p => {
+                      if (p.id === activeProfileId) {
+                        return { ...p, diseasesOrConditions: [...p.diseasesOrConditions, newDiseaseInput.trim()] };
+                      }
+                      return p;
+                    }));
+                    setNewDiseaseInput('');
+                  }}
+                  style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Añadir
+                </button>
+              </div>
+            </div>
+
+            {/* Gestión de Medicación */}
+            <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
+              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Registrar Medicación Actual:</h4>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Ej. Anticoagulantes..." 
+                  value={newMedicationInput}
+                  onChange={e => setNewMedicationInput(e.target.value)}
+                  style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+                />
+                <button 
+                  onClick={() => {
+                    if (!newMedicationInput) return;
+                    setProfiles(profiles.map(p => {
+                      if (p.id === activeProfileId) {
+                        return { ...p, medications: [...p.medications, newMedicationInput.trim()] };
+                      }
+                      return p;
+                    }));
+                    setNewMedicationInput('');
+                  }}
+                  style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Añadir
+                </button>
+              </div>
+            </div>
+
+            {/* Gestión de Materiales */}
+            <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
+              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir material disponible:</h4>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input 
                   type="text" 
