@@ -95,7 +95,6 @@ export default function App() {
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
   const [selectedDayMealPlan, setSelectedDayMealPlan] = useState<string>('Lunes');
-  const [newDislikedInput, setNewDislikedInput] = useState<string>('');
   const [activeDemoExerciseId, setActiveDemoExerciseId] = useState<string | null>(null);
 
   const [newProfileData, setNewProfileData] = useState({
@@ -140,7 +139,9 @@ export default function App() {
 
       if (error) throw error;
       
-      let rawProfiles = (data || []).filter(p => p && p.name && p.name.trim() !== 'Carlos Trainer');
+      // Filtramos de forma estricta para excluir cualquier perfil que se llame "Carlos Trainer"
+      let rawProfiles = (data || []).filter(p => p && p.name && p.name.trim().toLowerCase() !== 'carlos trainer');
+      
       let mappedProfiles: UserProfile[] = rawProfiles.map(p => {
         let parsedGoals: string[] = ['Perder grasa'];
         if (Array.isArray(p.goal)) {
@@ -332,7 +333,7 @@ export default function App() {
                   <input type="text" value={newProfileData.name} onChange={e => setNewProfileData({...newProfileData, name: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
 
-                {/* Selector múltiple corregido con casillas de verificación */}
+                {/* Selección múltiple con casillas de verificación */}
                 <label>Objetivos (puedes marcar varios):</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: t.bg, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}>
                   {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza'].map(goalOption => {
@@ -415,10 +416,6 @@ export default function App() {
     getRotatedMeal('Snack', dayOffset),
     getRotatedMeal('Cena', dayOffset)
   ].filter(m => selectedMealFilter === 'Todos' || m.type === selectedMealFilter);
-
-  const automatedShoppingList = Array.from(
-    new Set([getRotatedMeal('Desayuno', dayOffset), getRotatedMeal('Almuerzo', dayOffset), getRotatedMeal('Snack', dayOffset), getRotatedMeal('Cena', dayOffset)].flatMap(m => m.ingredients))
-  );
 
   return (
     <div style={{ fontFamily: '-apple-system, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '16px', paddingBottom: '90px', color: t.text, backgroundColor: t.bg, minHeight: '100vh', boxSizing: 'border-box' }}>
