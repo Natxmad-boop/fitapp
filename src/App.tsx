@@ -26,7 +26,8 @@ interface UserProfile {
   goal: string[];
   allergies: string[];
   trainingDaysPerWeek: number;
-  reminderTime: string;
+  reminderTime: string;      // 🕒 Hora del recordatorio de entrenamiento
+  waterIntervalHours: number; // 💧 Cada cuántas horas avisar para beber agua
   selectedDays: string[];
   workoutLocation: 'Casa' | 'Gimnasio';
   homeEquipment: string[];
@@ -49,12 +50,6 @@ interface AutoRoutineDay {
   exercises: Exercise[];
 }
 
-const INITIAL_INGREDIENTS = [
-  'Pollo', 'Ternera', 'Salmón', 'Huevo', 'Arroz', 'Avena', 
-  'Brócoli', 'Espinacas', 'Aguacate', 'Plátano', 'Manzana', 
-  'Fresa', 'Queso batido', 'Yogur griego', 'Leche', 'Proteína en polvo'
-];
-
 const DEFAULT_HOME_TOOLS = [
   'Bandas elásticas', 'Mancuernas', 'Silla / Banco', 'Esterilla', 'Barra dominadas'
 ];
@@ -64,7 +59,6 @@ const DEFAULT_GYM_TOOLS = [
 ];
 
 const EXERCISES: Exercise[] = [
-  // CASA / CALISTENIA
   { 
     id: 'c_emp_1', 
     name: 'Flexiones Declinadas', 
@@ -165,8 +159,6 @@ const EXERCISES: Exercise[] = [
     instructions: 'Manos bajo los glúteos, eleva las piernas rectas sin arquear la zona lumbar.',
     videoUrl: 'https://www.youtube.com/results?search_query=elevacion+de+piernas+suelo+abdomen'
   },
-
-  // GIMNASIO
   { 
     id: 'g_emp_1', 
     name: 'Press de Banca con Barra', 
@@ -229,6 +221,12 @@ const EXERCISES: Exercise[] = [
   }
 ];
 
+const INITIAL_INGREDIENTS = [
+  'Pollo', 'Ternera', 'Salmón', 'Huevo', 'Arroz', 'Avena', 
+  'Brócoli', 'Espinacas', 'Aguacate', 'Plátano', 'Manzana', 
+  'Fresa', 'Queso batido', 'Yogur griego', 'Leche', 'Proteína en polvo'
+];
+
 const INITIAL_MEALS: MealIdea[] = [
   { 
     id: 'm1', 
@@ -264,6 +262,7 @@ export default function App() {
         allergies: [], 
         trainingDaysPerWeek: 3, 
         reminderTime: '09:00', 
+        waterIntervalHours: 2,
         selectedDays: ['Lun', 'Mié', 'Vie'],
         workoutLocation: 'Casa',
         homeEquipment: DEFAULT_HOME_TOOLS,
@@ -372,6 +371,7 @@ export default function App() {
       allergies: [],
       trainingDaysPerWeek: 3,
       reminderTime: '09:00',
+      waterIntervalHours: 2,
       selectedDays: ['Lun', 'Mié', 'Vie'],
       workoutLocation: 'Casa',
       homeEquipment: DEFAULT_HOME_TOOLS,
@@ -385,7 +385,6 @@ export default function App() {
     alert(`¡Perfil de ${createdUser.name} creado con éxito! 🎉`);
   };
 
-  // Función para eliminar un perfil
   const handleDeleteProfile = (idToDelete: string) => {
     if (profilesList.length <= 1) {
       alert('No puedes eliminar el único perfil existente.');
@@ -561,7 +560,6 @@ export default function App() {
       {/* PESTAÑA: ENTRENAMIENTO */}
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>📍 ¿Dónde vas a entrenar?</h2>
             
@@ -948,16 +946,34 @@ export default function App() {
             </form>
           </div>
 
-          {/* Editar el perfil actual */}
+          {/* Editar el perfil actual y sus recordatorios */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚙️ Editar Perfil Actual: {profile.name}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚙️ Ajustes del Perfil: {profile.name}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
               <label style={{ color: t.textSec, fontWeight: '600' }}>Nombre:
                 <input type="text" value={profile.name} onChange={e => handleUpdateActiveProfile('name', e.target.value)} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
               </label>
+              
               <label style={{ color: t.textSec, fontWeight: '600' }}>Peso (kg):
                 <input type="number" value={profile.weight} onChange={e => handleUpdateActiveProfile('weight', Number(e.target.value))} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
               </label>
+
+              <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '10px', marginTop: '4px' }}>
+                <strong style={{ fontSize: '12px', color: t.primary, display: 'block', marginBottom: '8px' }}>⏰ Programar Recordatorios Visuales</strong>
+                
+                <label style={{ color: t.textSec, fontWeight: '600', display: 'block', marginBottom: '8px' }}>🕒 Hora aviso de Entrenamiento:
+                  <input type="time" value={profile.reminderTime || '09:00'} onChange={e => handleUpdateActiveProfile('reminderTime', e.target.value)} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
+                </label>
+
+                <label style={{ color: t.textSec, fontWeight: '600', display: 'block' }}>💧 Aviso de Hidratación (cada cuántas horas):
+                  <select value={profile.waterIntervalHours || 2} onChange={e => handleUpdateActiveProfile('waterIntervalHours', Number(e.target.value))} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }}>
+                    <option value={1}>Cada 1 hora</option>
+                    <option value={2}>Cada 2 horas</option>
+                    <option value={3}>Cada 3 horas</option>
+                    <option value={4}>Cada 4 horas</option>
+                  </select>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -1011,7 +1027,6 @@ export default function App() {
           );
         })}
 
-        {/* Botón "Más" para desplegar la sección de Biblioteca de Ejercicios y herramientas secundarias */}
         <button 
           onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} 
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: ['ejercicios', 'batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? 1 : 0.6, flex: 1 }}
