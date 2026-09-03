@@ -248,7 +248,6 @@ const MEALS: MealIdea[] = [
 ];
 
 export default function App() {
-  // Lista de usuarios disponibles
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
@@ -262,10 +261,8 @@ export default function App() {
     return savedId || 'user_1';
   });
 
-  // Perfil activo actual
   const profile = profilesList.find(p => p.id === activeUserId) || profilesList[0];
 
-  // Logs vinculados estrictamente al usuario activo actual
   const [logs, setLogs] = useState<WorkoutLog[]>(() => {
     const saved = localStorage.getItem(`fitapp_logs_${activeUserId}`);
     return saved ? JSON.parse(saved) : [];
@@ -286,19 +283,16 @@ export default function App() {
   const [newUserName, setNewUserName] = useState<string>('');
   const [newUserWeight, setNewUserWeight] = useState<string>('');
 
-  // Sincronizar directorio de perfiles y usuario activo
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
   }, [profilesList]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_active_user_id', activeUserId);
-    // Cargar los logs específicos de este usuario al cambiar de cuenta
     const savedLogs = localStorage.getItem(`fitapp_logs_${activeUserId}`);
     setLogs(savedLogs ? JSON.parse(savedLogs) : []);
   }, [activeUserId]);
 
-  // Guardar logs del usuario activo
   useEffect(() => {
     localStorage.setItem(`fitapp_logs_${activeUserId}`, JSON.stringify(logs));
   }, [logs, activeUserId]);
@@ -325,6 +319,31 @@ export default function App() {
     setNewUserName('');
     setNewUserWeight('');
     alert(`¡Perfil de ${newUser.name} creado y seleccionado con éxito! 🎉`);
+  };
+
+  const handleDeleteUserProfile = (userIdToDelete: string) => {
+    if (profilesList.length <= 1) {
+      alert('⚠️ No puedes borrar el único perfil disponible.');
+      return;
+    }
+
+    const targetUser = profilesList.find(p => p.id === userIdToDelete);
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar el perfil de "${targetUser?.name}" y todos sus registros guardados?`)) {
+      return;
+    }
+
+    // Limpiar logs del usuario borrado del localStorage
+    localStorage.removeItem(`fitapp_logs_${userIdToDelete}`);
+
+    const updatedList = profilesList.filter(p => p.id !== userIdToDelete);
+    setProfilesList(updatedList);
+
+    // Si borramos el usuario activo, saltamos al primero restante
+    if (activeUserId === userIdToDelete) {
+      setActiveUserId(updatedList[0].id);
+    }
+
+    alert('Perfil eliminado correctamente.');
   };
 
   const handleAddLog = (e: React.FormEvent) => {
@@ -366,7 +385,7 @@ export default function App() {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
           <h1 style={{ fontSize: '18px', margin: 0, color: t.primary }}>FitApp Pro ⚡</h1>
-          <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Usuario: <strong>{profile.name}</strong> ({profile.weight} kg)</p>
+          <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Usuario: <strong>{profile?.name}</strong> ({profile?.weight} kg)</p>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', fontSize: '14px' }}>
           {isDarkMode ? '☀️' : '🌙'}
@@ -499,7 +518,7 @@ export default function App() {
       {activeTab === 'progreso' && (
         <div>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento de {profile.name}</h2>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento de {profile?.name}</h2>
             <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
               <label>Ejercicio:
                 <select 
@@ -534,12 +553,12 @@ export default function App() {
               </label>
 
               <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
-                Guardar Avance para {profile.name} 💾
+                Guardar Avance para {profile?.name} 💾
               </button>
             </form>
           </div>
 
-          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>📊 Historial de {profile.name} ({logs.length})</h3>
+          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>📊 Historial de {profile?.name} ({logs.length})</h3>
           {logs.length === 0 ? (
             <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>Aún no hay entrenamientos registrados para este usuario.</p>
           ) : (
@@ -560,30 +579,41 @@ export default function App() {
       )}
 
       {/* PESTAÑA: PERFIL Y MULTI-USUARIO */}
-      {activeTab === 'perfil' && (
+      {activeTab === 'perfil' && profile && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* Selector de Usuario Activo */}
+          {/* Selector y Borrado de Perfiles */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '15px', marginTop: 0 }}>👥 Cambiar de Usuario</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Cada usuario mantiene sus propios registros y cargas independientes sin borrar los de los demás.</p>
+            <h2 style={{ fontSize: '15px', marginTop: 0 }}>👥 Gestión de Usuarios</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Selecciona para cambiar o elimina los perfiles que ya no uses:</p>
             
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
               {profilesList.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => setActiveUserId(p.id)}
-                  style={{
-                    padding: '8px 14px', borderRadius: '8px', cursor: 'pointer',
-                    backgroundColor: p.id === activeUserId ? t.primary : t.bg,
-                    color: p.id === activeUserId ? '#fff' : t.text,
-                    border: `1px solid ${p.id === activeUserId ? t.primary : t.border}`,
-                    fontWeight: p.id === activeUserId ? 'bold' : 'normal',
-                    fontSize: '12px'
-                  }}
-                >
-                  👤 {p.name} {p.id === activeUserId ? '✓' : ''}
-                </button>
+                <div key={p.id} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <button
+                    onClick={() => setActiveUserId(p.id)}
+                    style={{
+                      flex: 1, textAlign: 'left', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
+                      backgroundColor: p.id === activeUserId ? t.primary : t.bg,
+                      color: p.id === activeUserId ? '#fff' : t.text,
+                      border: `1px solid ${p.id === activeUserId ? t.primary : t.border}`,
+                      fontWeight: p.id === activeUserId ? 'bold' : 'normal',
+                      fontSize: '12px'
+                    }}
+                  >
+                    👤 {p.name} ({p.weight} kg) {p.id === activeUserId ? '✓ (Activo)' : ''}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUserProfile(p.id)}
+                    title="Eliminar perfil"
+                    style={{
+                      background: 'none', border: `1px solid #ef4444`, color: '#ef4444', 
+                      borderRadius: '8px', padding: '8px 10px', cursor: 'pointer', fontSize: '12px'
+                    }}
+                  >
+                    🗑️
+                  </button>
+                </div>
               ))}
             </div>
           </div>
