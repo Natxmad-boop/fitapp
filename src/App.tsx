@@ -23,16 +23,16 @@ interface UserProfile {
   id: string;
   name: string;
   weight: number;
-  goal: string[]; // Ahora es un array para admitir múltiples objetivos seleccionados
+  goal: string[];
 }
 
 interface MealIdea {
   id: string;
   type: 'Desayuno' | 'Almuerzo' | 'Cena' | 'Snack';
-  dietType: 'Perder peso' | 'Ganar masa' | 'Sin lactosa' | 'Sin gluten';
   title: string;
   description: string;
   caloriesApprox: string;
+  ingredients: string[]; // Ingredientes clave para el filtrado
 }
 
 const AVAILABLE_GOALS = [
@@ -41,6 +41,22 @@ const AVAILABLE_GOALS = [
   'Ganar masa muscular',
   'Mejorar resistencia',
   'Movilidad y salud'
+];
+
+// Lista de ingredientes predefinidos para seleccionar
+const AVAILABLE_INGREDIENTS = [
+  'Pollo',
+  'Arroz',
+  'Brócoli',
+  'Zanahoria',
+  'Lomo',
+  'Huevo',
+  'Aguacate',
+  'Salmón',
+  'Avena',
+  'Plátano',
+  'Ternera',
+  'Patata'
 ];
 
 const EXERCISES: Exercise[] = [
@@ -230,29 +246,70 @@ const EXERCISES: Exercise[] = [
 ];
 
 const MEALS: MealIdea[] = [
-  // Perder Peso
-  { id: 'm1', type: 'Desayuno', dietType: 'Perder peso', title: 'Tostada integral con aguacate y huevo pochado', description: 'Pan de centeno integral, medio aguacate machacado y un huevo cocido o pochado.', caloriesApprox: '320 kcal' },
-  { id: 'm2', type: 'Almuerzo', dietType: 'Perder peso', title: 'Pechuga de pollo a la plancha con espárragos y quinoa', description: '150g de pollo, manojo de espárragos trigueros salteados y 40g de quinoa cocida.', caloriesApprox: '410 kcal' },
-  { id: 'm3', type: 'Cena', dietType: 'Perder peso', title: 'Crema de calabacín ligera y merluza al horno', description: 'Crema casera sin patata y lomo de merluza con chorrito de aceite de oliva.', caloriesApprox: '300 kcal' },
-  { id: 'm4', type: 'Snack', dietType: 'Perder peso', title: 'Yogur griego desnatado con arándanos', description: 'Yogur natural sin azúcar con un puñado pequeño de arándanos frescos.', caloriesApprox: '130 kcal' },
-
-  // Ganar Masa Muscular
-  { id: 'm5', type: 'Desayuno', dietType: 'Ganar masa', title: 'Porridge de avena energético con plátano y nueces', description: '80g de copos de avena con leche, un plátano en rodajas y 20g de nueces.', caloriesApprox: '550 kcal' },
-  { id: 'm6', type: 'Almuerzo', dietType: 'Ganar masa', title: 'Ternera magra con arroz blanco y patata', description: '180g de carne de ternera, 150g de arroz cocido y patata asada.', caloriesApprox: '650 kcal' },
-  { id: 'm7', type: 'Cena', dietType: 'Ganar masa', title: 'Tortilla de 3 huevos con atún y pan integral', description: 'Tortilla francesa con una lata de atún al natural y dos rebanadas de pan de masa madre.', caloriesApprox: '520 kcal' },
-  { id: 'm8', type: 'Snack', dietType: 'Ganar masa', title: 'Batido casero de plátano, crema de cacahuete y leche', description: '1 plátano, 2 cucharadas soperas de crema de cacahuete 100% y vaso grande de leche.', caloriesApprox: '450 kcal' },
-
-  // Sin Lactosa
-  { id: 'm9', type: 'Desayuno', dietType: 'Sin lactosa', title: 'Tostadas con jamón serrano y tomate natural', description: 'Pan integral tostado con aceite de oliva virgen extra, tomate rallado y jamón.', caloriesApprox: '310 kcal' },
-  { id: 'm10', type: 'Almuerzo', dietType: 'Sin lactosa', title: 'Salmón al horno con patatas panaderas', description: 'Filete de salmón fresco al horno con rodajas finas de patata y cebolla.', caloriesApprox: '500 kcal' },
-  { id: 'm11', type: 'Cena', dietType: 'Sin lactosa', title: 'Salteado de pavo con verduras variadas', description: 'Tiras de pavo salteadas en wok con pimientos, calabacín y salsa de soja.', caloriesApprox: '380 kcal' },
-  { id: 'm12', type: 'Snack', dietType: 'Sin lactosa', title: 'Frutos secos naturales y una pieza de fruta', description: 'Mix de almendras y nueces con una manzana.', caloriesApprox: '220 kcal' },
-
-  // Sin Gluten
-  { id: 'm13', type: 'Desayuno', dietType: 'Sin gluten', title: 'Tortitas caseras de avena sin gluten y plátano', description: 'Avena certificada sin gluten batida con un huevo y un plátano a la plancha.', caloriesApprox: '340 kcal' },
-  { id: 'm14', type: 'Almuerzo', dietType: 'Sin gluten', title: 'Pechuga de pollo desmenuzada con arroz y frijoles', description: 'Plato completo estilo bol con arroz, pollo especiado y judías negras.', caloriesApprox: '490 kcal' },
-  { id: 'm15', type: 'Cena', dietType: 'Sin gluten', title: 'Tortilla de patatas casera con ensalada verde', description: 'Clásica tortilla de patata y cebolla con aceite de oliva acompañada de lechuga.', caloriesApprox: '420 kcal' },
-  { id: 'm16', type: 'Snack', dietType: 'Sin gluten', title: 'Tortitas de maíz con crema de cacahuete', description: '3 tortitas de maíz soplado untadas con crema de cacahuete.', caloriesApprox: '180 kcal' }
+  { 
+    id: 'm1', 
+    type: 'Almuerzo', 
+    title: 'Pechuga de pollo a la plancha con arroz y brócoli', 
+    description: 'Pechuga marinada a la plancha acompañada de arroz blanco y brócoli al vapor.', 
+    caloriesApprox: '450 kcal',
+    ingredients: ['Pollo', 'Arroz', 'Brócoli'] 
+  },
+  { 
+    id: 'm2', 
+    type: 'Almuerzo', 
+    title: 'Lomo adobado salteado con zanahorias y patata', 
+    description: 'Tiras de lomo adobado con patata asada y bastoncitos de zanahoria tierna.', 
+    caloriesApprox: '490 kcal',
+    ingredients: ['Lomo', 'Zanahoria', 'Patata'] 
+  },
+  { 
+    id: 'm3', 
+    type: 'Desayuno', 
+    title: 'Tostada integral con aguacate y huevo pochado', 
+    description: 'Pan integral, medio aguacate machacado por encima y un huevo pochado.', 
+    caloriesApprox: '320 kcal',
+    ingredients: ['Huevo', 'Aguacate'] 
+  },
+  { 
+    id: 'm4', 
+    type: 'Cena', 
+    title: 'Salmón al horno con brócoli y zanahorias', 
+    description: 'Lomo de salmón fresco al horno con guarnición de verduras crujientes.', 
+    caloriesApprox: '510 kcal',
+    ingredients: ['Salmón', 'Brócoli', 'Zanahoria'] 
+  },
+  { 
+    id: 'm5', 
+    type: 'Almuerzo', 
+    title: 'Ternera magra con arroz y patata', 
+    description: 'Filete de ternera a la plancha con arroz blanco y patata cocida.', 
+    caloriesApprox: '580 kcal',
+    ingredients: ['Ternera', 'Arroz', 'Patata'] 
+  },
+  { 
+    id: 'm6', 
+    type: 'Desayuno', 
+    title: 'Porridge de avena con plátano', 
+    description: 'Copos de avena cocidos con leche o bebida vegetal y rodajas de plátano.', 
+    caloriesApprox: '380 kcal',
+    ingredients: ['Avena', 'Plátano'] 
+  },
+  { 
+    id: 'm7', 
+    type: 'Cena', 
+    title: 'Tortilla francesa con lomo y ensalada de zanahoria', 
+    description: 'Tortilla de dos huevos acompañada de unos taquitos de lomo y zanahoria rallada.', 
+    caloriesApprox: '410 kcal',
+    ingredients: ['Huevo', 'Lomo', 'Zanahoria'] 
+  },
+  { 
+    id: 'm8', 
+    type: 'Snack', 
+    title: 'Tortitas de arroz con aguacate y huevo', 
+    description: 'Snack energético salado con base de aguacate y huevo cocido picado.', 
+    caloriesApprox: '250 kcal',
+    ingredients: ['Aguacate', 'Huevo'] 
+  }
 ];
 
 export default function App() {
@@ -260,7 +317,7 @@ export default function App() {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
       { id: 'user_1', name: 'Nacho', weight: 70, goal: ['Ganar fuerza'] },
-      { id: 'user_2', name: 'Lucía', weight: 60, goal: ['Perder grasa', 'Tonificación'] }
+      { id: 'user_2', name: 'Lucía', weight: 60, goal: ['Perder grasa'] }
     ];
   });
 
@@ -280,9 +337,11 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
-  const [selectedDietType, setSelectedDietType] = useState<'Perder peso' | 'Ganar masa' | 'Sin lactosa' | 'Sin gluten'>('Perder peso');
 
-  // Formulario registro
+  // NUEVO ESTADO: Ingredientes seleccionados para filtrar la nutrición (por defecto vacío para mostrar todo o los que marque)
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+
+  // Formulario registro entreno
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>(EXERCISES[0].name);
   const [weightUsedInput, setWeightUsedInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
@@ -311,12 +370,10 @@ export default function App() {
     setProfilesList(updated);
   };
 
-  // Función para alternar objetivos múltiples en el perfil activo
   const handleToggleActiveGoal = (goalOption: string) => {
     const currentGoals = profile.goal || [];
     let updatedGoals;
     if (currentGoals.includes(goalOption)) {
-      // Si ya lo tiene marcado y hay más de uno, lo quita
       if (currentGoals.length === 1) {
         alert('⚠️ Debes seleccionar al menos un objetivo.');
         return;
@@ -328,13 +385,21 @@ export default function App() {
     handleUpdateActiveProfile('goal', updatedGoals);
   };
 
-  // Función para alternar objetivos en la creación de nuevo usuario
   const handleToggleNewUserGoal = (goalOption: string) => {
     if (newUserGoals.includes(goalOption)) {
       if (newUserGoals.length === 1) return;
       setNewUserGoals(newUserGoals.filter(g => g !== goalOption));
     } else {
       setNewUserGoals([...newUserGoals, goalOption]);
+    }
+  };
+
+  // Función para alternar ingredientes favoritos en la pestaña de nutrición
+  const handleToggleIngredient = (ingredient: string) => {
+    if (selectedIngredients.includes(ingredient)) {
+      setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
+    } else {
+      setSelectedIngredients([...selectedIngredients, ingredient]);
     }
   };
 
@@ -420,7 +485,11 @@ export default function App() {
     return true;
   });
 
-  const filteredMeals = MEALS.filter(meal => meal.dietType === selectedDietType);
+  // Filtrado de recetas: si hay ingredientes marcados, muestra las recetas que contengan AL MENOS UNO de los ingredientes seleccionados. Si no hay ninguno marcado, muestra todas.
+  const filteredMeals = MEALS.filter(meal => {
+    if (selectedIngredients.length === 0) return true;
+    return meal.ingredients.some(ing => selectedIngredients.includes(ing));
+  });
 
   const t = isDarkMode ? {
     bg: '#0f172a', card: '#1e293b', text: '#f8fafc', textSec: '#94a3b8', primary: '#38bdf8', border: '#334155'
@@ -536,42 +605,71 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: NUTRICIÓN Y DIETAS */}
+      {/* PESTAÑA: NUTRICIÓN Y SELECCIÓN DE INGREDIENTES */}
       {activeTab === 'nutricion' && (
         <div>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '8px' }}>🥗 Elige tu objetivo o dieta:</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-              {(['Perder peso', 'Ganar masa', 'Sin lactosa', 'Sin gluten'] as const).map(diet => (
-                <button 
-                  key={diet} 
-                  onClick={() => setSelectedDietType(diet)}
-                  style={{ 
-                    padding: '8px', borderRadius: '8px', 
-                    border: `1px solid ${selectedDietType === diet ? t.primary : t.border}`, 
-                    backgroundColor: selectedDietType === diet ? t.primary : t.bg, 
-                    color: selectedDietType === diet ? '#fff' : t.text, 
-                    fontSize: '11px', fontWeight: '600', cursor: 'pointer', textAlign: 'center' 
-                  }}
-                >
-                  {diet === 'Perder peso' ? '🔥 Perder Peso' : diet === 'Ganar masa' ? '💪 Ganar Masa' : diet === 'Sin lactosa' ? '🥛 Sin Lactosa' : '🌾 Sin Gluten'}
-                </button>
-              ))}
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 ¿Qué ingredientes tienes o te apetece comer?</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Pincha para marcar tus favoritos y te daremos ideas adaptadas:</p>
+            
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {AVAILABLE_INGREDIENTS.map(ing => {
+                const isSelected = selectedIngredients.includes(ing);
+                return (
+                  <button
+                    key={ing}
+                    onClick={() => handleToggleIngredient(ing)}
+                    style={{
+                      padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '11px', fontWeight: '600',
+                      backgroundColor: isSelected ? t.primary : t.bg,
+                      color: isSelected ? '#fff' : t.text,
+                      border: `1px solid ${isSelected ? t.primary : t.border}`
+                    }}
+                  >
+                    {isSelected ? '✓ ' : '+ '} {ing}
+                  </button>
+                );
+              })}
             </div>
+
+            {selectedIngredients.length > 0 && (
+              <button 
+                onClick={() => setSelectedIngredients([])}
+                style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '11px', cursor: 'pointer', marginTop: '10px', padding: 0, textDecoration: 'underline' }}
+              >
+                Limpiar filtros de ingredientes
+              </button>
+            )}
           </div>
 
-          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>Ideas de Comidas ({selectedDietType})</h3>
+          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>
+            Ideas de Comidas ({filteredMeals.length}) {selectedIngredients.length > 0 ? 'filtradas' : 'totales'}
+          </h3>
+          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {filteredMeals.map(meal => (
-              <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
-                  <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ Aprox: {meal.caloriesApprox}</span>
+            {filteredMeals.length === 0 ? (
+              <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>No hay recetas que coincidan con todos los ingredientes seleccionados.</p>
+            ) : (
+              filteredMeals.map(meal => (
+                <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
+                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ Aprox: {meal.caloriesApprox}</span>
+                  </div>
+                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
+                  <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
+                  
+                  {/* Etiquetas de ingredientes de la receta */}
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
+                    {meal.ingredients.map(ing => (
+                      <span key={ing} style={{ fontSize: '9px', backgroundColor: t.bg, border: `1px solid ${t.border}`, color: t.textSec, padding: '2px 6px', borderRadius: '4px' }}>
+                        {ing}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
-                <p style={{ fontSize: '12px', color: t.textSec, margin: 0 }}>{meal.description}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -680,7 +778,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Editar Perfil Activo con Checkboxes de Objetivos */}
+          {/* Editar Perfil Activo */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>⚙️ Configurar a: {profile.name}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
@@ -701,7 +799,6 @@ export default function App() {
                 />
               </label>
 
-              {/* Objetivos múltiples predefinidos */}
               <div>
                 <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Objetivos (puedes marcar varios):</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -729,7 +826,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Crear Nuevo Usuario con Objetivos múltiples */}
+          {/* Crear Nuevo Usuario */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>➕ Añadir Nuevo Perfil</h2>
             <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
