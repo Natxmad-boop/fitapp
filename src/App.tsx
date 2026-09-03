@@ -168,6 +168,7 @@ export default function App() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [isCreatingProfile, setIsCreatingProfile] = useState<boolean>(false);
+  const [freshPinNotice, setFreshPinNotice] = useState<string | null>(null);
 
   const [profilePinTarget, setProfilePinTarget] = useState<UserProfile | null>(null);
   const [enteredPin, setEnteredPin] = useState<string>('');
@@ -191,7 +192,7 @@ export default function App() {
     height: 175,
     weight: 70,
     goals: [] as string[],
-    pin: '0000'
+    pin: '1234'
   });
 
   useEffect(() => {
@@ -210,14 +211,14 @@ export default function App() {
 
   useEffect(() => {
     if (session?.user) {
-      fetchProfiles();
+      fetchProfilesAndAutoCreate();
     } else {
       setProfiles([]);
       setActiveProfileId(null);
     }
   }, [session]);
 
-  const fetchProfiles = async () => {
+  const fetchProfilesAndAutoCreate = async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -226,7 +227,7 @@ export default function App() {
 
       if (error) throw error;
       
-      const mappedProfiles: UserProfile[] = (data || []).map(p => ({
+      let mappedProfiles: UserProfile[] = (data || []).map(p => ({
         id: p.id,
         user_id: p.user_id,
         name: p.name,
@@ -246,6 +247,52 @@ export default function App() {
         points: p.points || 50,
         created_at: p.created_at
       }));
+
+      // Si el usuario no tiene perfiles (y limpiamos el de Carlos Trainer), autogeneramos uno limpio
+      if (mappedProfiles.length === 0) {
+        const defaultPin = Math.floor(1000 + Math.random() * 9000).toString();
+        const pinHashed = await hashPin(defaultPin);
+        const defaultName = session.user.email ? session.user.email.split('@')[0] : 'Mi Perfil';
+
+        const { data: newDbData, error: insertError } = await supabase.from('profiles').insert([{
+          user_id: session.user.id,
+          name: defaultName,
+          age: 25,
+          gender: 'No especificado',
+          height: 175,
+          weight: 70,
+          goal: 'Perder grasa, Ganar músculo',
+          pin_hash: pinHashed,
+          equipment: ['Mancuernas', 'Ninguno'],
+          streak_days: 1,
+          points: 50
+        }]).select();
+
+        if (!insertError && newDbData && newDbData[0]) {
+          const created = newDbData[0];
+          mappedProfiles = [{
+            id: created.id,
+            user_id: created.user_id,
+            name: created.name,
+            age: created.age,
+            gender: created.gender,
+            height: created.height,
+            weight: created.weight,
+            goal: created.goal,
+            pin_hash: created.pin_hash,
+            healthRestrictions: [],
+            medications: [],
+            diseasesOrConditions: [],
+            equipment: created.equipment || ['Mancuernas', 'Ninguno'],
+            injuries: [],
+            dislikedIngredients: [],
+            streakDays: 1,
+            points: 50,
+            created_at: created.created_at
+          }];
+          setFreshPinNotice(defaultPin);
+        }
+      }
 
       setProfiles(mappedProfiles);
     } catch (err: any) {
@@ -324,6 +371,12 @@ export default function App() {
 
     return (
       <div style={{ fontFamily: '-apple-system, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', color: t.text, backgroundColor: t.bg, minHeight: '100vh', boxSizing: 'border-box' }}>
+        {freshPinNotice && (
+          <div style={{ backgroundColor: '#dcfce7', border: '1px solid #22c55e', color: '#166534', padding: '12px', borderRadius: '8px', fontSize: '12px', marginBottom: '16px' }}>
+            <strong>¡Perfil autogenerado con éxito!</strong> Tu PIN temporal de acceso seguro es: <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{freshPinNotice}</span> (anótalo bien, no se puede recuperar).
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
             <h1 style={{ fontSize: '20px', margin: 0 }}>FitApp Pro 🏆</h1>
@@ -337,35 +390,31 @@ export default function App() {
         <p style={{ textAlign: 'center', fontSize: '13px', color: t.textSecondary, marginBottom: '24px' }}>Selecciona tu perfil seguro</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {profiles.length === 0 ? (
-            <p style={{ textAlign: 'center', color: t.textSecondary, fontSize: '13px' }}>No tienes ningún perfil creado todavía.</p>
-          ) : (
-            profiles.map(p => {
-              const goalDisplay = Array.isArray(p.goal) 
-                ? p.goal.join(', ') 
-                : (typeof p.goal === 'string' && p.goal.includes(',') ? p.goal : p.goal);
+          {profiles.map(p => {
+            const goalDisplay = Array.isArray(p.goal) 
+              ? p.goal.join(', ') 
+              : (typeof p.goal === 'string' && p.goal.includes(',') ? p.goal : p.goal);
 
-              return (
-                <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
-                    <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {goalDisplay} | 🔒 Protegido con PIN</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      if (isLockedOut) return;
-                      setProfilePinTarget(p);
-                      setEnteredPin('');
-                      setPinError(false);
-                    }}
-                    style={{ backgroundColor: isLockedOut ? t.border : t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: isLockedOut ? 'not-allowed' : 'pointer', fontWeight: '600' }}
-                  >
-                    Entrar ➔
-                  </button>
+            return (
+              <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
+                  <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {goalDisplay} | 🔒 Protegido con PIN</p>
                 </div>
-              );
-            })
-          )}
+                <button 
+                  onClick={() => {
+                    if (isLockedOut) return;
+                    setProfilePinTarget(p);
+                    setEnteredPin('');
+                    setPinError(false);
+                  }}
+                  style={{ backgroundColor: isLockedOut ? t.border : t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: isLockedOut ? 'not-allowed' : 'pointer', fontWeight: '600' }}
+                >
+                  Entrar ➔
+                </button>
+              </div>
+            );
+          })}
 
           <button 
             onClick={() => {
@@ -374,7 +423,7 @@ export default function App() {
             }}
             style={{ backgroundColor: 'transparent', border: `2px dashed ${t.primary}`, color: t.primary, padding: '12px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', marginTop: '10px' }}
           >
-            + Crear Nuevo Perfil Independiente
+            + Crear Nuevo Perfil Adicional
           </button>
         </div>
 
@@ -437,7 +486,6 @@ export default function App() {
                   </label>
                 </div>
                 
-                {/* Selector múltiple de objetivos principales mediante casillas */}
                 <label style={{ fontWeight: '600', marginTop: '4px' }}>Objetivos Principales (marca uno o varios):</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: t.bg, padding: '10px', borderRadius: '6px', border: `1px solid ${t.border}` }}>
                   {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza', 'Aumentar resistencia', 'Mejorar salud y movilidad'].map((option) => {
@@ -494,7 +542,7 @@ export default function App() {
                     if (error) {
                       alert('Error al crear perfil: ' + error.message);
                     } else if (data) {
-                      await fetchProfiles();
+                      await fetchProfilesAndAutoCreate();
                       setIsCreatingProfile(false);
                     }
                   }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Guardar Perfil</button>
