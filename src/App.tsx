@@ -47,11 +47,9 @@ interface CustomWorkoutRoutine {
 }
 
 const INITIAL_INGREDIENTS = [
-  'Pollo', 'Ternera', 'Lomo', 'Salmón', 'Atún', 'Huevo', 
-  'Arroz', 'Patata', 'Avena', 'Pan integral', 'Garbanzos',
-  'Brócoli', 'Zanahoria', 'Espinacas', 'Tomate', 'Aguacate', 'Calabacín',
-  'Queso fresco', 'Plátano', 'Manzana', 'Fresa', 'Pera', 'Naranja', 'Nueces',
-  'Queso batido', 'Yogur griego', 'Leche', 'Bebida de almendras', 'Proteína en polvo', 'Cacao puro'
+  'Pollo', 'Ternera', 'Salmón', 'Huevo', 'Arroz', 'Avena', 
+  'Brócoli', 'Espinacas', 'Aguacate', 'Plátano', 'Manzana', 
+  'Fresa', 'Queso batido', 'Yogur griego', 'Leche', 'Proteína en polvo'
 ];
 
 const EXERCISES: Exercise[] = [
@@ -106,25 +104,26 @@ const INITIAL_MEALS: MealIdea[] = [
     caloriesApprox: '450 kcal',
     ingredients: ['Pollo', 'Arroz', 'Brócoli'],
     allergens: [] 
+  },
+  { 
+    id: 'm2', 
+    type: 'Desayuno', 
+    title: 'Bol de Avena, Plátano y Yogur Griego', 
+    description: 'Avena mezclada con yogur griego y rodajas de plátano fresco.', 
+    caloriesApprox: '380 kcal',
+    ingredients: ['Avena', 'Yogur griego', 'Plátano'],
+    allergens: [] 
   }
 ];
 
-// Definimos los días con su clave interna completa y su etiqueta corta visible
-const DAYS_CONFIG = [
-  { key: 'Lunes', label: 'Lun' },
-  { key: 'Martes', label: 'Mar' },
-  { key: 'Miércoles', label: 'Mié' },
-  { key: 'Jueves', label: 'Jue' },
-  { key: 'Viernes', label: 'Vie' },
-  { key: 'Sábado', label: 'Sáb' },
-  { key: 'Domingo', label: 'Dom' },
-];
+// Usamos directamente las abreviaturas cortas como identificadores unificados
+const DAYS_LIST = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
-      { id: 'user_1', name: 'Eli', weight: 50, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3, reminderTime: '09:00', selectedDays: ['Lunes', 'Miércoles', 'Viernes'] }
+      { id: 'user_1', name: 'Eli', weight: 50, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3, reminderTime: '09:00', selectedDays: ['Lun', 'Mié', 'Vie'] }
     ];
   });
 
@@ -169,7 +168,10 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  
+  // Dejamos un par de ingredientes seleccionados por defecto para que el generador de batidos funcione de inmediato
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>(['Plátano', 'Yogur griego', 'Avena']);
+  
   const [dailyMenu, setDailyMenu] = useState<{ desayuno?: MealIdea; almuerzo?: MealIdea; cena?: MealIdea; snack?: MealIdea; bebida?: MealIdea }>({});
 
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>(EXERCISES[0].name);
@@ -194,7 +196,8 @@ export default function App() {
       const currentTimeStr = `${currentHours}:${currentMinutes}`;
 
       const currentDayIndex = now.getDay();
-      const mapDays: Record<number, string> = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 0: 'Domingo' };
+      // Mapeo índice JS a abreviatura
+      const mapDays: Record<number, string> = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
       const currentDayName = mapDays[currentDayIndex];
 
       const isScheduledDay = profile.selectedDays?.includes(currentDayName);
@@ -239,11 +242,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isResting, restTimerSeconds]);
 
-  const startRestTimer = (seconds: number) => {
-    setRestTimerSeconds(seconds);
-    setIsResting(true);
-  };
-
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
   }, [profilesList]);
@@ -285,8 +283,8 @@ export default function App() {
       ? currentDays.filter(d => d !== dayKey)
       : [...currentDays, dayKey];
     
-    handleUpdateActiveProfile('selectedDays', updatedDays);
-    handleUpdateActiveProfile('trainingDaysPerWeek', updatedDays.length);
+    const updatedProfiles = profilesList.map(p => p.id === profile.id ? { ...p, selectedDays: updatedDays, trainingDaysPerWeek: updatedDays.length } : p);
+    setProfilesList(updatedProfiles);
   };
 
   const handleToggleIngredient = (ingredient: string) => {
@@ -322,6 +320,7 @@ export default function App() {
     setNewMealTitle('');
     setNewMealDesc('');
     setNewMealCalories('');
+    alert('¡Batido guardado con éxito! 🥤');
   };
 
   const handleSubstituteExercise = (currentExName: string) => {
@@ -367,15 +366,13 @@ export default function App() {
   });
 
   const solidMealsList = filteredMeals.filter(m => m.type !== 'Bebida / Batido');
-  const activeFruitsAndLiquids = selectedIngredients.filter(ing => 
-    ['Plátano', 'Manzana', 'Fresa', 'Pera', 'Naranja', 'Queso batido', 'Yogur griego', 'Leche', 'Bebida de almendras', 'Proteína en polvo', 'Cacao puro'].includes(ing)
-  );
-
-  const generatedSmartSmoothie = activeFruitsAndLiquids.length > 0 ? {
-    title: `Batido Smart Express de ${activeFruitsAndLiquids.slice(0, 2).join(' y ')}`,
-    description: `Creado combinando: ${activeFruitsAndLiquids.join(', ')}.`,
-    caloriesApprox: `${160 + (activeFruitsAndLiquids.length * 40)} kcal`
-  } : null;
+  
+  // Generador inteligente ampliado para que detecte cualquier ingrediente seleccionado si no hay restricciones duras
+  const generatedSmartSmoothie = {
+    title: selectedIngredients.length > 0 ? `Batido Smart Express de ${selectedIngredients.slice(0, 2).join(' y ')}` : 'Batido Energético Base',
+    description: selectedIngredients.length > 0 ? `Creado combinando tus ingredientes: ${selectedIngredients.join(', ')}.` : 'Selecciona ingredientes en Nutrición para personalizarlo.',
+    caloriesApprox: `${180 + (selectedIngredients.length * 35)} kcal`
+  };
 
   const t = isDarkMode ? {
     bg: '#0f172a', card: '#1e293b', text: '#f8fafc', textSec: '#94a3b8', primary: '#38bdf8', border: '#334155'
@@ -407,25 +404,25 @@ export default function App() {
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* Selector Interactivo Corregido */}
+          {/* Selector de días funcional con IDs cortos */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>📅 ¿Qué días quieres entrenar?</h2>
             <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 8px 0' }}>Selecciona los días de la semana:</p>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              {DAYS_CONFIG.map(dayObj => {
-                const isSelected = profile.selectedDays?.includes(dayObj.key);
+              {DAYS_LIST.map(day => {
+                const isSelected = profile.selectedDays?.includes(day);
                 return (
                   <button
-                    key={dayObj.key}
-                    onClick={() => handleToggleSpecificDay(dayObj.key)}
+                    key={day}
+                    onClick={() => handleToggleSpecificDay(day)}
                     style={{
-                      padding: '8px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
+                      padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
                       backgroundColor: isSelected ? t.primary : t.bg,
                       color: isSelected ? '#fff' : t.text,
                       border: `1px solid ${isSelected ? t.primary : t.border}`
                     }}
                   >
-                    {dayObj.label}
+                    {day}
                   </button>
                 );
               })}
@@ -534,15 +531,11 @@ export default function App() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, color: '#8b5cf6' }}>🪄 Batido Generado</h2>
-            {generatedSmartSmoothie ? (
-              <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '8px', padding: '10px', marginTop: '8px' }}>
-                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{generatedSmartSmoothie.title}</strong>
-                <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{generatedSmartSmoothie.description}</p>
-                <span style={{ fontSize: '11px', fontWeight: 'bold', color: t.primary }}>⚡ {generatedSmartSmoothie.caloriesApprox}</span>
-              </div>
-            ) : (
-              <p style={{ fontSize: '12px', color: t.textSec, margin: '8px 0 0 0' }}>Selecciona frutas o lácteos en <strong>Nutrición</strong>.</p>
-            )}
+            <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '8px', padding: '10px', marginTop: '8px' }}>
+              <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{generatedSmartSmoothie.title}</strong>
+              <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{generatedSmartSmoothie.description}</p>
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: t.primary }}>⚡ {generatedSmartSmoothie.caloriesApprox}</span>
+            </div>
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
