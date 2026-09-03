@@ -84,7 +84,7 @@ interface SetItem {
 }
 
 export default function App() {
-  // 1. Perfiles y Seguridad (Fases 1 y 2)
+  // 1. Perfiles y Seguridad
   const [profiles, setProfiles] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles');
     return saved ? JSON.parse(saved) : [
@@ -113,7 +113,7 @@ export default function App() {
   const t = isDarkMode ? themes.dark : themes.light;
   const pKey = currentProfile ? `_${currentProfile.id}` : '_default';
 
-  // Estados editables del Perfil (Fase 8)
+  // Estados editables del Perfil
   const [editGoal, setEditGoal] = useState(currentProfile?.goal || 'Ganar músculo');
   const [editLevel, setEditLevel] = useState(currentProfile?.level || 'Intermedio');
   const [editEquipment, setEditEquipment] = useState<string[]>(currentProfile?.equipment || ['Mancuernas']);
@@ -126,18 +126,18 @@ export default function App() {
     }
   }, [currentProfile]);
 
-  // 2. Biblioteca de Ejercicios (Fase 4)
+  // 2. Biblioteca de Ejercicios
   const defaultExercises: Exercise[] = [
     { id: 'ex_1', name: 'Press de Banca con Barra', category: 'Fuerza', targetMuscle: 'Pectorales, Tríceps', equipment: 'Barra', difficulty: 'Intermedio', instructions: 'Acuéstate en el banco, retrae omóplatos y baja la barra controladamente hasta el pecho.', commonErrors: 'Rebotar la barra en el pecho.' },
     { id: 'ex_2', name: 'Sentadilla Goblet', category: 'Fuerza', targetMuscle: 'Cuádriceps, Glúteos', equipment: 'Mancuernas', difficulty: 'Principiante', instructions: 'Sostén la mancuerna verticalmente frente al pecho, baja la cadera manteniendo la espalda recta.', commonErrors: 'Levantar los talones del suelo.' },
   ];
 
   const [exerciseLibrary] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem(`fitapp_library_v8${pKey}`);
+    const saved = localStorage.getItem(`fitapp_library_v9${pKey}`);
     return saved ? JSON.parse(saved) : defaultExercises;
   });
 
-  // 3. Nutrición y Menús (Fase 5)
+  // 3. Nutrición y Menús
   const defaultDailyMeals: Meal[] = [
     { id: 'm_1', type: 'Desayuno', title: 'Avena Energética con Proteína', description: '60g de avena cocida en leche o bebida vegetal, 1 plátano en rodajas y 1 scoop de proteína de suero.', calories: 450, protein: 32, carbs: 65, fats: 8 },
     { id: 'm_2', type: 'Comida', title: 'Pechuga de Pollo con Arroz y Verduras', description: '200g de pechuga a la plancha, 180g de arroz cocido y brócoli al vapor con aceite de oliva.', calories: 620, protein: 52, carbs: 70, fats: 14 },
@@ -146,13 +146,13 @@ export default function App() {
   ];
 
   const [dailyMeals, setDailyMeals] = useState<Meal[]>(() => {
-    const saved = localStorage.getItem(`fitapp_meals_v8${pKey}`);
+    const saved = localStorage.getItem(`fitapp_meals_v9${pKey}`);
     return saved ? JSON.parse(saved) : defaultDailyMeals;
   });
 
   const [activeMealModal, setActiveMealModal] = useState<Meal | null>(null);
 
-  // 4. Lista de la Compra Inteligente (Fase 6)
+  // 4. Lista de la Compra
   const defaultShoppingList: ShoppingItem[] = [
     { id: 's_1', name: 'Avena en copos', category: 'Despensa / Cereales', checked: false, amount: '500g' },
     { id: 's_2', name: 'Plátanos', category: 'Frutas y Verduras', checked: false, amount: '1 kg' },
@@ -166,7 +166,7 @@ export default function App() {
   ];
 
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_shopping_v8${pKey}`);
+    const saved = localStorage.getItem(`fitapp_shopping_v9${pKey}`);
     return saved ? JSON.parse(saved) : defaultShoppingList;
   });
 
@@ -174,7 +174,7 @@ export default function App() {
   const [newCustomItemCat, setNewCustomItemCat] = useState<ShoppingItem['category']>('Despensa / Cereales');
   const [newCustomItemAmount, setNewCustomItemAmount] = useState('');
 
-  // 5. Historial y Progreso (Fase 7)
+  // 5. Historial y Progreso
   const defaultHistory: SetItem[] = [
     { name: 'Press de Banca con Barra', weight: 70, reps: 10, date: '10/05/2026' },
     { name: 'Press de Banca con Barra', weight: 75, reps: 8, date: '17/05/2026' },
@@ -184,7 +184,7 @@ export default function App() {
   ];
 
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history_v8${pKey}`);
+    const saved = localStorage.getItem(`fitapp_history_v9${pKey}`);
     return saved ? JSON.parse(saved) : defaultHistory;
   });
 
@@ -206,10 +206,10 @@ export default function App() {
   useEffect(() => {
     if (currentProfile) {
       localStorage.setItem('fitapp_active_profile', JSON.stringify(currentProfile));
-      localStorage.setItem(`fitapp_library_v8${pKey}`, JSON.stringify(exerciseLibrary));
-      localStorage.setItem(`fitapp_meals_v8${pKey}`, JSON.stringify(dailyMeals));
-      localStorage.setItem(`fitapp_shopping_v8${pKey}`, JSON.stringify(shoppingList));
-      localStorage.setItem(`fitapp_history_v8${pKey}`, JSON.stringify(history));
+      localStorage.setItem(`fitapp_library_v9${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_meals_v9${pKey}`, JSON.stringify(dailyMeals));
+      localStorage.setItem(`fitapp_shopping_v9${pKey}`, JSON.stringify(shoppingList));
+      localStorage.setItem(`fitapp_history_v9${pKey}`, JSON.stringify(history));
     }
   }, [currentProfile, exerciseLibrary, dailyMeals, shoppingList, history, pKey]);
 
@@ -282,6 +282,56 @@ export default function App() {
       setEditEquipment(editEquipment.filter(e => e !== item));
     } else {
       setEditEquipment([...editEquipment, item]);
+    }
+  };
+
+  // Fase 9: Funciones de Exportación e Importación de Datos
+  const handleExportData = () => {
+    const backupData = {
+      version: '9.0',
+      exportDate: new Date().toISOString(),
+      profiles,
+      currentProfile,
+      history,
+      shoppingList,
+      dailyMeals,
+      exerciseLibrary
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `fitapp_backup_${currentProfile?.name || 'atleta'}_${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (e.target.files && e.target.files[0]) {
+      fileReader.readAsText(e.target.files[0], "UTF-8");
+      fileReader.onload = (event) => {
+        try {
+          const parsedData = JSON.parse(event.target?.result as string);
+          if (parsedData.profiles && parsedData.history) {
+            setProfiles(parsedData.profiles);
+            localStorage.setItem('fitapp_profiles', JSON.stringify(parsedData.profiles));
+            if (parsedData.currentProfile) {
+              setCurrentProfile(parsedData.currentProfile);
+              localStorage.setItem('fitapp_active_profile', JSON.stringify(parsedData.currentProfile));
+            }
+            if (parsedData.history) setHistory(parsedData.history);
+            if (parsedData.shoppingList) setShoppingList(parsedData.shoppingList);
+            if (parsedData.dailyMeals) setDailyMeals(parsedData.dailyMeals);
+            alert('¡Copia de seguridad restaurada con éxito!');
+            window.location.reload();
+          } else {
+            alert('El archivo no tiene un formato válido de FitApp.');
+          }
+        } catch (err) {
+          alert('Error al leer el archivo JSON.');
+        }
+      };
     }
   };
 
@@ -679,7 +729,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 👤 7. PERFIL Y CONFIGURACIÓN AVANZADA (Fase 8 del Guion) */}
+      {/* 👤 7. PERFIL Y COPIA DE SEGURIDAD (Fase 9 del Guion) */}
       {activeTab === 'perfil' && (
         <div>
           <div style={dynamicStyles.card}>
@@ -740,6 +790,30 @@ export default function App() {
 
               <button type="submit" style={dynamicStyles.button}>Guardar Cambios de Perfil</button>
             </form>
+          </div>
+
+          {/* Módulo de Copias de Seguridad (Fase 9) */}
+          <div style={dynamicStyles.card}>
+            <h2 style={dynamicStyles.cardTitle}>💾 Copia de Seguridad y Datos</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '14px' }}>
+              Exporta todos tus historiales, perfiles y listas de compra en un archivo JSON seguro o restaura una copia anterior.
+            </p>
+
+            <button style={{ ...dynamicStyles.button, backgroundColor: '#10b981', marginBottom: '10px' }} onClick={handleExportData}>
+              📥 Exportar Datos (Backup JSON)
+            </button>
+
+            <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block', width: '100%' }}>
+              <button style={{ ...dynamicStyles.secondaryButton, width: '100%', padding: '12px', textAlign: 'center', backgroundColor: isDarkMode ? '#334155' : '#e2e8f0' }}>
+                📂 Restaurar Datos desde JSON
+              </button>
+              <input 
+                type="file" 
+                accept=".json" 
+                onChange={handleImportData} 
+                style={{ position: 'absolute', left: 0, top: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} 
+              />
+            </div>
 
             <div style={{ marginTop: '20px', paddingTop: '14px', borderTop: `1px solid ${t.border}` }}>
               <button style={dynamicStyles.secondaryButton} onClick={() => setCurrentProfile(null)}>🚪 Cambiar de Perfil / Bloquear</button>
