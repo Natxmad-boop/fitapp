@@ -45,11 +45,12 @@ const AVAILABLE_GOALS = [
   'Movilidad y salud'
 ];
 
-const AVAILABLE_INGREDIENTS = [
+const INITIAL_INGREDIENTS = [
   'Pollo', 'Ternera', 'Lomo', 'Salmón', 'Atún', 'Merluza', 'Huevo', 
   'Arroz', 'Patata', 'Avena', 'Pan integral', 'Garbanzos', 'Lentejas',
   'Brócoli', 'Zanahoria', 'Espinacas', 'Tomate', 'Aguacate', 'Calabacín',
-  'Queso fresco', 'Yogur', 'Plátano', 'Manzana', 'Nueces', 'Almendras'
+  'Queso fresco', 'Yogur', 'Plátano', 'Manzana', 'Nueces', 'Almendras',
+  'Queso batido', 'Yogur griego'
 ];
 
 const AVAILABLE_ALLERGIES = [
@@ -337,7 +338,7 @@ const EXERCISES: Exercise[] = [
   }
 ];
 
-const MEALS: MealIdea[] = [
+const INITIAL_MEALS: MealIdea[] = [
   { 
     id: 'm1', 
     type: 'Almuerzo', 
@@ -436,6 +437,24 @@ const MEALS: MealIdea[] = [
     caloriesApprox: '270 kcal',
     ingredients: ['Yogur', 'Nueces', 'Manzana'],
     allergens: ['Lactosa', 'Frutos secos']
+  },
+  {
+    id: 'm12',
+    type: 'Snack',
+    title: 'Bol de queso batido con arándanos y almendras',
+    description: 'Queso batido cremoso rico en proteínas con frutos secos y toque fresco.',
+    caloriesApprox: '220 kcal',
+    ingredients: ['Queso batido', 'Almendras'],
+    allergens: ['Lactosa', 'Frutos secos']
+  },
+  {
+    id: 'm13',
+    type: 'Desayuno',
+    title: 'Yogur griego con plátano y nueces',
+    description: 'Yogur griego natural con rodajas de plátano y nueces crujientes.',
+    caloriesApprox: '340 kcal',
+    ingredients: ['Yogur griego', 'Plátano', 'Nueces'],
+    allergens: ['Lactosa', 'Frutos secos']
   }
 ];
 
@@ -460,7 +479,19 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'menu' | 'progreso' | 'perfil'>('entreno');
+  // Lista de ingredientes personalizada persistente
+  const [customIngredients, setCustomIngredients] = useState<string[]>(() => {
+    const saved = localStorage.getItem('fitapp_custom_ingredients');
+    return saved ? JSON.parse(saved) : INITIAL_INGREDIENTS;
+  });
+
+  // Lista de recetas personalizada persistente
+  const [customMeals, setCustomMeals] = useState<MealIdea[]>(() => {
+    const saved = localStorage.getItem('fitapp_custom_meals');
+    return saved ? JSON.parse(saved) : INITIAL_MEALS;
+  });
+
+  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
@@ -477,9 +508,26 @@ export default function App() {
   const [newUserGoals, setNewUserGoals] = useState<string[]>(['Ganar fuerza']);
   const [newUserAllergies, setNewUserAllergies] = useState<string[]>([]);
 
+  // Estados para añadir nuevo alimento/receta en la pestaña Despensa
+  const [newIngName, setNewIngName] = useState<string>('');
+  const [newMealTitle, setNewMealTitle] = useState<string>('');
+  const [newMealType, setNewMealType] = useState<'Desayuno' | 'Almuerzo' | 'Cena' | 'Snack'>('Almuerzo');
+  const [newMealDesc, setNewMealDesc] = useState<string>('');
+  const [newMealCalories, setNewMealCalories] = useState<string>('');
+  const [newMealSelectedIngs, setNewMealSelectedIngs] = useState<string[]>([]);
+  const [newMealAllergens, setNewMealAllergens] = useState<string[]>([]);
+
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
   }, [profilesList]);
+
+  useEffect(() => {
+    localStorage.setItem('fitapp_custom_ingredients', JSON.stringify(customIngredients));
+  }, [customIngredients]);
+
+  useEffect(() => {
+    localStorage.setItem('fitapp_custom_meals', JSON.stringify(customMeals));
+  }, [customMeals]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_active_user_id', activeUserId);
@@ -545,6 +593,63 @@ export default function App() {
     } else {
       setSelectedIngredients([...selectedIngredients, ingredient]);
     }
+  };
+
+  const handleAddIngredientSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = newIngName.trim();
+    if (!cleanName) return;
+
+    if (customIngredients.includes(cleanName)) {
+      alert('⚠️ Este alimento ya existe en tu despensa.');
+      return;
+    }
+
+    setCustomIngredients([...customIngredients, cleanName]);
+    setNewIngName('');
+    alert(`¡Alimento "${cleanName}" añadido a tu despensa con éxito! 🛒`);
+  };
+
+  const handleToggleNewMealIng = (ing: string) => {
+    if (newMealSelectedIngs.includes(ing)) {
+      setNewMealSelectedIngs(newMealSelectedIngs.filter(i => i !== ing));
+    } else {
+      setNewMealSelectedIngs([...newMealSelectedIngs, ing]);
+    }
+  };
+
+  const handleToggleNewMealAllergen = (al: string) => {
+    if (newMealAllergens.includes(al)) {
+      setNewMealAllergens(newMealAllergens.filter(a => a !== al));
+    } else {
+      setNewMealAllergens([...newMealAllergens, al]);
+    }
+  };
+
+  const handleAddMealSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMealTitle.trim()) {
+      alert('⚠️ Por favor, introduce un título para la receta.');
+      return;
+    }
+
+    const newMealObj: MealIdea = {
+      id: 'custom_meal_' + Date.now(),
+      type: newMealType,
+      title: newMealTitle.trim(),
+      description: newMealDesc.trim() || 'Receta personalizada de despensa.',
+      caloriesApprox: newMealCalories.trim() ? `${newMealCalories.trim()} kcal` : '350 kcal',
+      ingredients: newMealSelectedIngs.length > 0 ? newMealSelectedIngs : ['Queso batido'],
+      allergens: newMealAllergens
+    };
+
+    setCustomMeals([newMealObj, ...customMeals]);
+    setNewMealTitle('');
+    setNewMealDesc('');
+    setNewMealCalories('');
+    setNewMealSelectedIngs([]);
+    setNewMealAllergens([]);
+    alert(`¡Receta "${newMealObj.title}" añadida correctamente! 🍳`);
   };
 
   const handleCreateUser = (e: React.FormEvent) => {
@@ -627,7 +732,7 @@ export default function App() {
 
   const generateDailyMenu = () => {
     const userAllergies = profile.allergies || [];
-    let safeMeals = MEALS.filter(meal => !meal.allergens.some(al => userAllergies.includes(al)));
+    let safeMeals = customMeals.filter(meal => !meal.allergens.some(al => userAllergies.includes(al)));
     const matchingMeals = safeMeals.filter(meal => 
       selectedIngredients.length === 0 || meal.ingredients.some(ing => selectedIngredients.includes(ing))
     );
@@ -654,7 +759,7 @@ export default function App() {
     return true;
   });
 
-  const filteredMeals = MEALS.filter(meal => {
+  const filteredMeals = customMeals.filter(meal => {
     const userAllergies = profile.allergies || [];
     const hasForbiddenAllergen = meal.allergens.some(allergen => userAllergies.includes(allergen));
     if (hasForbiddenAllergen) return false;
@@ -793,7 +898,7 @@ export default function App() {
             <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Pincha para marcar tus favoritos y te daremos ideas adaptadas:</p>
             
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {AVAILABLE_INGREDIENTS.map(ing => {
+              {customIngredients.map(ing => {
                 const isSelected = selectedIngredients.includes(ing);
                 return (
                   <button
@@ -860,6 +965,146 @@ export default function App() {
               ))
             )}
           </div>
+        </div>
+      )}
+
+      {/* PESTAÑA: DESPENSA (NUEVA) */}
+      {activeTab === 'despensa' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* Añadir Alimento */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimentos a la Despensa</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Integra nuevos alimentos (queso batido, yogur griego, queso fresco, etc.):</p>
+            
+            <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="text" 
+                placeholder="Ej: Queso fresco batido 0%" 
+                value={newIngName}
+                onChange={e => setNewIngName(e.target.value)}
+                style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', boxSizing: 'border-box' }}
+              />
+              <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>
+                Añadir ➕
+              </button>
+            </form>
+
+            <div style={{ marginTop: '12px' }}>
+              <span style={{ fontSize: '11px', fontWeight: '600', color: t.textSec, display: 'block', marginBottom: '6px' }}>Alimentos disponibles ({customIngredients.length}):</span>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxHeight: '120px', overflowY: 'auto' }}>
+                {customIngredients.map(ing => (
+                  <span key={ing} style={{ fontSize: '10px', backgroundColor: t.bg, border: `1px solid ${t.border}`, padding: '3px 8px', borderRadius: '6px' }}>
+                    {ing}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Crear Receta con los nuevos alimentos */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🍳 Crear Receta Personalizada</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Diseña un plato usando tus alimentos:</p>
+
+            <form onSubmit={handleAddMealSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+              <label>Título de la Receta:
+                <input 
+                  type="text" 
+                  placeholder="Ej: Bol proteico de queso batido con frutos secos" 
+                  value={newMealTitle}
+                  onChange={e => setNewMealTitle(e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+
+              <label>Tipo de Comida:
+                <select 
+                  value={newMealType}
+                  onChange={e => setNewMealType(e.target.value as any)}
+                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+                >
+                  <option value="Desayuno">🌅 Desayuno</option>
+                  <option value="Almuerzo">☀️ Almuerzo</option>
+                  <option value="Snack">🍎 Snack</option>
+                  <option value="Cena">🌙 Cena</option>
+                </select>
+              </label>
+
+              <label>Descripción:
+                <input 
+                  type="text" 
+                  placeholder="Breve explicación de la preparación..." 
+                  value={newMealDesc}
+                  onChange={e => setNewMealDesc(e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+
+              <label>Calorías aproximadas (kcal):
+                <input 
+                  type="text" 
+                  placeholder="Ej: 300" 
+                  value={newMealCalories}
+                  onChange={e => setNewMealCalories(e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '2px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+
+              <div>
+                <span style={{ display: 'block', marginBottom: '4px', fontWeight: '600' }}>Ingredientes principales incluidos:</span>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxHeight: '100px', overflowY: 'auto', border: `1px solid ${t.border}`, padding: '6px', borderRadius: '6px' }}>
+                  {customIngredients.map(ing => {
+                    const isSelected = newMealSelectedIngs.includes(ing);
+                    return (
+                      <button
+                        type="button"
+                        key={ing}
+                        onClick={() => handleToggleNewMealIng(ing)}
+                        style={{
+                          padding: '3px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer',
+                          backgroundColor: isSelected ? t.primary : t.bg,
+                          color: isSelected ? '#fff' : t.text,
+                          border: `1px solid ${isSelected ? t.primary : t.border}`
+                        }}
+                      >
+                        {isSelected ? '✓ ' : '+ '} {ing}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ display: 'block', marginBottom: '4px', fontWeight: '600' }}>Alérgenos (si contiene):</span>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  {AVAILABLE_ALLERGIES.map(al => {
+                    const isSelected = newMealAllergens.includes(al);
+                    return (
+                      <button
+                        type="button"
+                        key={al}
+                        onClick={() => handleToggleNewMealAllergen(al)}
+                        style={{
+                          padding: '3px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer',
+                          backgroundColor: isSelected ? '#ef4444' : t.bg,
+                          color: isSelected ? '#fff' : t.text,
+                          border: `1px solid ${isSelected ? '#ef4444' : t.border}`
+                        }}
+                      >
+                        {al}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '6px' }}>
+                Guardar Receta en Sistema 🚀
+              </button>
+            </form>
+          </div>
+
         </div>
       )}
 
@@ -1184,21 +1429,24 @@ export default function App() {
       )}
 
       {/* Navegación Inferior */}
-      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.card, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
-        <button onClick={() => setActiveTab('entreno')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'entreno' ? '700' : '400', color: activeTab === 'entreno' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '18px' }}>🏋️</span> Entreno
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.card, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
+        <button onClick={() => setActiveTab('entreno')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'entreno' ? '700' : '400', color: activeTab === 'entreno' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '16px' }}>🏋️</span> Entreno
         </button>
-        <button onClick={() => setActiveTab('nutricion')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'nutricion' ? '700' : '400', color: activeTab === 'nutricion' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '18px' }}>🥗</span> Nutrición
+        <button onClick={() => setActiveTab('nutricion')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'nutricion' ? '700' : '400', color: activeTab === 'nutricion' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '16px' }}>🥗</span> Nutrición
         </button>
-        <button onClick={() => setActiveTab('menu')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'menu' ? '700' : '400', color: activeTab === 'menu' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '18px' }}>🍽️</span> Menú
+        <button onClick={() => setActiveTab('despensa')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'despensa' ? '700' : '400', color: activeTab === 'despensa' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '16px' }}>🛒</span> Despensa
         </button>
-        <button onClick={() => setActiveTab('progreso')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'progreso' ? '700' : '400', color: activeTab === 'progreso' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '18px' }}>📈</span> Progreso
+        <button onClick={() => setActiveTab('menu')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'menu' ? '700' : '400', color: activeTab === 'menu' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '16px' }}>🍽️</span> Menú
         </button>
-        <button onClick={() => setActiveTab('perfil')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'perfil' ? '700' : '400', color: activeTab === 'perfil' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '18px' }}>👤</span> Perfil
+        <button onClick={() => setActiveTab('progreso')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'progreso' ? '700' : '400', color: activeTab === 'progreso' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '16px' }}>📈</span> Progreso
+        </button>
+        <button onClick={() => setActiveTab('perfil')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'perfil' ? '700' : '400', color: activeTab === 'perfil' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '16px' }}>👤</span> Perfil
         </button>
       </nav>
 
