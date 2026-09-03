@@ -25,6 +25,15 @@ interface UserProfile {
   goal: string;
 }
 
+interface MealIdea {
+  id: string;
+  type: 'Desayuno' | 'Almuerzo' | 'Cena' | 'Snack';
+  dietType: 'Perder peso' | 'Ganar masa' | 'Sin lactosa' | 'Sin gluten';
+  title: string;
+  description: string;
+  caloriesApprox: string;
+}
+
 const EXERCISES: Exercise[] = [
   // --- CASA ---
   { 
@@ -211,33 +220,60 @@ const EXERCISES: Exercise[] = [
   }
 ];
 
+const MEALS: MealIdea[] = [
+  // Perder Peso
+  { id: 'm1', type: 'Desayuno', dietType: 'Perder peso', title: 'Tostada integral con aguacate y huevo pochado', description: 'Pan de centeno integral, medio aguacate machacado y un huevo cocido o pochado.', caloriesApprox: '320 kcal' },
+  { id: 'm2', type: 'Almuerzo', dietType: 'Perder peso', title: 'Pechuga de pollo a la plancha con espárragos y quinoa', description: '150g de pollo, manojo de espárragos trigueros salteados y 40g de quinoa cocida.', caloriesApprox: '410 kcal' },
+  { id: 'm3', type: 'Cena', dietType: 'Perder peso', title: 'Crema de calabacín ligera y merluza al horno', description: 'Crema casera sin patata y lomo de merluza con chorrito de aceite de oliva.', caloriesApprox: '300 kcal' },
+  { id: 'm4', type: 'Snack', dietType: 'Perder peso', title: 'Yogur griego desnatado con arándanos', description: 'Yogur natural sin azúcar con un puñado pequeño de arándanos frescos.', caloriesApprox: '130 kcal' },
+
+  // Ganar Masa Muscular
+  { id: 'm5', type: 'Desayuno', dietType: 'Ganar masa', title: 'Porridge de avena energético con plátano y nueces', description: '80g de copos de avena con leche, un plátano en rodajas y 20g de nueces.', caloriesApprox: '550 kcal' },
+  { id: 'm6', type: 'Almuerzo', dietType: 'Ganar masa', title: 'Ternera magra con arroz blanco y patata', description: '180g de carne de ternera, 150g de arroz cocido y patata asada.', caloriesApprox: '650 kcal' },
+  { id: 'm7', type: 'Cena', dietType: 'Ganar masa', title: 'Tortilla de 3 huevos con atún y pan integral', description: 'Tortilla francesa con una lata de atún al natural y dos rebanadas de pan de masa madre.', caloriesApprox: '520 kcal' },
+  { id: 'm8', type: 'Snack', dietType: 'Ganar masa', title: 'Batido casero de plátano, crema de cacahuete y leche', description: '1 plátano, 2 cucharadas soperas de crema de cacahuete 100% y vaso grande de leche.', caloriesApprox: '450 kcal' },
+
+  // Sin Lactosa
+  { id: 'm9', type: 'Desayuno', dietType: 'Sin lactosa', title: 'Tostadas con jamón serrano y tomate natural', description: 'Pan integral tostado con aceite de oliva virgen extra, tomate rallado y jamón.', caloriesApprox: '310 kcal' },
+  { id: 'm10', type: 'Almuerzo', dietType: 'Sin lactosa', title: 'Salmón al horno con patatas panaderas', description: 'Filete de salmón fresco al horno con rodajas finas de patata y cebolla.', caloriesApprox: '500 kcal' },
+  { id: 'm11', type: 'Cena', dietType: 'Sin lactosa', title: 'Salteado de pavo con verduras variadas', description: 'Tiras de pavo salteadas en wok con pimientos, calabacín y salsa de soja.', caloriesApprox: '380 kcal' },
+  { id: 'm12', type: 'Snack', dietType: 'Sin lactosa', title: 'Frutos secos naturales y una pieza de fruta', description: 'Mix de almendras y nueces con una manzana.', caloriesApprox: '220 kcal' },
+
+  // Sin Gluten
+  { id: 'm13', type: 'Desayuno', dietType: 'Sin gluten', title: 'Tortitas caseras de avena sin gluten y plátano', description: 'Avena certificada sin gluten batida con un huevo y un plátano a la plancha.', caloriesApprox: '340 kcal' },
+  { id: 'm14', type: 'Almuerzo', dietType: 'Sin gluten', title: 'Pechuga de pollo desmenuzada con arroz y frijoles', description: 'Plato completo estilo bol con arroz, pollo especiado y judías negras.', caloriesApprox: '490 kcal' },
+  { id: 'm15', type: 'Cena', dietType: 'Sin gluten', title: 'Tortilla de patatas casera con ensalada verde', description: 'Clásica tortilla de patata y cebolla con aceite de oliva acompañada de lechuga.', caloriesApprox: '420 kcal' },
+  { id: 'm16', type: 'Snack', dietType: 'Sin gluten', title: 'Tortitas de maíz con crema de cacahuete', description: '3 tortitas de maíz soplado untadas con crema de cacahuete.', caloriesApprox: '180 kcal' }
+];
+
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('fitapp_profile_v3');
+    const saved = localStorage.getItem('fitapp_profile_v4');
     return saved ? JSON.parse(saved) : { name: 'Nacho', weight: 70, goal: 'Ganar fuerza y músculo' };
   });
 
   const [logs, setLogs] = useState<WorkoutLog[]>(() => {
-    const saved = localStorage.getItem('fitapp_logs_v3');
+    const saved = localStorage.getItem('fitapp_logs_v4');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [activeTab, setActiveTab] = useState<'entreno' | 'progreso' | 'perfil'>('entreno');
+  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
+  const [selectedDietType, setSelectedDietType] = useState<'Perder peso' | 'Ganar masa' | 'Sin lactosa' | 'Sin gluten'>('Perder peso');
 
-  // Formulario de registro
+  // Formulario registro
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>(EXERCISES[0].name);
   const [weightUsedInput, setWeightUsedInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
 
   useEffect(() => {
-    localStorage.setItem('fitapp_profile_v3', JSON.stringify(profile));
+    localStorage.setItem('fitapp_profile_v4', JSON.stringify(profile));
   }, [profile]);
 
   useEffect(() => {
-    localStorage.setItem('fitapp_logs_v3', JSON.stringify(logs));
+    localStorage.setItem('fitapp_logs_v4', JSON.stringify(logs));
   }, [logs]);
 
   const handleAddLog = (e: React.FormEvent) => {
@@ -263,6 +299,8 @@ export default function App() {
     if (selectedCategory !== 'Todos' && ex.category !== selectedCategory) return false;
     return true;
   });
+
+  const filteredMeals = MEALS.filter(meal => meal.dietType === selectedDietType);
 
   const t = isDarkMode ? {
     bg: '#0f172a', card: '#1e293b', text: '#f8fafc', textSec: '#94a3b8', primary: '#38bdf8', border: '#334155'
@@ -360,6 +398,46 @@ export default function App() {
                 >
                   ▶️ Ver vídeo demostración
                 </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* PESTAÑA: NUTRICIÓN Y DIETAS */}
+      {activeTab === 'nutricion' && (
+        <div>
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '8px' }}>🥗 Elige tu objetivo o dieta:</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              {(['Perder peso', 'Ganar masa', 'Sin lactosa', 'Sin gluten'] as const).map(diet => (
+                <button 
+                  key={diet} 
+                  onClick={() => setSelectedDietType(diet)}
+                  style={{ 
+                    padding: '8px', borderRadius: '8px', 
+                    border: `1px solid ${selectedDietType === diet ? t.primary : t.border}`, 
+                    backgroundColor: selectedDietType === diet ? t.primary : t.bg, 
+                    color: selectedDietType === diet ? '#fff' : t.text, 
+                    fontSize: '11px', fontWeight: '600', cursor: 'pointer', textAlign: 'center' 
+                  }}
+                >
+                  {diet === 'Perder peso' ? '🔥 Perder Peso' : diet === 'Ganar masa' ? '💪 Ganar Masa' : diet === 'Sin lactosa' ? '🥛 Sin Lactosa' : '🌾 Sin Gluten'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>Ideas de Comidas ({selectedDietType})</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {filteredMeals.map(meal => (
+              <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
+                  <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ Aprox: {meal.caloriesApprox}</span>
+                </div>
+                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
+                <p style={{ fontSize: '12px', color: t.textSec, margin: 0 }}>{meal.description}</p>
               </div>
             ))}
           </div>
@@ -468,6 +546,9 @@ export default function App() {
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.card, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
         <button onClick={() => setActiveTab('entreno')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'entreno' ? '700' : '400', color: activeTab === 'entreno' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <span style={{ fontSize: '18px' }}>🏋️</span> Entreno
+        </button>
+        <button onClick={() => setActiveTab('nutricion')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'nutricion' ? '700' : '400', color: activeTab === 'nutricion' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '18px' }}>🥗</span> Nutrición
         </button>
         <button onClick={() => setActiveTab('progreso')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'progreso' ? '700' : '400', color: activeTab === 'progreso' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <span style={{ fontSize: '18px' }}>📈</span> Progreso
