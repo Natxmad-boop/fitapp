@@ -44,29 +44,12 @@ interface CustomWorkoutRoutine {
   exercises: string[];
 }
 
-const AVAILABLE_GOALS = [
-  'Ganar fuerza',
-  'Perder grasa',
-  'Ganar masa muscular',
-  'Mejorar resistencia',
-  'Movilidad y salud'
-];
-
 const INITIAL_INGREDIENTS = [
-  'Pollo', 'Ternera', 'Lomo', 'Salmón', 'Atún', 'Merluza', 'Huevo', 
-  'Arroz', 'Patata', 'Avena', 'Pan integral', 'Garbanzos', 'Lentejas',
+  'Pollo', 'Ternera', 'Lomo', 'Salmón', 'Atún', 'Huevo', 
+  'Arroz', 'Patata', 'Avena', 'Pan integral', 'Garbanzos',
   'Brócoli', 'Zanahoria', 'Espinacas', 'Tomate', 'Aguacate', 'Calabacín',
-  'Queso fresco', 'Yogur', 'Plátano', 'Manzana', 'Nueces', 'Almendras',
-  'Queso batido', 'Yogur griego', 'Leche', 'Proteína en polvo', 'Cacao puro'
-];
-
-const AVAILABLE_ALLERGIES = [
-  'Gluten',
-  'Lactosa',
-  'Frutos secos',
-  'Pescado',
-  'Huevo',
-  'Marisco'
+  'Queso fresco', 'Plátano', 'Manzana', 'Fresa', 'Pera', 'Naranja', 'Nueces',
+  'Queso batido', 'Yogur griego', 'Leche', 'Bebida de almendras', 'Proteína en polvo', 'Cacao puro'
 ];
 
 const EXERCISES: Exercise[] = [
@@ -79,16 +62,6 @@ const EXERCISES: Exercise[] = [
     homeSubstitute: 'Flexiones normales en suelo',
     instructions: 'Pies elevados en silla, banda cruzada en la espalda para añadir resistencia.',
     videoUrl: 'https://www.youtube.com/results?search_query=flexiones+declinadas+con+bandas'
-  },
-  { 
-    id: 'c_emp_2', 
-    name: 'Flexiones Diamante', 
-    location: 'Casa', 
-    category: 'Fuerza', 
-    equipment: 'Peso corporal', 
-    homeSubstitute: 'Flexiones cerradas',
-    instructions: 'Manos juntas bajo el pecho para enfocar el esfuerzo en tríceps.',
-    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+flexiones+diamante'
   },
   { 
     id: 'c_trac_1', 
@@ -129,16 +102,6 @@ const EXERCISES: Exercise[] = [
     homeSubstitute: 'No aplica',
     instructions: 'Acuéstate, baja la barra de manera controlada al pecho y empuja hacia arriba.',
     videoUrl: 'https://www.youtube.com/results?search_query=press+de+banca+plano+tecnica'
-  },
-  { 
-    id: 'g_2', 
-    name: 'Sentadilla con Barra Libre', 
-    location: 'Gimnasio', 
-    category: 'Fuerza', 
-    equipment: 'Jaula y barra', 
-    homeSubstitute: 'No aplica',
-    instructions: 'Barra en los trapecios, rompe el paralelo bajando la cadera y sube firme.',
-    videoUrl: 'https://www.youtube.com/results?search_query=sentadilla+con+barra+libre+tecnica'
   }
 ];
 
@@ -151,15 +114,6 @@ const INITIAL_MEALS: MealIdea[] = [
     caloriesApprox: '450 kcal',
     ingredients: ['Pollo', 'Arroz', 'Brócoli'],
     allergens: [] 
-  },
-  { 
-    id: 'm2', 
-    type: 'Desayuno', 
-    title: 'Tostada integral con aguacate y huevo pochado', 
-    description: 'Pan integral, medio aguacate machacado por encima y un huevo pochado.', 
-    caloriesApprox: '320 kcal',
-    ingredients: ['Pan integral', 'Aguacate', 'Huevo'],
-    allergens: ['Gluten', 'Huevo'] 
   },
   { 
     id: 'b1', 
@@ -218,7 +172,6 @@ export default function App() {
     ];
   });
 
-  // Estado para el contador de agua diario
   const [waterGlasses, setWaterGlasses] = useState<number>(() => {
     const todayStr = new Date().toDateString();
     const savedData = localStorage.getItem('fitapp_water_tracker');
@@ -229,7 +182,7 @@ export default function App() {
     return 0;
   });
 
-  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
+  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
@@ -243,7 +196,6 @@ export default function App() {
 
   const [newIngName, setNewIngName] = useState<string>('');
   const [newMealTitle, setNewMealTitle] = useState<string>('');
-  const [newMealType, setNewMealType] = useState<'Desayuno' | 'Almuerzo' | 'Cena' | 'Snack' | 'Bebida / Batido'>('Bebida / Batido');
   const [newMealDesc, setNewMealDesc] = useState<string>('');
   const [newMealCalories, setNewMealCalories] = useState<string>('');
 
@@ -285,14 +237,6 @@ export default function App() {
     setProfilesList(updated);
   };
 
-  const handleToggleActiveAllergy = (allergyOption: string) => {
-    const currentAllergies = profile.allergies || [];
-    let updatedAllergies = currentAllergies.includes(allergyOption)
-      ? currentAllergies.filter(a => a !== allergyOption)
-      : [...currentAllergies, allergyOption];
-    handleUpdateActiveProfile('allergies', updatedAllergies);
-  };
-
   const handleToggleIngredient = (ingredient: string) => {
     setSelectedIngredients(prev => 
       prev.includes(ingredient) ? prev.filter(i => i !== ingredient) : [...prev, ingredient]
@@ -312,25 +256,25 @@ export default function App() {
     alert(`¡Alimento "${cleanName}" añadido con éxito! 🛒`);
   };
 
-  const handleAddMealSubmit = (e: React.FormEvent) => {
+  const handleAddBatidoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMealTitle.trim()) return;
 
-    const newMealObj: MealIdea = {
-      id: 'custom_meal_' + Date.now(),
-      type: newMealType,
+    const newBatidoObj: MealIdea = {
+      id: 'custom_batido_' + Date.now(),
+      type: 'Bebida / Batido',
       title: newMealTitle.trim(),
-      description: newMealDesc.trim() || 'Receta o bebida saludable.',
+      description: newMealDesc.trim() || 'Batido saludable personalizado.',
       caloriesApprox: newMealCalories.trim() ? `${newMealCalories.trim()} kcal` : '200 kcal',
-      ingredients: ['Queso batido', 'Plátano'],
+      ingredients: selectedIngredients.length > 0 ? [...selectedIngredients] : ['Plátano', 'Leche'],
       allergens: []
     };
 
-    setCustomMeals([newMealObj, ...customMeals]);
+    setCustomMeals([newBatidoObj, ...customMeals]);
     setNewMealTitle('');
     setNewMealDesc('');
     setNewMealCalories('');
-    alert(`¡Elemento añadido correctamente! 🥤🍳`);
+    alert(`¡Batido guardado en tu recetario con éxito! 🥤`);
   };
 
   const handleSubstituteExercise = (currentExName: string) => {
@@ -421,6 +365,17 @@ export default function App() {
     return true;
   });
 
+  // Generador automático inteligente de batidos según las frutas/ingredientes marcados
+  const activeFruitsAndLiquids = selectedIngredients.filter(ing => 
+    ['Plátano', 'Manzana', 'Fresa', 'Pera', 'Naranja', 'Queso batido', 'Yogur griego', 'Leche', 'Bebida de almendras', 'Proteína en polvo', 'Cacao puro'].includes(ing)
+  );
+
+  const generatedSmartSmoothie = activeFruitsAndLiquids.length > 0 ? {
+    title: `Batido Smart Express de ${activeFruitsAndLiquids.slice(0, 2).join(' y ')}`,
+    description: `Creado al instante combinando los ingredientes seleccionados en tu despensa: ${activeFruitsAndLiquids.join(', ')}.`,
+    caloriesApprox: `${160 + (activeFruitsAndLiquids.length * 40)} kcal`
+  } : null;
+
   const filteredMeals = customMeals.filter(meal => {
     const userAllergies = profile.allergies || [];
     if (meal.allergens.some(al => userAllergies.includes(al))) return false;
@@ -429,6 +384,9 @@ export default function App() {
     }
     return true;
   });
+
+  const batidosList = filteredMeals.filter(m => m.type === 'Bebida / Batido');
+  const solidMealsList = filteredMeals.filter(m => m.type !== 'Bebida / Batido');
 
   const t = isDarkMode ? {
     bg: '#0f172a', card: '#1e293b', text: '#f8fafc', textSec: '#94a3b8', primary: '#38bdf8', border: '#334155'
@@ -507,37 +465,26 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: NUTRICIÓN (Incluye Contador de Agua y Batidos Visibles) */}
+      {/* PESTAÑA: NUTRICIÓN */}
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* NUEVO: Contador de Agua Diario */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ fontSize: '14px', margin: 0 }}>💧 Hidratación Diaria</h2>
               <span style={{ fontSize: '12px', fontWeight: 'bold', color: t.primary }}>{waterGlasses} / 8 vasos</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button 
-                onClick={() => setWaterGlasses(prev => Math.max(0, prev - 1))}
-                style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '14px' }}
-              >
-                ➖
-              </button>
+              <button onClick={() => setWaterGlasses(prev => Math.max(0, prev - 1))} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px 12px', cursor: 'pointer' }}>➖</button>
               <div style={{ flex: 1, backgroundColor: t.bg, borderRadius: '8px', height: '12px', overflow: 'hidden', border: `1px solid ${t.border}` }}>
-                <div style={{ width: `${Math.min(100, (waterGlasses / 8) * 100)}%`, backgroundColor: '#38bdf8', height: '100%', transition: 'width 0.3s' }}></div>
+                <div style={{ width: `${Math.min(100, (waterGlasses / 8) * 100)}%`, backgroundColor: '#38bdf8', height: '100%' }}></div>
               </div>
-              <button 
-                onClick={() => setWaterGlasses(prev => prev + 1)}
-                style={{ backgroundColor: t.primary, color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
-              >
-                ➕ Vaso
-              </button>
+              <button onClick={() => setWaterGlasses(prev => prev + 1)} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>➕ Vaso</button>
             </div>
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 Despensa Activa</h2>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 Selecciona tus Ingredientes / Frutas</h2>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {customIngredients.map(ing => {
                 const isSelected = selectedIngredients.includes(ing);
@@ -559,12 +506,12 @@ export default function App() {
             </div>
           </div>
 
-          <h3 style={{ fontSize: '15px', margin: '4px 0' }}>🥤 Recetas y Batidos Saludables ({filteredMeals.length})</h3>
+          <h3 style={{ fontSize: '15px', margin: '4px 0' }}>🍳 Platos y Recetas Sólidas ({solidMealsList.length})</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {filteredMeals.map(meal => (
+            {solidMealsList.map(meal => (
               <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '10px', backgroundColor: meal.type === 'Bebida / Batido' ? '#8b5cf6' : '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
+                  <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{meal.type}</span>
                   <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {meal.caloriesApprox}</span>
                 </div>
                 <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
@@ -575,47 +522,39 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: DESPENSA */}
-      {activeTab === 'despensa' && (
+      {/* PESTAÑA: BATIDOS (Con Generador Automático por Frutas) */}
+      {activeTab === 'batidos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimentos</h2>
-            <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="text" 
-                placeholder="Ej: Leche, Cacao..." 
-                value={newIngName}
-                onChange={e => setNewIngName(e.target.value)}
-                style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
-              />
-              <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
-            </form>
+            <h2 style={{ fontSize: '14px', marginTop: 0, color: '#8b5cf6' }}>🪄 Batido Generado por tus Frutas</h2>
+            {generatedSmartSmoothie ? (
+              <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '8px', padding: '10px', marginTop: '8px' }}>
+                <span style={{ fontSize: '10px', backgroundColor: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>Automático</span>
+                <strong style={{ fontSize: '13px', display: 'block', margin: '6px 0 4px 0' }}>{generatedSmartSmoothie.title}</strong>
+                <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{generatedSmartSmoothie.description}</p>
+                <span style={{ fontSize: '11px', fontWeight: 'bold', color: t.primary }}>⚡ {generatedSmartSmoothie.caloriesApprox}</span>
+              </div>
+            ) : (
+              <p style={{ fontSize: '12px', color: t.textSec, margin: '8px 0 0 0' }}>
+                💡 Selecciona frutas o líquidos en la pestaña de <strong>Nutrición</strong> para que la app te cree un batido inteligente al instante.
+              </p>
+            )}
           </div>
 
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🥤 Crear Receta o Batido Healthy</h2>
-            <form onSubmit={handleAddMealSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+            <h3 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🥤 Crear Batido Personalizado</h3>
+            <form onSubmit={handleAddBatidoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
               <input 
                 type="text" 
-                placeholder="Título (ej: Batido post-entreno con plátano)..." 
+                placeholder="Nombre del batido (ej: Batido post-entreno)..." 
                 value={newMealTitle}
                 onChange={e => setNewMealTitle(e.target.value)}
                 style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
               />
-              <select 
-                value={newMealType}
-                onChange={e => setNewMealType(e.target.value as any)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
-              >
-                <option value="Bebida / Batido">🥤 Bebida / Batido Healthy</option>
-                <option value="Desayuno">🌅 Desayuno</option>
-                <option value="Almuerzo">☀️ Almuerzo</option>
-                <option value="Snack">🍎 Snack</option>
-                <option value="Cena">🌙 Cena</option>
-              </select>
               <input 
                 type="text" 
-                placeholder="Calorías (ej: 250 kcal)..." 
+                placeholder="Calorías aproximadas (ej: 250 kcal)..." 
                 value={newMealCalories}
                 onChange={e => setNewMealCalories(e.target.value)}
                 style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
@@ -626,7 +565,42 @@ export default function App() {
                 onChange={e => setNewMealDesc(e.target.value)}
                 style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box', height: '50px' }}
               />
-              <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '6px' }}>Guardar Receta 🚀</button>
+              <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>Guardar Batido 🚀</button>
+            </form>
+          </div>
+
+          <h3 style={{ fontSize: '15px', margin: '4px 0' }}>📋 Tus Batidos Guardados ({batidosList.length})</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {batidosList.map(meal => (
+              <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '10px', backgroundColor: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>Bebida / Batido</span>
+                  <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {meal.caloriesApprox}</span>
+                </div>
+                <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
+                <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
+                <div style={{ fontSize: '10px', color: t.primary }}>Ingredientes: {meal.ingredients.join(', ')}</div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      )}
+
+      {/* PESTAÑA: DESPENSA */}
+      {activeTab === 'despensa' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🧀 Añadir Alimento o Fruta</h2>
+            <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="text" 
+                placeholder="Ej: Fresa, Pera, Leche..." 
+                value={newIngName}
+                onChange={e => setNewIngName(e.target.value)}
+                style={{ flex: 1, padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
+              />
+              <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
             </form>
           </div>
         </div>
@@ -642,9 +616,8 @@ export default function App() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
             {dailyMenu.desayuno && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🌅 Desayuno:</strong> {dailyMenu.desayuno.title}</div>}
-            {dailyMenu.bebida && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color:'#8b5cf6'}}>🥤 Bebida / Batido:</strong> {dailyMenu.bebida.title}</div>}
+            {dailyMenu.bebida && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color:'#8b5cf6'}}>🥤 Batido del día:</strong> {dailyMenu.bebida.title}</div>}
             {dailyMenu.almuerzo && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>☀️ Almuerzo:</strong> {dailyMenu.almuerzo.title}</div>}
-            {dailyMenu.snack && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🍎 Snack:</strong> {dailyMenu.snack.title}</div>}
             {dailyMenu.cena && <div style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px'}}>🌙 Cena:</strong> {dailyMenu.cena.title}</div>}
           </div>
         </div>
@@ -652,17 +625,15 @@ export default function App() {
 
       {/* PESTAÑA: PROGRESO */}
       {activeTab === 'progreso' && (
-        <div>
-          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento</h2>
-            <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
-              <select value={selectedExerciseName} onChange={e => setSelectedExerciseName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}>
-                {EXERCISES.map(ex => (<option key={ex.id} value={ex.name}>{ex.name}</option>))}
-              </select>
-              <input type="text" placeholder="Notas..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }} />
-              <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Guardar Avance 💾</button>
-            </form>
-          </div>
+        <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
+          <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento</h2>
+          <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+            <select value={selectedExerciseName} onChange={e => setSelectedExerciseName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}>
+              {EXERCISES.map(ex => (<option key={ex.id} value={ex.name}>{ex.name}</option>))}
+            </select>
+            <input type="text" placeholder="Notas..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }} />
+            <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Guardar Avance 💾</button>
+          </form>
         </div>
       )}
 
@@ -683,23 +654,26 @@ export default function App() {
 
       {/* Navegación Inferior */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.card, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '8px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
-        <button onClick={() => setActiveTab('entreno')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'entreno' ? '700' : '400', color: activeTab === 'entreno' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '16px' }}>🏋️</span> Entreno
+        <button onClick={() => setActiveTab('entreno')} style={{ background: 'none', border: 'none', fontSize: '9px', fontWeight: activeTab === 'entreno' ? '700' : '400', color: activeTab === 'entreno' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '15px' }}>🏋️</span> Entreno
         </button>
-        <button onClick={() => setActiveTab('nutricion')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'nutricion' ? '700' : '400', color: activeTab === 'nutricion' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '16px' }}>🥗</span> Nutrición
+        <button onClick={() => setActiveTab('nutricion')} style={{ background: 'none', border: 'none', fontSize: '9px', fontWeight: activeTab === 'nutricion' ? '700' : '400', color: activeTab === 'nutricion' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '15px' }}>🥗</span> Nutrición
         </button>
-        <button onClick={() => setActiveTab('despensa')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'despensa' ? '700' : '400', color: activeTab === 'despensa' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '16px' }}>🛒</span> Despensa
+        <button onClick={() => setActiveTab('batidos')} style={{ background: 'none', border: 'none', fontSize: '9px', fontWeight: activeTab === 'batidos' ? '700' : '400', color: activeTab === 'batidos' ? '#8b5cf6' : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '15px' }}>🥤</span> Batidos
         </button>
-        <button onClick={() => setActiveTab('menu')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'menu' ? '700' : '400', color: activeTab === 'menu' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '16px' }}>🍽️</span> Menú
+        <button onClick={() => setActiveTab('despensa')} style={{ background: 'none', border: 'none', fontSize: '9px', fontWeight: activeTab === 'despensa' ? '700' : '400', color: activeTab === 'despensa' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '15px' }}>🛒</span> Despensa
         </button>
-        <button onClick={() => setActiveTab('progreso')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'progreso' ? '700' : '400', color: activeTab === 'progreso' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '16px' }}>📈</span> Progreso
+        <button onClick={() => setActiveTab('menu')} style={{ background: 'none', border: 'none', fontSize: '9px', fontWeight: activeTab === 'menu' ? '700' : '400', color: activeTab === 'menu' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '15px' }}>🍽️</span> Menú
         </button>
-        <button onClick={() => setActiveTab('perfil')} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: activeTab === 'perfil' ? '700' : '400', color: activeTab === 'perfil' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span style={{ fontSize: '16px' }}>👤</span> Perfil
+        <button onClick={() => setActiveTab('progreso')} style={{ background: 'none', border: 'none', fontSize: '9px', fontWeight: activeTab === 'progreso' ? '700' : '400', color: activeTab === 'progreso' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '15px' }}>📈</span> Progreso
+        </button>
+        <button onClick={() => setActiveTab('perfil')} style={{ background: 'none', border: 'none', fontSize: '9px', fontWeight: activeTab === 'perfil' ? '700' : '400', color: activeTab === 'perfil' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '15px' }}>👤</span> Perfil
         </button>
       </nav>
 
