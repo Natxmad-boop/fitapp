@@ -27,6 +27,7 @@ interface UserProfile {
   allergies: string[];
   trainingDaysPerWeek: number;
   reminderTime: string;
+  selectedDays: string[]; // Días específicos seleccionados (ej: 'Lunes', 'Miércoles', 'Viernes')
 }
 
 interface MealIdea {
@@ -127,11 +128,13 @@ const INITIAL_MEALS: MealIdea[] = [
   }
 ];
 
+const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
 export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
-      { id: 'user_1', name: 'Eli', weight: 50, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3, reminderTime: '09:00' }
+      { id: 'user_1', name: 'Eli', weight: 50, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3, reminderTime: '09:00', selectedDays: ['Lunes', 'Miércoles', 'Viernes'] }
     ];
   });
 
@@ -195,6 +198,50 @@ export default function App() {
   const [restTimerSeconds, setRestTimerSeconds] = useState<number>(0);
   const [isResting, setIsResting] = useState<boolean>(false);
 
+  // Verificador automático de recordatorios por hora del sistema
+  useEffect(() => {
+    if (!profile.reminderTime) return;
+
+    const checkReminderInterval = setInterval(() => {
+      const now = new Date();
+      const currentHours = String(now.getHours()).padStart(2, '0');
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+      const currentTimeStr = `${currentHours}:${currentMinutes}`;
+
+      const currentDayIndex = now.getDay(); // 0 es Domingo, 1 es Lunes...
+      const mapDays: Record<number, string> = { 1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 0: 'Domingo' };
+      const currentDayName = mapDays[currentDayIndex];
+
+      const isScheduledDay = profile.selectedDays?.includes(currentDayName);
+
+      if (currentTimeStr === profile.reminderTime && isScheduledDay) {
+        // Disparar Notificación Nativa del Navegador si hay permiso
+        if (Notification.permission === 'granted') {
+          new Notification('FitApp Pro ⚡', {
+            body: `¡Hola ${profile.name}! Es hora de tu entrenamiento de hoy (${currentDayName}). ¡A por todas! 💪`,
+            icon: '🏋️'
+          });
+        }
+      }
+    }, 30000); // Comprueba cada 30 segundos
+
+    return () => clearInterval(checkReminderInterval);
+  }, [profile.reminderTime, profile.selectedDays, profile.name]);
+
+  const requestNotificationPermission = () => {
+    if (!('Notification' in window)) {
+      alert('⚠️ Este navegador no soporta notificaciones de escritorio.');
+      return;
+    }
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        alert('🔔 ¡Permiso concedido! Recibirás tus recordatorios puntuales.');
+      } else {
+        alert('❌ Has denegado los permisos de notificación.');
+      }
+    });
+  };
+
   useEffect(() => {
     let interval: any = null;
     if (isResting && restTimerSeconds > 0) {
@@ -246,6 +293,16 @@ export default function App() {
   const handleUpdateActiveProfile = (field: keyof UserProfile, value: any) => {
     const updated = profilesList.map(p => p.id === profile.id ? { ...p, [field]: value } : p);
     setProfilesList(updated);
+  };
+
+  const handleToggleSpecificDay = (day: string) => {
+    const currentDays = profile.selectedDays || [];
+    const updatedDays = currentDays.includes(day)
+      ? currentDays.filter(d => d !== day)
+      : [...currentDays, day];
+    
+    handleUpdateActiveProfile('selectedDays', updatedDays);
+    handleUpdateActiveProfile('trainingDaysPerWeek', updatedDays.length);
   };
 
   const handleToggleIngredient = (ingredient: string) => {
@@ -345,16 +402,6 @@ export default function App() {
     });
   };
 
-  const getAssignedDaysText = (daysCount: number) => {
-    switch (daysCount) {
-      case 2: return '📅 Días asignados: Martes y Jueves';
-      case 3: return '📅 Días asignados: Lunes, Miércoles y Viernes';
-      case 4: return '📅 Días asignados: Lunes, Martes, Jueves y Viernes';
-      case 5: return '📅 Días asignados: Lunes a Viernes';
-      default: return '📅 Días asignados: Flexibles';
-    }
-  };
-
   const filteredExercises = EXERCISES.filter(ex => {
     if (selectedLocation !== 'Todos' && ex.location !== selectedLocation) return false;
     if (selectedCategory !== 'Todos' && ex.category !== selectedCategory) return false;
@@ -413,41 +460,54 @@ export default function App() {
       {/* PESTAÑA: ENTRENAMIENTO */}
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* Selector Interactivo de Días */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>📅 Días de Entrenamiento</h2>
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-              {[2, 3, 4, 5].map(days => (
-                <button
-                  key={days}
-                  onClick={() => handleUpdateActiveProfile('trainingDaysPerWeek', days)}
-                  style={{
-                    flex: 1, padding: '8px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold',
-                    backgroundColor: (profile.trainingDaysPerWeek || 3) === days ? t.primary : t.bg,
-                    color: (profile.trainingDaysPerWeek || 3) === days ? '#fff' : t.text,
-                    border: `1px solid ${(profile.trainingDaysPerWeek || 3) === days ? t.primary : t.border}`
-                  }}
-                >
-                  {days} Días
-                </button>
-              ))}
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>📅 ¿Qué días quieres entrenar?</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 8px 0' }}>Selecciona los días de la semana que prefieras:</p>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {DAYS_OF_WEEK.map(day => {
+                const isSelected = profile.selectedDays?.includes(day);
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleToggleSpecificDay(day)}
+                    style={{
+                      padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold',
+                      backgroundColor: isSelected ? t.primary : t.bg,
+                      color: isSelected ? '#fff' : t.text,
+                      border: `1px solid ${isSelected ? t.primary : t.border}`
+                    }}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                );
+              })}
             </div>
-            <p style={{ fontSize: '11px', color: t.primary, margin: '4px 0 0 0', fontWeight: '600' }}>
-              {getAssignedDaysText(profile.trainingDaysPerWeek || 3)}
+            <p style={{ fontSize: '11px', color: t.primary, margin: '8px 0 0 0', fontWeight: '600' }}>
+              Total: {profile.selectedDays?.length || 0} días por semana
             </p>
           </div>
 
-          {/* Configuración de Recordatorio */}
+          {/* Configuración de Recordatorio y Notificaciones */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '13px', marginTop: 0, marginBottom: '6px' }}>🔔 Recordatorio Diario de Entrenamiento</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '11px', color: t.textSec }}>Avisar a las:</span>
-              <input 
-                type="time" 
-                value={profile.reminderTime || '09:00'} 
-                onChange={e => handleUpdateActiveProfile('reminderTime', e.target.value)}
-                style={{ padding: '6px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
-              />
-              <button onClick={() => alert(`✅ ¡Recordatorio configurado con éxito para las ${profile.reminderTime || '09:00'}h!`)} style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Aviso ⏰</button>
+            <h3 style={{ fontSize: '13px', marginTop: 0, marginBottom: '6px' }}>🔔 Recordatorio y Avisos Push</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', color: t.textSec }}>Hora del recordatorio:</span>
+                <input 
+                  type="time" 
+                  value={profile.reminderTime || '09:00'} 
+                  onChange={e => handleUpdateActiveProfile('reminderTime', e.target.value)}
+                  style={{ padding: '6px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px' }}
+                />
+              </div>
+              <button 
+                onClick={requestNotificationPermission} 
+                style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}
+              >
+                🔔 Activar Notificaciones del Navegador
+              </button>
             </div>
           </div>
 
