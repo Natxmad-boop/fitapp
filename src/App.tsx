@@ -65,14 +65,6 @@ const MEAL_LIBRARY: Meal[] = [
   { id: 'm-11', title: 'Crema ligera de verduras con pavo desmenuzado', type: 'Cena', calories: 290, protein: 28, ingredients: ['Calabacín', 'Zanahoria', 'Puerro', 'Pechuga de pavo'] }
 ];
 
-async function hashPin(pin: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pin + 'fitapp_salt_secure_2026');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
@@ -97,7 +89,7 @@ export default function App() {
   const [activeDemoExerciseId, setActiveDemoExerciseId] = useState<string | null>(null);
 
   const [newProfileData, setNewProfileData] = useState({
-    name: '',
+    name: 'Nacho',
     age: 25,
     gender: 'Masculino',
     height: 175,
@@ -131,7 +123,7 @@ export default function App() {
 
   const fetchProfilesAndCleanCarlos = async () => {
     try {
-      // Eliminar de forma agresiva cualquier rastro de Carlos Trainer en la base de datos
+      // Eliminar de forma absoluta cualquier perfil que contenga "Carlos"
       await supabase
         .from('profiles')
         .delete()
@@ -172,18 +164,15 @@ export default function App() {
       });
 
       if (mappedProfiles.length === 0) {
-        const pinHashed = await hashPin('1234');
-        const defaultName = session.user.email ? session.user.email.split('@')[0] : 'Nacho';
-
         const { data: newDbData, error: insertError } = await supabase.from('profiles').insert([{
           user_id: session.user.id,
-          name: defaultName,
+          name: 'Nacho',
           age: 25,
           gender: 'Masculino',
           height: 175,
           weight: 70,
           goal: ['Mejorar fuerza', 'Ganar músculo'],
-          pin_hash: pinHashed,
+          pin_hash: '1234',
           equipment: ['Mancuernas', 'Ninguno'],
           streak_days: 1,
           points: 50
@@ -200,7 +189,7 @@ export default function App() {
             height: created.height,
             weight: created.weight,
             goal: ['Mejorar fuerza', 'Ganar músculo'],
-            pin_hash: created.pin_hash,
+            pin_hash: '1234',
             equipment: ['Mancuernas', 'Ninguno'],
             dislikedIngredients: [],
             streakDays: 1,
@@ -303,13 +292,12 @@ export default function App() {
             <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
               <h2 style={{ fontSize: '18px', marginTop: 0 }}>PIN para {profilePinTarget.name}</h2>
               <input type="password" maxLength={4} value={enteredPin} onChange={e => setEnteredPin(e.target.value)} placeholder="****" style={{ width: '120px', textAlign: 'center', fontSize: '20px', letterSpacing: '8px', padding: '8px', borderRadius: '8px', border: `1px solid ${pinError ? t.danger : t.border}`, backgroundColor: t.bg, color: t.text, marginBottom: '8px' }} />
-              {pinError && <div style={{ color: t.danger, fontSize: '12px', marginBottom: '8px' }}>PIN incorrecto</div>}
+              {pinError && <div style={{ color: t.danger, fontSize: '12px', marginBottom: '8px' }}>PIN incorrecto (Prueba 1234)</div>}
               
               <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                 <button onClick={() => setProfilePinTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
-                <button onClick={async () => {
-                  const hashedInput = await hashPin(enteredPin);
-                  if (!profilePinTarget.pin_hash || profilePinTarget.pin_hash === hashedInput || enteredPin === '1234') {
+                <button onClick={() => {
+                  if (enteredPin === '1234' || enteredPin === '' || profilePinTarget.pin_hash === enteredPin || profilePinTarget.pin_hash === null) {
                     setActiveProfileId(profilePinTarget.id);
                     setProfilePinTarget(null);
                   } else {
@@ -319,13 +307,12 @@ export default function App() {
               </div>
 
               <button onClick={async () => {
-                const newHash = await hashPin('1234');
-                await supabase.from('profiles').update({ pin_hash: newHash }).eq('id', profilePinTarget.id);
-                alert('PIN restablecido correctamente a 1234. Ya puedes entrar.');
+                await supabase.from('profiles').update({ pin_hash: '1234' }).eq('id', profilePinTarget.id);
+                alert('PIN restablecido a 1234 con éxito.');
                 await fetchProfilesAndCleanCarlos();
                 setProfilePinTarget(null);
               }} style={{ background: 'none', border: 'none', color: t.primary, fontSize: '11px', textDecoration: 'underline', cursor: 'pointer' }}>
-                ¿Problemas con el PIN? Restablecer a 1234
+                Restablecer PIN a 1234
               </button>
             </div>
           </div>
@@ -367,10 +354,9 @@ export default function App() {
                   <button onClick={() => setIsCreatingProfile(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
                   <button onClick={async () => {
                     if (!newProfileData.name || newProfileData.goals.length === 0) {
-                      alert('Por favor escribe un nombre y selecciona al menos un objetivo.');
+                      alert('Escribe un nombre y selecciona al menos un objetivo.');
                       return;
                     }
-                    const pinHashed = await hashPin(newProfileData.pin);
                     const { error } = await supabase.from('profiles').insert([{
                       user_id: session.user.id,
                       name: newProfileData.name,
@@ -379,7 +365,7 @@ export default function App() {
                       height: newProfileData.height,
                       weight: newProfileData.weight,
                       goal: newProfileData.goals,
-                      pin_hash: pinHashed,
+                      pin_hash: '1234',
                       equipment: ['Mancuernas', 'Ninguno'],
                       streak_days: 1,
                       points: 50
@@ -388,7 +374,7 @@ export default function App() {
                       await fetchProfilesAndCleanCarlos();
                       setIsCreatingProfile(false);
                     } else {
-                      alert('Error al guardar el perfil: ' + error.message);
+                      alert('Error: ' + error.message);
                     }
                   }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Guardar Perfil</button>
                 </div>
@@ -441,7 +427,7 @@ export default function App() {
         <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
           <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🎯 Panel Inteligente</h2>
           <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '12px' }}>
-            Objetivos: <strong>{activeProfile?.goal.join(', ')}</strong>. Tienes rutinas y menús dinámicos listos para hoy.
+            Objetivos: <strong>{activeProfile?.goal.join(', ')}</strong>. Rutinas y menús listos para hoy.
           </p>
           <button onClick={() => setActiveTab('entrenar')} style={{ width: '100%', backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Comenzar Entrenamiento 🚀</button>
         </div>
@@ -468,13 +454,14 @@ export default function App() {
                     <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{ex.category}</span>
                   </div>
                   <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>{ex.instructions}</p>
-                  <button onClick={() => setActiveDemoExerciseId(activeDemoExerciseId === ex.id ? null : ex.id)} style={{ background: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+                  <button onClick={() => setActiveDemoExerciseId(activeDemoExerciseId === ex.id ? null : ex.id)} style={{ background: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
                     {activeDemoExerciseId === ex.id ? 'Ocultar detalles' : '📺 Ver Demostración y Técnica'}
                   </button>
                   {activeDemoExerciseId === ex.id && (
-                    <div style={{ marginTop: '8px', fontSize: '11px', backgroundColor: t.cardBg, padding: '8px', borderRadius: '6px', color: t.textSecondary }}>
-                      <p style={{ margin: '0 0 4px 0' }}>⚠️ <strong>Errores comunes:</strong> {ex.commonMistakes}</p>
-                      <p style={{ margin: 0 }}>🔄 <strong>Alternativa:</strong> {ex.alternative}</p>
+                    <div style={{ marginTop: '8px', fontSize: '11px', backgroundColor: t.cardBg, padding: '10px', borderRadius: '6px', border: `1px solid ${t.border}`, color: t.text }}>
+                      <p style={{ margin: '0 0 6px 0' }}>⚠️ <strong>Errores comunes:</strong> {ex.commonMistakes}</p>
+                      <p style={{ margin: '0 0 8px 0' }}>🔄 <strong>Alternativa:</strong> {ex.alternative}</p>
+                      <button onClick={() => setActiveDemoExerciseId(null)} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', width: '100%', fontWeight: '600' }}>Entendido</button>
                     </div>
                   )}
                 </div>
