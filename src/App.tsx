@@ -120,7 +120,7 @@ export default function App() {
   ];
 
   const [exerciseLibrary] = useState<Exercise[]>(() => {
-    const saved = localStorage.getItem(`fitapp_library_v6${pKey}`);
+    const saved = localStorage.getItem(`fitapp_library_v7${pKey}`);
     return saved ? JSON.parse(saved) : defaultExercises;
   });
 
@@ -133,13 +133,13 @@ export default function App() {
   ];
 
   const [dailyMeals, setDailyMeals] = useState<Meal[]>(() => {
-    const saved = localStorage.getItem(`fitapp_meals_v6${pKey}`);
+    const saved = localStorage.getItem(`fitapp_meals_v7${pKey}`);
     return saved ? JSON.parse(saved) : defaultDailyMeals;
   });
 
   const [activeMealModal, setActiveMealModal] = useState<Meal | null>(null);
 
-  // 4. Lista de la Compra Inteligente (Fase 6 del Guion)
+  // 4. Lista de la Compra Inteligente (Fase 6)
   const defaultShoppingList: ShoppingItem[] = [
     { id: 's_1', name: 'Avena en copos', category: 'Despensa / Cereales', checked: false, amount: '500g' },
     { id: 's_2', name: 'Plátanos', category: 'Frutas y Verduras', checked: false, amount: '1 kg' },
@@ -153,7 +153,7 @@ export default function App() {
   ];
 
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_shopping_v6${pKey}`);
+    const saved = localStorage.getItem(`fitapp_shopping_v7${pKey}`);
     return saved ? JSON.parse(saved) : defaultShoppingList;
   });
 
@@ -161,10 +161,18 @@ export default function App() {
   const [newCustomItemCat, setNewCustomItemCat] = useState<ShoppingItem['category']>('Despensa / Cereales');
   const [newCustomItemAmount, setNewCustomItemAmount] = useState('');
 
-  // Estados de entrenamiento y progreso
+  // 5. Historial y Progreso con Gráficos (Fase 7 del Guion)
+  const defaultHistory: SetItem[] = [
+    { name: 'Press de Banca con Barra', weight: 70, reps: 10, date: '10/05/2026' },
+    { name: 'Press de Banca con Barra', weight: 75, reps: 8, date: '17/05/2026' },
+    { name: 'Press de Banca con Barra', weight: 80, reps: 6, date: '24/05/2026' },
+    { name: 'Sentadilla Goblet', weight: 24, reps: 12, date: '18/05/2026' },
+    { name: 'Sentadilla Goblet', weight: 28, reps: 10, date: '25/05/2026' },
+  ];
+
   const [history, setHistory] = useState<SetItem[]>(() => {
-    const saved = localStorage.getItem(`fitapp_history_v6${pKey}`);
-    return saved ? JSON.parse(saved) : [];
+    const saved = localStorage.getItem(`fitapp_history_v7${pKey}`);
+    return saved ? JSON.parse(saved) : defaultHistory;
   });
 
   const [weightInput, setWeightInput] = useState('');
@@ -172,6 +180,7 @@ export default function App() {
   const [selectedExerciseForLog, setSelectedExerciseForLog] = useState('Press de Banca con Barra');
   const [selectedDifficulty, setSelectedDifficulty] = useState<'Fácil' | 'Normal' | 'Difícil'>('Normal');
   const [exerciseNote, setExerciseNote] = useState('');
+  const [selectedExerciseForGraph, setSelectedExerciseForGraph] = useState('Press de Banca con Barra');
 
   // Temporizador
   const [timeLeft, setTimeLeft] = useState(0);
@@ -184,10 +193,10 @@ export default function App() {
   useEffect(() => {
     if (currentProfile) {
       localStorage.setItem('fitapp_active_profile', JSON.stringify(currentProfile));
-      localStorage.setItem(`fitapp_library_v6${pKey}`, JSON.stringify(exerciseLibrary));
-      localStorage.setItem(`fitapp_meals_v6${pKey}`, JSON.stringify(dailyMeals));
-      localStorage.setItem(`fitapp_shopping_v6${pKey}`, JSON.stringify(shoppingList));
-      localStorage.setItem(`fitapp_history_v6${pKey}`, JSON.stringify(history));
+      localStorage.setItem(`fitapp_library_v7${pKey}`, JSON.stringify(exerciseLibrary));
+      localStorage.setItem(`fitapp_meals_v7${pKey}`, JSON.stringify(dailyMeals));
+      localStorage.setItem(`fitapp_shopping_v7${pKey}`, JSON.stringify(shoppingList));
+      localStorage.setItem(`fitapp_history_v7${pKey}`, JSON.stringify(history));
     }
   }, [currentProfile, exerciseLibrary, dailyMeals, shoppingList, history, pKey]);
 
@@ -258,6 +267,7 @@ export default function App() {
     setRepsInput('');
     setExerciseNote('');
     startTimer(90);
+    alert('¡Serie registrada con éxito! Tu gráfico de evolución se ha actualizado.');
   };
 
   const toggleShoppingItem = (id: string) => {
@@ -322,29 +332,6 @@ export default function App() {
       color: t.text,
       marginTop: 0,
       marginBottom: '12px',
-    },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '12px',
-    },
-    statBox: {
-      backgroundColor: t.statBg,
-      padding: '12px',
-      borderRadius: '8px',
-      textAlign: 'center' as const,
-      border: `1px solid ${t.border}`,
-    },
-    statValue: {
-      fontSize: '18px',
-      fontWeight: '700',
-      color: t.primary,
-      margin: '0 0 4px 0',
-    },
-    statLabel: {
-      fontSize: '12px',
-      color: t.textSecondary,
-      margin: 0,
     },
     button: {
       backgroundColor: t.primary,
@@ -471,6 +458,11 @@ export default function App() {
   const totalCalories = dailyMeals.reduce((acc, m) => acc + m.calories, 0);
   const totalProtein = dailyMeals.reduce((acc, m) => acc + m.protein, 0);
 
+  // Filtrar datos para gráficos del ejercicio seleccionado
+  const exerciseHistoryFiltered = history.filter(h => h.name === selectedExerciseForGraph).reverse();
+  const maxWeightRegistered = exerciseHistoryFiltered.length > 0 ? Math.max(...exerciseHistoryFiltered.map(h => h.weight)) : 0;
+  const estimated1RM = exerciseHistoryFiltered.length > 0 ? Math.round(maxWeightRegistered * (1 + 0.0333 * Math.max(...exerciseHistoryFiltered.map(h => h.reps)))) : 0;
+
   return (
     <div style={dynamicStyles.container}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -562,69 +554,96 @@ export default function App() {
         </div>
       )}
 
-      {/* 🛒 5. LISTA DE LA COMPRA INTELIGENTE (Fase 6 del Guion) */}
+      {/* 🛒 5. LISTA DE LA COMPRA INTELIGENTE */}
       {activeTab === 'compra' && (
-        <div>
-          <div style={dynamicStyles.card}>
-            <h2 style={dynamicStyles.cardTitle}>🛒 Lista de la Compra Inteligente</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '14px' }}>
-              Generada automáticamente a partir de tu menú semanal. Organizada por secciones del supermercado.
-            </p>
+        <div style={dynamicStyles.card}>
+          <h2 style={dynamicStyles.cardTitle}>🛒 Lista de la Compra Inteligente</h2>
+          <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '14px' }}>
+            Generada automáticamente a partir de tu menú semanal. Organizada por secciones del supermercado.
+          </p>
 
-            {/* Formulario para añadir ítem manual */}
-            <form onSubmit={addCustomShoppingItem} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${t.border}` }}>
-              <input type="text" placeholder="Añadir producto (ej. Tomates)..." value={newCustomItemName} onChange={(e) => setNewCustomItemName(e.target.value)} style={dynamicStyles.input} />
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input type="text" placeholder="Cantidad (ej. 500g)" value={newCustomItemAmount} onChange={(e) => setNewCustomItemAmount(e.target.value)} style={{ ...dynamicStyles.input, margin: 0 }} />
-                <select value={newCustomItemCat} onChange={(e) => setNewCustomItemCat(e.target.value as any)} style={{ ...dynamicStyles.input, margin: 0 }}>
-                  <option value="Frutas y Verduras">Frutas y Verduras</option>
-                  <option value="Carnicería / Pescadería">Carnicería / Pescadería</option>
-                  <option value="Lácteos y Huevos">Lácteos y Huevos</option>
-                  <option value="Despensa / Cereales">Despensa / Cereales</option>
-                </select>
-              </div>
-              <button type="submit" style={{ ...dynamicStyles.button, marginTop: '8px', backgroundColor: '#10b981' }}>+ Añadir a la Compra</button>
-            </form>
+          <form onSubmit={addCustomShoppingItem} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${t.border}` }}>
+            <input type="text" placeholder="Añadir producto (ej. Tomates)..." value={newCustomItemName} onChange={(e) => setNewCustomItemName(e.target.value)} style={dynamicStyles.input} />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input type="text" placeholder="Cantidad (ej. 500g)" value={newCustomItemAmount} onChange={(e) => setNewCustomItemAmount(e.target.value)} style={{ ...dynamicStyles.input, margin: 0 }} />
+              <select value={newCustomItemCat} onChange={(e) => setNewCustomItemCat(e.target.value as any)} style={{ ...dynamicStyles.input, margin: 0 }}>
+                <option value="Frutas y Verduras">Frutas y Verduras</option>
+                <option value="Carnicería / Pescadería">Carnicería / Pescadería</option>
+                <option value="Lácteos y Huevos">Lácteos y Huevos</option>
+                <option value="Despensa / Cereales">Despensa / Cereales</option>
+              </select>
+            </div>
+            <button type="submit" style={{ ...dynamicStyles.button, marginTop: '8px', backgroundColor: '#10b981' }}>+ Añadir a la Compra</button>
+          </form>
 
-            {/* Agrupado por Categorías */}
-            {(['Frutas y Verduras', 'Carnicería / Pescadería', 'Lácteos y Huevos', 'Despensa / Cereales'] as const).map(category => {
-              const itemsInCat = shoppingList.filter(item => item.category === category);
-              if (itemsInCat.length === 0) return null;
-              return (
-                <div key={category} style={{ marginBottom: '14px' }}>
-                  <h3 style={{ fontSize: '13px', fontWeight: '700', color: t.primary, marginBottom: '6px', textTransform: 'uppercase' }}>{category}</h3>
-                  {itemsInCat.map(item => (
-                    <div key={item.id} onClick={() => toggleShoppingItem(item.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: t.statBg, borderRadius: '6px', marginBottom: '6px', cursor: 'pointer', border: `1px solid ${t.border}` }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '16px' }}>{item.checked ? '✅' : '⬜'}</span>
-                        <span style={{ fontSize: '13px', textDecoration: item.checked ? 'line-through' : 'none', color: item.checked ? t.textSecondary : t.text, fontWeight: '500' }}>
-                          {item.name}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '12px', color: t.textSecondary, fontWeight: '600' }}>{item.amount}</span>
+          {(['Frutas y Verduras', 'Carnicería / Pescadería', 'Lácteos y Huevos', 'Despensa / Cereales'] as const).map(category => {
+            const itemsInCat = shoppingList.filter(item => item.category === category);
+            if (itemsInCat.length === 0) return null;
+            return (
+              <div key={category} style={{ marginBottom: '14px' }}>
+                <h3 style={{ fontSize: '13px', fontWeight: '700', color: t.primary, marginBottom: '6px', textTransform: 'uppercase' }}>{category}</h3>
+                {itemsInCat.map(item => (
+                  <div key={item.id} onClick={() => toggleShoppingItem(item.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: t.statBg, borderRadius: '6px', marginBottom: '6px', cursor: 'pointer', border: `1px solid ${t.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '16px' }}>{item.checked ? '✅' : '⬜'}</span>
+                      <span style={{ fontSize: '13px', textDecoration: item.checked ? 'line-through' : 'none', color: item.checked ? t.textSecondary : t.text, fontWeight: '500' }}>
+                        {item.name}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
+                    <span style={{ fontSize: '12px', color: t.textSecondary, fontWeight: '600' }}>{item.amount}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* 📈 6. PROGRESO */}
+      {/* 📈 6. PROGRESO Y GRÁFICOS (Fase 7 del Guion) */}
       {activeTab === 'progreso' && (
-        <div style={dynamicStyles.card}>
-          <h2 style={dynamicStyles.cardTitle}>🏆 Historial de Entrenamientos</h2>
-          {history.length === 0 ? (
-            <p style={{ fontSize: '13px', color: t.textSecondary, margin: 0 }}>Sin registros todavía.</p>
-          ) : (
-            history.map((item, idx) => (
-              <div key={idx} style={dynamicStyles.listItem}>
-                <span>{item.name}</span>
-                <strong>{item.weight} kg × {item.reps} reps</strong>
+        <div>
+          <div style={dynamicStyles.card}>
+            <h2 style={dynamicStyles.cardTitle}>📈 Gráficos de Evolución y 1RM</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
+              Analiza tu progresión de cargas y estima tu repetición máxima teórica (1RM).
+            </p>
+
+            <select value={selectedExerciseForGraph} onChange={(e) => setSelectedExerciseForGraph(e.target.value)} style={dynamicStyles.input}>
+              {Array.from(new Set(history.map(h => h.name))).map(exName => (
+                <option key={exName} value={exName}>{exName}</option>
+              ))}
+            </select>
+
+            {/* Tarjetas de Estadísticas Clave */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', margin: '14px 0' }}>
+              <div style={{ backgroundColor: t.statBg, padding: '12px', borderRadius: '8px', textAlign: 'center', border: `1px solid ${t.border}` }}>
+                <span style={{ fontSize: '18px', fontWeight: '700', color: t.primary }}>{maxWeightRegistered} kg</span>
+                <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>Peso Máximo</p>
               </div>
-            ))
-          )}
+              <div style={{ backgroundColor: t.statBg, padding: '12px', borderRadius: '8px', textAlign: 'center', border: `1px solid ${t.border}` }}>
+                <span style={{ fontSize: '18px', fontWeight: '700', color: '#10b981' }}>{estimated1RM} kg</span>
+                <p style={{ fontSize: '11px', color: t.textSecondary, margin: '2px 0 0 0' }}>1RM Estimado</p>
+              </div>
+            </div>
+
+            {/* Simulación Visual de Gráfico de Barras / Cargas */}
+            <h3 style={{ fontSize: '13px', fontWeight: '600', color: t.text, marginBottom: '8px' }}>Historial de Sesiones</h3>
+            {exerciseHistoryFiltered.length === 0 ? (
+              <p style={{ fontSize: '12px', color: t.textSecondary }}>No hay registros para este ejercicio.</p>
+            ) : (
+              exerciseHistoryFiltered.map((item, idx) => (
+                <div key={idx} style={{ padding: '10px 0', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', color: t.textSecondary, display: 'block' }}>{item.date}</span>
+                    <strong style={{ fontSize: '14px', color: t.text }}>{item.weight} kg × {item.reps} reps</strong>
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: t.primary, backgroundColor: t.statBg, padding: '4px 8px', borderRadius: '4px' }}>
+                    Volumen: {item.weight * item.reps} kg
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
