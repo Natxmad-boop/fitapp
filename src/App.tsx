@@ -20,6 +20,7 @@ interface WorkoutLog {
 }
 
 interface UserProfile {
+  id: string;
   name: string;
   weight: number;
   goal: string;
@@ -247,13 +248,26 @@ const MEALS: MealIdea[] = [
 ];
 
 export default function App() {
-  const [profile, setProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('fitapp_profile_v4');
-    return saved ? JSON.parse(saved) : { name: 'Nacho', weight: 70, goal: 'Ganar fuerza y músculo' };
+  // Lista de usuarios disponibles
+  const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
+    const saved = localStorage.getItem('fitapp_profiles_directory');
+    return saved ? JSON.parse(saved) : [
+      { id: 'user_1', name: 'Nacho', weight: 70, goal: 'Ganar fuerza y músculo' },
+      { id: 'user_2', name: 'Lucía', weight: 60, goal: 'Tonificación y pérdida de grasa' }
+    ];
   });
 
+  const [activeUserId, setActiveUserId] = useState<string>(() => {
+    const savedId = localStorage.getItem('fitapp_active_user_id');
+    return savedId || 'user_1';
+  });
+
+  // Perfil activo actual
+  const profile = profilesList.find(p => p.id === activeUserId) || profilesList[0];
+
+  // Logs vinculados estrictamente al usuario activo actual
   const [logs, setLogs] = useState<WorkoutLog[]>(() => {
-    const saved = localStorage.getItem('fitapp_logs_v4');
+    const saved = localStorage.getItem(`fitapp_logs_${activeUserId}`);
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -268,13 +282,50 @@ export default function App() {
   const [weightUsedInput, setWeightUsedInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
 
+  // Nuevo usuario inputs
+  const [newUserName, setNewUserName] = useState<string>('');
+  const [newUserWeight, setNewUserWeight] = useState<string>('');
+
+  // Sincronizar directorio de perfiles y usuario activo
   useEffect(() => {
-    localStorage.setItem('fitapp_profile_v4', JSON.stringify(profile));
-  }, [profile]);
+    localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
+  }, [profilesList]);
 
   useEffect(() => {
-    localStorage.setItem('fitapp_logs_v4', JSON.stringify(logs));
-  }, [logs]);
+    localStorage.setItem('fitapp_active_user_id', activeUserId);
+    // Cargar los logs específicos de este usuario al cambiar de cuenta
+    const savedLogs = localStorage.getItem(`fitapp_logs_${activeUserId}`);
+    setLogs(savedLogs ? JSON.parse(savedLogs) : []);
+  }, [activeUserId]);
+
+  // Guardar logs del usuario activo
+  useEffect(() => {
+    localStorage.setItem(`fitapp_logs_${activeUserId}`, JSON.stringify(logs));
+  }, [logs, activeUserId]);
+
+  const handleUpdateActiveProfile = (field: keyof UserProfile, value: any) => {
+    const updated = profilesList.map(p => p.id === profile.id ? { ...p, [field]: value } : p);
+    setProfilesList(updated);
+  };
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserName.trim()) return;
+
+    const newId = 'user_' + Date.now();
+    const newUser: UserProfile = {
+      id: newId,
+      name: newUserName.trim(),
+      weight: Number(newUserWeight) || 65,
+      goal: 'Mantener forma física'
+    };
+
+    setProfilesList([...profilesList, newUser]);
+    setActiveUserId(newId);
+    setNewUserName('');
+    setNewUserWeight('');
+    alert(`¡Perfil de ${newUser.name} creado y seleccionado con éxito! 🎉`);
+  };
 
   const handleAddLog = (e: React.FormEvent) => {
     e.preventDefault();
@@ -291,7 +342,7 @@ export default function App() {
     setLogs([newLog, ...logs]);
     setWeightUsedInput('');
     setNotesInput('');
-    alert('¡Entrenamiento guardado en tus avances! 🚀');
+    alert(`¡Entrenamiento guardado para ${profile.name}! 🚀`);
   };
 
   const filteredExercises = EXERCISES.filter(ex => {
@@ -315,7 +366,7 @@ export default function App() {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
           <h1 style={{ fontSize: '18px', margin: 0, color: t.primary }}>FitApp Pro ⚡</h1>
-          <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>¡Hola, {profile.name}! ({profile.weight} kg)</p>
+          <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Usuario: <strong>{profile.name}</strong> ({profile.weight} kg)</p>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', fontSize: '14px' }}>
           {isDarkMode ? '☀️' : '🌙'}
@@ -448,7 +499,7 @@ export default function App() {
       {activeTab === 'progreso' && (
         <div>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento</h2>
+            <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '10px' }}>📝 Registrar Entrenamiento de {profile.name}</h2>
             <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
               <label>Ejercicio:
                 <select 
@@ -483,14 +534,14 @@ export default function App() {
               </label>
 
               <button type="submit" style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
-                Guardar Avance 💾
+                Guardar Avance para {profile.name} 💾
               </button>
             </form>
           </div>
 
-          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>📊 Tus Avances Guardados ({logs.length})</h3>
+          <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>📊 Historial de {profile.name} ({logs.length})</h3>
           {logs.length === 0 ? (
-            <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>Aún no hay entrenamientos registrados. ¡Haz tu primer registro arriba!</p>
+            <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>Aún no hay entrenamientos registrados para este usuario.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {logs.map(log => (
@@ -508,37 +559,94 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: PERFIL */}
+      {/* PESTAÑA: PERFIL Y MULTI-USUARIO */}
       {activeTab === 'perfil' && (
-        <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-          <h2 style={{ fontSize: '15px', marginTop: 0 }}>👤 Tu Perfil Personal</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', marginTop: '12px' }}>
-            <label>Tu nombre:
-              <input 
-                type="text" 
-                value={profile.name} 
-                onChange={e => setProfile({...profile, name: e.target.value})}
-                style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-              />
-            </label>
-            <label>Peso actual (kg):
-              <input 
-                type="number" 
-                value={profile.weight} 
-                onChange={e => setProfile({...profile, weight: Number(e.target.value)})}
-                style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-              />
-            </label>
-            <label>Objetivo principal:
-              <input 
-                type="text" 
-                value={profile.goal} 
-                onChange={e => setProfile({...profile, goal: e.target.value})}
-                style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
-              />
-            </label>
-            <p style={{ fontSize: '11px', color: '#10b981', marginTop: '4px' }}>✅ Guardado automático local en el dispositivo.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* Selector de Usuario Activo */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '15px', marginTop: 0 }}>👥 Cambiar de Usuario</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Cada usuario mantiene sus propios registros y cargas independientes sin borrar los de los demás.</p>
+            
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              {profilesList.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => setActiveUserId(p.id)}
+                  style={{
+                    padding: '8px 14px', borderRadius: '8px', cursor: 'pointer',
+                    backgroundColor: p.id === activeUserId ? t.primary : t.bg,
+                    color: p.id === activeUserId ? '#fff' : t.text,
+                    border: `1px solid ${p.id === activeUserId ? t.primary : t.border}`,
+                    fontWeight: p.id === activeUserId ? 'bold' : 'normal',
+                    fontSize: '12px'
+                  }}
+                >
+                  👤 {p.name} {p.id === activeUserId ? '✓' : ''}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Editar Perfil Activo */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '15px', marginTop: 0 }}>⚙️ Configurar a: {profile.name}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
+              <label>Nombre:
+                <input 
+                  type="text" 
+                  value={profile.name} 
+                  onChange={e => handleUpdateActiveProfile('name', e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+              <label>Peso (kg):
+                <input 
+                  type="number" 
+                  value={profile.weight} 
+                  onChange={e => handleUpdateActiveProfile('weight', Number(e.target.value))}
+                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+              <label>Objetivo:
+                <input 
+                  type="text" 
+                  value={profile.goal} 
+                  onChange={e => handleUpdateActiveProfile('goal', e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Crear Nuevo Usuario */}
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '15px', marginTop: 0 }}>➕ Añadir Nuevo Perfil</h2>
+            <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
+              <label>Nombre del nuevo usuario:
+                <input 
+                  type="text" 
+                  placeholder="Ej: Carlos" 
+                  value={newUserName} 
+                  onChange={e => setNewUserName(e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+              <label>Peso inicial (kg):
+                <input 
+                  type="number" 
+                  placeholder="Ej: 75" 
+                  value={newUserWeight} 
+                  onChange={e => setNewUserWeight(e.target.value)}
+                  style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </label>
+              <button type="submit" style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
+                Crear y Cambiar a este Usuario 🚀
+              </button>
+            </form>
+          </div>
+
         </div>
       )}
 
