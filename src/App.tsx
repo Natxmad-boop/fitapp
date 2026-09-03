@@ -155,6 +155,7 @@ interface SetItem {
   name: string;
   weight: number;
   reps: number;
+  note?: string;
   date: string;
 }
 
@@ -163,13 +164,16 @@ interface MealItem {
   category: string;
   food: string;
   calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
   date: string;
 }
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'routines' | 'tracker' | 'nutrition'>('dashboard');
 
-  // Estados de Entreno y Rutinas (con localStorage)
+  // Estados de Entreno y Rutinas
   const [routines, setRoutines] = useState(() => {
     const saved = localStorage.getItem('fitapp_routines');
     return saved ? JSON.parse(saved) : [
@@ -183,7 +187,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Estados de Nutrición y Salud (con localStorage)
+  // Estados de Nutrición y Salud
   const [meals, setMeals] = useState<MealItem[]>(() => {
     const saved = localStorage.getItem('fitapp_meals');
     return saved ? JSON.parse(saved) : [];
@@ -199,11 +203,15 @@ export default function App() {
   const [exerciseName, setExerciseName] = useState('Press de Banca');
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
+  const [exerciseNote, setExerciseNote] = useState('');
 
-  // Formulario de Nutrición
+  // Formulario de Nutrición ampliado con Macros
   const [mealCategory, setMealCategory] = useState('Desayuno');
   const [foodName, setFoodName] = useState('');
   const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fats, setFats] = useState('');
 
   // Temporizador
   const [timeLeft, setTimeLeft] = useState(0);
@@ -258,31 +266,38 @@ export default function App() {
       name: exerciseName.trim() || 'Ejercicio',
       weight: parsedWeight,
       reps: parsedReps,
+      note: exerciseNote.trim(),
       date: new Date().toLocaleDateString(),
     };
 
     setHistory([newSet, ...history]);
     setWeight('');
     setReps('');
+    setExerciseNote('');
     startTimer(90);
   };
 
   const handleAddMeal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!foodName.trim()) return;
-    const parsedCals = parseInt(calories, 10) || 0;
 
     const newMeal: MealItem = {
       id: Date.now(),
       category: mealCategory,
       food: foodName,
-      calories: parsedCals,
+      calories: parseInt(calories, 10) || 0,
+      protein: parseFloat(protein) || 0,
+      carbs: parseFloat(carbs) || 0,
+      fats: parseFloat(fats) || 0,
       date: new Date().toLocaleDateString(),
     };
 
     setMeals([newMeal, ...meals]);
     setFoodName('');
     setCalories('');
+    setProtein('');
+    setCarbs('');
+    setFats('');
   };
 
   const clearHistory = () => {
@@ -302,7 +317,7 @@ export default function App() {
     setIsEditingHealth(false);
   };
 
-  // Cálculos rápidos
+  // Cálculos
   const personalRecords = history.reduce((acc: { [key: string]: number }, item) => {
     if (!acc[item.name] || item.weight > acc[item.name]) {
       acc[item.name] = item.weight;
@@ -311,15 +326,18 @@ export default function App() {
   }, {});
 
   const totalCaloriesToday = meals.reduce((acc, m) => acc + m.calories, 0);
+  const totalProteinToday = meals.reduce((acc, m) => acc + m.protein, 0);
+  const totalCarbsToday = meals.reduce((acc, m) => acc + m.carbs, 0);
+  const totalFatsToday = meals.reduce((acc, m) => acc + m.fats, 0);
 
   return (
     <div style={styles.container}>
       <header style={styles.header}>
         <h1 style={styles.title}>FitApp 💪</h1>
-        <p style={styles.subtitle}>Entreno, Nutrición y Salud</p>
+        <p style={styles.subtitle}>Entreno, Nutrición y Salud Integral</p>
       </header>
 
-      {/* VISTA 1: DASHBOARD (PANEL GENERAL) */}
+      {/* VISTA 1: DASHBOARD */}
       {activeTab === 'dashboard' && (
         <div>
           <div style={styles.card}>
@@ -331,9 +349,16 @@ export default function App() {
               </div>
               <div style={styles.statBox}>
                 <p style={styles.statValue}>{totalCaloriesToday} kcal</p>
-                <p style={styles.statLabel}>Calorías Registradas</p>
+                <p style={styles.statLabel}>Calorías Hoy</p>
               </div>
             </div>
+            {meals.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '12px', fontSize: '12px', color: '#475569', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
+                <span>🥩 P: <strong>{totalProteinToday}g</strong></span>
+                <span>🍚 C: <strong>{totalCarbsToday}g</strong></span>
+                <span>🥑 G: <strong>{totalFatsToday}g</strong></span>
+              </div>
+            )}
           </div>
 
           <div style={styles.card}>
@@ -460,6 +485,13 @@ export default function App() {
                 style={styles.input}
               />
             </div>
+            <input
+              type="text"
+              placeholder="Notas (ej. RPE 8, buena técnica...)"
+              value={exerciseNote}
+              onChange={(e) => setExerciseNote(e.target.value)}
+              style={styles.input}
+            />
             <button style={styles.button} onClick={handleAddSet}>Guardar Serie y Descansar</button>
           </div>
 
@@ -473,6 +505,7 @@ export default function App() {
                 <div key={index} style={styles.listItem}>
                   <div>
                     <strong style={{ color: '#1e293b', display: 'block' }}>{item.name}</strong>
+                    {item.note && <span style={{ fontSize: '11px', color: '#0284c7', display: 'block' }}>{item.note}</span>}
                     <span style={{ fontSize: '11px', color: '#94a3b8' }}>{item.date}</span>
                   </div>
                   <span style={{ color: '#0284c7', fontWeight: '600' }}>{item.weight} kg × {item.reps} reps</span>
@@ -483,11 +516,11 @@ export default function App() {
         </div>
       )}
 
-      {/* VISTA 4: NUTRICIÓN Y COMIDAS */}
+      {/* VISTA 4: NUTRICIÓN Y MACROS */}
       {activeTab === 'nutrition' && (
         <div>
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>🥗 Registrar Comida</h2>
+            <h2 style={styles.cardTitle}>🥗 Registrar Comida y Macros</h2>
             <form onSubmit={handleAddMeal}>
               <select
                 value={mealCategory}
@@ -501,18 +534,41 @@ export default function App() {
               </select>
               <input
                 type="text"
-                placeholder="Ej: Avena con plátano y proteína"
+                placeholder="Ej: Arroz con pollo y aguacate"
                 value={foodName}
                 onChange={(e) => setFoodName(e.target.value)}
                 style={styles.input}
               />
               <input
                 type="number"
-                placeholder="Calorías estimadas (kcal)"
+                placeholder="Calorías (kcal)"
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
                 style={styles.input}
               />
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="number"
+                  placeholder="Proteínas (g)"
+                  value={protein}
+                  onChange={(e) => setProtein(e.target.value)}
+                  style={styles.input}
+                />
+                <input
+                  type="number"
+                  placeholder="Carbos (g)"
+                  value={carbs}
+                  onChange={(e) => setCarbs(e.target.value)}
+                  style={styles.input}
+                />
+                <input
+                  type="number"
+                  placeholder="Grasas (g)"
+                  value={fats}
+                  onChange={(e) => setFats(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
               <button type="submit" style={styles.button}>Añadir al Registro</button>
             </form>
           </div>
@@ -536,7 +592,10 @@ export default function App() {
                       {meal.category}
                     </span>
                     <strong style={{ color: '#1e293b', display: 'block' }}>{meal.food}</strong>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>{meal.date}</span>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>
+                      P: {meal.protein}g | C: {meal.carbs}g | G: {meal.fats}g
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block' }}>{meal.date}</span>
                   </div>
                   <span style={{ color: '#334155', fontWeight: '600' }}>{meal.calories} kcal</span>
                 </div>
@@ -546,7 +605,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Navegación Inferior Actualizada */}
+      {/* Navegación Inferior */}
       <nav style={styles.nav}>
         <button style={styles.navItem(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>
           📊 Panel
