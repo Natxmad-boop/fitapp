@@ -412,11 +412,55 @@ export default function App() {
     setIsEditingHealth(false);
   };
 
-  // Cálculos
+  // Funciones de Backup (Exportar / Importar)
+  const exportData = () => {
+    const data = {
+      routines,
+      history,
+      meals,
+      bodyWeights,
+      dailyNotes,
+      healthNotes,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `fitapp_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+  };
+
+  const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (e.target.files && e.target.files[0]) {
+      fileReader.readAsText(e.target.files[0], 'UTF-8');
+      fileReader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target?.result as string);
+          if (parsed.routines) setRoutines(parsed.routines);
+          if (parsed.history) setHistory(parsed.history);
+          if (parsed.meals) setMeals(parsed.meals);
+          if (parsed.bodyWeights) setBodyWeights(parsed.bodyWeights);
+          if (parsed.dailyNotes) setDailyNotes(parsed.dailyNotes);
+          if (parsed.healthNotes) setHealthNotes(parsed.healthNotes);
+          alert('¡Datos importados correctamente!');
+        } catch (error) {
+          alert('Error al leer el archivo JSON.');
+        }
+      };
+    }
+  };
+
+  // Cálculos y Estadísticas Avanzadas
   const personalRecords = history.reduce((acc: { [key: string]: number }, item) => {
     if (!acc[item.name] || item.weight > acc[item.name]) {
       acc[item.name] = item.weight;
     }
+    return acc;
+  }, {});
+
+  const exerciseCounts = history.reduce((acc: { [key: string]: number }, item) => {
+    acc[item.name] = (acc[item.name] || 0) + 1;
     return acc;
   }, {});
 
@@ -430,10 +474,10 @@ export default function App() {
     <div style={styles.container}>
       <header style={styles.header}>
         <h1 style={styles.title}>FitApp 💪</h1>
-        <p style={styles.subtitle}>Ecosistema de Rendimiento Definitivo</p>
+        <p style={styles.subtitle}>Ecosistema Definitivo con Estadísticas y Backup</p>
       </header>
 
-      {/* VISTA 1: DASHBOARD */}
+      {/* VISTA 1: DASHBOARD Y ESTADÍSTICAS */}
       {activeTab === 'dashboard' && (
         <div>
           <div style={styles.card}>
@@ -453,6 +497,31 @@ export default function App() {
                 <span>🥩 P: <strong>{totalProteinToday}g</strong></span>
                 <span>🍚 C: <strong>{totalCarbsToday}g</strong></span>
                 <span>🥑 G: <strong>{totalFatsToday}g</strong></span>
+              </div>
+            )}
+          </div>
+
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>📊 Estadísticas de Entrenamiento</h2>
+            <div style={styles.grid}>
+              <div style={styles.statBox}>
+                <p style={styles.statValue}>{history.length}</p>
+                <p style={styles.statLabel}>Series Totales</p>
+              </div>
+              <div style={styles.statBox}>
+                <p style={styles.statValue}>{Object.keys(exerciseCounts).length}</p>
+                <p style={styles.statLabel}>Ejercicios Únicos</p>
+              </div>
+            </div>
+            {Object.keys(exerciseCounts).length > 0 && (
+              <div style={{ marginTop: '12px', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Series por ejercicio:</p>
+                {Object.entries(exerciseCounts).map(([ex, count]) => (
+                  <div key={ex} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '3px 0' }}>
+                    <span style={{ color: '#334155' }}>{ex}</span>
+                    <span style={{ fontWeight: '600', color: '#0284c7' }}>{count} series</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -499,6 +568,21 @@ export default function App() {
                 </div>
               ))
             )}
+          </div>
+
+          {/* Sección de Respaldo / Backup */}
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>💾 Copia de Seguridad</h2>
+            <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
+              Exporta tus datos a un archivo para guardarlos o importarlos en otro dispositivo.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              <button style={styles.secondaryButton} onClick={exportData}>Exportar Datos</button>
+              <label style={{ ...styles.secondaryButton, display: 'inline-block', textAlign: 'center', cursor: 'pointer' }}>
+                Importar JSON
+                <input type="file" accept=".json" onChange={importData} style={{ display: 'none' }} />
+              </label>
+            </div>
           </div>
         </div>
       )}
@@ -807,7 +891,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Navegación Inferior (6 opciones optimizadas) */}
+      {/* Navegación Inferior */}
       <nav style={styles.nav}>
         <button style={styles.navItem(activeTab === 'dashboard')} onClick={() => setActiveTab('dashboard')}>
           📊 Panel
