@@ -158,11 +158,9 @@ async function hashPin(pin: string): Promise<string> {
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [authEmail, setAuthEmail] = useState<string>('');
   const [authPassword, setAuthPassword] = useState<string>('');
   const [authError, setAuthError] = useState<string | null>(null);
-  const [authSuccessMsg, setAuthSuccessMsg] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'inicio' | 'entrenar' | 'nutricion' | 'progreso' | 'perfil'>('inicio');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -178,14 +176,8 @@ export default function App() {
   const [lockoutUntil, setLockoutUntil] = useState<number>(0);
 
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
-  const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
-  const [newWeightInput, setNewWeightInput] = useState<string>('');
   const [newDislikedInput, setNewDislikedInput] = useState<string>('');
   const [activeDemoExerciseId, setActiveDemoExerciseId] = useState<string | null>(null);
-
-  const [newEquipmentInput, setNewEquipmentInput] = useState<string>('');
-  const [newMedicationInput, setNewMedicationInput] = useState<string>('');
-  const [newDiseaseInput, setNewDiseaseInput] = useState<string>('');
 
   const [customMealIdea, setCustomMealIdea] = useState<string>('');
   const [savedMeals, setSavedMeals] = useState<string[]>([]);
@@ -348,29 +340,38 @@ export default function App() {
           {profiles.length === 0 ? (
             <p style={{ textAlign: 'center', color: t.textSecondary, fontSize: '13px' }}>No tienes ningún perfil creado todavía.</p>
           ) : (
-            profiles.map(p => (
-              <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {Array.isArray(p.goal) ? p.goal.join(', ') : p.goal} | 🔒 Protegido con PIN</p>
+            profiles.map(p => {
+              const goalDisplay = Array.isArray(p.goal) 
+                ? p.goal.join(', ') 
+                : (typeof p.goal === 'string' && p.goal.includes(',') ? p.goal : p.goal);
+
+              return (
+                <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
+                    <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {goalDisplay} | 🔒 Protegido con PIN</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (isLockedOut) return;
+                      setProfilePinTarget(p);
+                      setEnteredPin('');
+                      setPinError(false);
+                    }}
+                    style={{ backgroundColor: isLockedOut ? t.border : t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: isLockedOut ? 'not-allowed' : 'pointer', fontWeight: '600' }}
+                  >
+                    Entrar ➔
+                  </button>
                 </div>
-                <button 
-                  onClick={() => {
-                    if (isLockedOut) return;
-                    setProfilePinTarget(p);
-                    setEnteredPin('');
-                    setPinError(false);
-                  }}
-                  style={{ backgroundColor: isLockedOut ? t.border : t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: isLockedOut ? 'not-allowed' : 'pointer', fontWeight: '600' }}
-                >
-                  Entrar ➔
-                </button>
-              </div>
-            ))
+              );
+            })
           )}
 
           <button 
-            onClick={() => setIsCreatingProfile(true)}
+            onClick={() => {
+              setNewProfileData({ name: '', age: 25, gender: 'Masculino', height: 175, weight: 70, goals: [], pin: '0000' });
+              setIsCreatingProfile(true);
+            }}
             style={{ backgroundColor: 'transparent', border: `2px dashed ${t.primary}`, color: t.primary, padding: '12px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', marginTop: '10px' }}
           >
             + Crear Nuevo Perfil Independiente
@@ -436,27 +437,37 @@ export default function App() {
                   </label>
                 </div>
                 
-                {/* Selector múltiple de objetivos principales */}
-                <label style={{ fontWeight: '600' }}>Objetivos Principales (puedes marcar varios):</label>
+                {/* Selector múltiple de objetivos principales mediante casillas */}
+                <label style={{ fontWeight: '600', marginTop: '4px' }}>Objetivos Principales (marca uno o varios):</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: t.bg, padding: '10px', borderRadius: '6px', border: `1px solid ${t.border}` }}>
-                  {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza', 'Aumentar resistencia', 'Mejorar salud y movilidad'].map((option) => (
-                    <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={newProfileData.goals.includes(option)}
-                        onChange={(e) => {
-                          const updatedGoals = e.target.checked 
-                            ? [...newProfileData.goals, option]
-                            : newProfileData.goals.filter(g => g !== option);
-                          setNewProfileData({ ...newProfileData, goals: updatedGoals });
-                        }}
-                      />
-                      {option}
-                    </label>
-                  ))}
+                  {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza', 'Aumentar resistencia', 'Mejorar salud y movilidad'].map((option) => {
+                    const isChecked = newProfileData.goals.includes(option);
+                    return (
+                      <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setNewProfileData(prev => {
+                              const currentGoals = [...prev.goals];
+                              if (checked && !currentGoals.includes(option)) {
+                                currentGoals.push(option);
+                              } else if (!checked && currentGoals.includes(option)) {
+                                const index = currentGoals.indexOf(option);
+                                currentGoals.splice(index, 1);
+                              }
+                              return { ...prev, goals: currentGoals };
+                            });
+                          }}
+                        />
+                        {option}
+                      </label>
+                    );
+                  })}
                 </div>
 
-                <label>PIN de Seguridad (4 dígitos):
+                <label style={{ marginTop: '4px' }}>PIN de Seguridad (4 dígitos):
                   <input type="password" maxLength={4} value={newProfileData.pin} onChange={e => setNewProfileData({...newProfileData, pin: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -464,6 +475,8 @@ export default function App() {
                   <button onClick={async () => {
                     if (!newProfileData.name || !newProfileData.pin) return;
                     const pinHashed = await hashPin(newProfileData.pin);
+                    const finalGoalsString = newProfileData.goals.length > 0 ? newProfileData.goals.join(', ') : 'Perder grasa';
+
                     const { data, error } = await supabase.from('profiles').insert([{
                       user_id: session.user.id,
                       name: newProfileData.name,
@@ -471,7 +484,7 @@ export default function App() {
                       gender: newProfileData.gender,
                       height: newProfileData.height,
                       weight: newProfileData.weight,
-                      goal: newProfileData.goals.join(', ') || 'Perder grasa',
+                      goal: finalGoalsString,
                       pin_hash: pinHashed,
                       equipment: ['Mancuernas', 'Ninguno'],
                       streak_days: 1,
@@ -505,16 +518,9 @@ export default function App() {
     return true;
   });
 
-  const smartFilteredMeals = MEAL_LIBRARY.filter(meal => {
-    const hasDislikedIngredient = meal.ingredients.some(ing => 
-      activeProfile?.dislikedIngredients.some(disliked => ing.toLowerCase().includes(disliked.toLowerCase()))
-    );
-    if (hasDislikedIngredient) return false;
-    return true;
-  });
-
-  const shoppingList = Array.from(new Set(smartFilteredMeals.flatMap(m => m.ingredients)));
-  const currentDemoExercise = EXERCISE_LIBRARY.find(ex => ex.id === activeDemoExerciseId);
+  const displayGoals = Array.isArray(activeProfile?.goal) 
+    ? activeProfile?.goal.join(', ') 
+    : activeProfile?.goal;
 
   return (
     <div style={{
@@ -558,7 +564,7 @@ export default function App() {
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🎯 Panel Personalizado Supabase</h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Objetivo(s): <strong>{Array.isArray(activeProfile?.goal) ? activeProfile?.goal.join(', ') : activeProfile?.goal}</strong>.
+              Objetivo(s): <strong>{displayGoals}</strong>.
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -673,7 +679,7 @@ export default function App() {
             
             <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary, marginBottom: '16px' }}>
               <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
-              <p style={{ margin: 0 }}><strong>Objetivo(s):</strong> {Array.isArray(activeProfile?.goal) ? activeProfile?.goal.join(', ') : activeProfile?.goal}</p>
+              <p style={{ margin: 0 }}><strong>Objetivo(s):</strong> {displayGoals}</p>
               <p style={{ margin: 0 }}><strong>Alimentos Bloqueados / No Gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
             </div>
 
