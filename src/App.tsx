@@ -86,7 +86,6 @@ export default function App() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [isCreatingProfile, setIsCreatingProfile] = useState<boolean>(false);
-  const [freshPinNotice, setFreshPinNotice] = useState<string | null>(null);
 
   const [profilePinTarget, setProfilePinTarget] = useState<UserProfile | null>(null);
   const [enteredPin, setEnteredPin] = useState<string>('');
@@ -123,15 +122,23 @@ export default function App() {
 
   useEffect(() => {
     if (session?.user) {
-      fetchProfilesAndAutoCreate();
+      fetchProfilesAndCleanCarlos();
     } else {
       setProfiles([]);
       setActiveProfileId(null);
     }
   }, [session]);
 
-  const fetchProfilesAndAutoCreate = async () => {
+  const fetchProfilesAndCleanCarlos = async () => {
     try {
+      // 1. Eliminamos de la base de datos cualquier perfil basura llamado "Carlos Trainer"
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', session.user.id)
+        .ilike('name', 'Carlos Trainer');
+
+      // 2. Cargamos los perfiles limpios restantes
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -139,10 +146,7 @@ export default function App() {
 
       if (error) throw error;
       
-      // Filtramos de forma estricta para excluir cualquier perfil que se llame "Carlos Trainer"
-      let rawProfiles = (data || []).filter(p => p && p.name && p.name.trim().toLowerCase() !== 'carlos trainer');
-      
-      let mappedProfiles: UserProfile[] = rawProfiles.map(p => {
+      let mappedProfiles: UserProfile[] = (data || []).map(p => {
         let parsedGoals: string[] = ['Perder grasa'];
         if (Array.isArray(p.goal)) {
           parsedGoals = p.goal;
@@ -168,19 +172,19 @@ export default function App() {
         };
       });
 
+      // Si no queda ninguno, creamos uno nuevo por defecto
       if (mappedProfiles.length === 0) {
-        const defaultPin = Math.floor(1000 + Math.random() * 9000).toString();
-        const pinHashed = await hashPin(defaultPin);
-        const defaultName = session.user.email ? session.user.email.split('@')[0] : 'Mi Perfil';
+        const pinHashed = await hashPin('1234');
+        const defaultName = session.user.email ? session.user.email.split('@')[0] : 'Nacho';
 
         const { data: newDbData, error: insertError } = await supabase.from('profiles').insert([{
           user_id: session.user.id,
           name: defaultName,
           age: 25,
-          gender: 'No especificado',
+          gender: 'Masculino',
           height: 175,
           weight: 70,
-          goal: ['Perder grasa', 'Ganar músculo'],
+          goal: ['Mejorar fuerza'],
           pin_hash: pinHashed,
           equipment: ['Mancuernas', 'Ninguno'],
           streak_days: 1,
@@ -197,7 +201,7 @@ export default function App() {
             gender: created.gender,
             height: created.height,
             weight: created.weight,
-            goal: ['Perder grasa', 'Ganar músculo'],
+            goal: ['Mejorar fuerza'],
             pin_hash: created.pin_hash,
             equipment: ['Mancuernas', 'Ninguno'],
             dislikedIngredients: [],
@@ -205,7 +209,6 @@ export default function App() {
             points: 50,
             created_at: created.created_at
           }];
-          setFreshPinNotice(defaultPin);
         }
       }
 
@@ -273,12 +276,6 @@ export default function App() {
   if (!activeProfileId) {
     return (
       <div style={{ maxWidth: '480px', margin: '0 auto', padding: '20px', color: t.text, backgroundColor: t.bg, minHeight: '100vh', boxSizing: 'border-box' }}>
-        {freshPinNotice && (
-          <div style={{ backgroundColor: '#dcfce7', border: '1px solid #22c55e', color: '#166534', padding: '12px', borderRadius: '8px', fontSize: '12px', marginBottom: '16px' }}>
-            <strong>PIN temporal:</strong> <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{freshPinNotice}</span>
-          </div>
-        )}
-
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h1 style={{ fontSize: '20px', margin: 0 }}>FitApp Pro 🏆</h1>
           <button onClick={() => supabase.auth.signOut()} style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px 10px', color: t.danger, cursor: 'pointer' }}>Cerrar Sesión</button>
@@ -306,9 +303,11 @@ export default function App() {
         {profilePinTarget && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
             <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
-              <h2 style={{ fontSize: '18px', marginTop: 0 }}>PIN de Acceso</h2>
-              <input type="password" maxLength={4} value={enteredPin} onChange={e => setEnteredPin(e.target.value)} placeholder="****" style={{ width: '120px', textAlign: 'center', fontSize: '20px', letterSpacing: '8px', padding: '8px', borderRadius: '8px', border: `1px solid ${pinError ? t.danger : t.border}`, backgroundColor: t.bg, color: t.text, marginBottom: '12px' }} />
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <h2 style={{ fontSize: '18px', marginTop: 0 }}>PIN para {profilePinTarget.name}</h2>
+              <input type="password" maxLength={4} value={enteredPin} onChange={e => setEnteredPin(e.target.value)} placeholder="****" style={{ width: '120px', textAlign: 'center', fontSize: '20px', letterSpacing: '8px', padding: '8px', borderRadius: '8px', border: `1px solid ${pinError ? t.danger : t.border}`, backgroundColor: t.bg, color: t.text, marginBottom: '8px' }} />
+              {pinError && <div style={{ color: t.danger, fontSize: '12px', marginBottom: '8px' }}>PIN incorrecto</div>}
+              
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                 <button onClick={() => setProfilePinTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
                 <button onClick={async () => {
                   const hashedInput = await hashPin(enteredPin);
@@ -320,6 +319,17 @@ export default function App() {
                   }
                 }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Acceder</button>
               </div>
+
+              {/* Botón de emergencia para resetear el PIN a 1234 si se te olvidó */}
+              <button onClick={async () => {
+                const newHash = await hashPin('1234');
+                await supabase.from('profiles').update({ pin_hash: newHash }).eq('id', profilePinTarget.id);
+                alert('PIN restablecido a 1234 con éxito. Ya puedes entrar.');
+                fetchProfilesAndCleanCarlos();
+                setProfilePinTarget(null);
+              }} style={{ background: 'none', border: 'none', color: t.primary, fontSize: '11px', textDecoration: 'underline', cursor: 'pointer' }}>
+                ¿Olvidaste tu PIN? Restablecer a 1234
+              </button>
             </div>
           </div>
         )}
@@ -333,7 +343,6 @@ export default function App() {
                   <input type="text" value={newProfileData.name} onChange={e => setNewProfileData({...newProfileData, name: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
 
-                {/* Selección múltiple con casillas de verificación */}
                 <label>Objetivos (puedes marcar varios):</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: t.bg, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}>
                   {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza'].map(goalOption => {
@@ -376,7 +385,7 @@ export default function App() {
                       points: 50
                     }]);
                     if (!error) {
-                      await fetchProfilesAndAutoCreate();
+                      await fetchProfilesAndCleanCarlos();
                       setIsCreatingProfile(false);
                     }
                   }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Guardar Perfil</button>
