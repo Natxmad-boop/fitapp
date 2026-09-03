@@ -35,7 +35,7 @@ interface UserProfile {
   healthRestrictions: string[];
   equipment: string[];
   injuries: string[];
-  dislikedIngredients: string[]; // Tus preferencias de alimentos que NO te gustan
+  dislikedIngredients: string[];
   streakDays: number;
   points: number;
   createdAt: string;
@@ -49,9 +49,9 @@ const EXERCISE_LIBRARY: Exercise[] = [
     targetMuscle: 'Piernas y Glúteos',
     equipmentNeeded: 'Mancuernas',
     difficulty: 'Principiante',
-    instructions: 'Mantén los pies al ancho de los hombros, baja la cadera controlando el descenso y empuja desde los talones.',
-    commonMistakes: 'Dejar que las rodillas colapsen hacia adentro.',
-    alternative: 'Sentadillas libres sin peso',
+    instructions: 'Mantén los pies al ancho de los hombros. Baja la cadera controlando el descenso como si fueras a sentarte, manteniendo el pecho erguido, y empuja con fuerza desde los talones para subir.',
+    commonMistakes: 'Dejar que las rodillas colapsen hacia adentro o curvar la espalda baja al descender.',
+    alternative: 'Sentadillas libres sin peso o con banda de resistencia',
     contraindications: ['Rodilla', 'Espalda baja']
   },
   {
@@ -61,9 +61,9 @@ const EXERCISE_LIBRARY: Exercise[] = [
     targetMuscle: 'Pecho y Tríceps',
     equipmentNeeded: 'Mancuernas',
     difficulty: 'Intermedio',
-    instructions: 'Acuéstate boca arriba, empuja las mancuernas hacia arriba de forma controlada contrayendo el pecho.',
-    commonMistakes: 'Arquear excesivamente la espalda baja.',
-    alternative: 'Flexiones de pecho',
+    instructions: 'Acuéstate boca arriba apoyando los pies firmes. Empuja las mancuernas hacia arriba de forma controlada contrayendo el pecho en la parte alta sin bloquear los codos por completo.',
+    commonMistakes: 'Arquear excesivamente la espalda baja o rebotar el peso en el pecho.',
+    alternative: 'Flexiones de pecho declinadas o con rodillas apoyadas',
     contraindications: ['Hombro']
   },
   {
@@ -73,9 +73,9 @@ const EXERCISE_LIBRARY: Exercise[] = [
     targetMuscle: 'Abdomen y Core',
     equipmentNeeded: 'Esterilla',
     difficulty: 'Principiante',
-    instructions: 'Mantén el cuerpo en línea recta apoyado sobre antebrazos y puntas de los pies, contrayendo el abdomen.',
-    commonMistakes: 'Dejar caer la cadera hacia el suelo.',
-    alternative: 'Plancha sobre rodillas',
+    instructions: 'Mantén el cuerpo en línea recta apoyado sobre antebrazos y puntas de los pies. Contrae fuertemente el abdomen y los glúteos para evitar arquear la columna.',
+    commonMistakes: 'Dejar caer la cadera hacia el suelo o levantar los glúteos demasiado alto formando una "V".',
+    alternative: 'Plancha sobre rodillas o bird-dog',
     contraindications: ['Espalda baja']
   },
   {
@@ -85,9 +85,9 @@ const EXERCISE_LIBRARY: Exercise[] = [
     targetMuscle: 'Espalda',
     equipmentNeeded: 'Mancuernas',
     difficulty: 'Principiante',
-    instructions: 'Inclina el tronco apoyando una mano y lleva la mancuerna hacia la cadera apretando la espalda.',
-    commonMistakes: 'Girar el torso al elevar el peso.',
-    alternative: 'Remo con banda elástica',
+    instructions: 'Inclina el tronco apoyando una mano y rodilla en un banco o soporte. Eleva la mancuerna hacia la cadera tirando con el codo y apretando los músculos de la espalda al llegar arriba.',
+    commonMistakes: 'Girar el torso o usar impulso de inercia con el cuerpo.',
+    alternative: 'Remo con banda elástica anclada a una puerta',
     contraindications: ['Espalda baja']
   }
 ];
@@ -118,7 +118,7 @@ const MEAL_LIBRARY: Meal[] = [
     calories: 310,
     protein: 25,
     ingredients: ['Proteína Whey', 'Leche de vaca', 'Plátano'],
-    isAllowed: false // Contiene lactosa
+    isAllowed: false
   },
   {
     id: 'meal-4',
@@ -127,15 +127,6 @@ const MEAL_LIBRARY: Meal[] = [
     calories: 450,
     protein: 35,
     ingredients: ['Salmón', 'Espárragos', 'Limón', 'Especias'],
-    isAllowed: true
-  },
-  {
-    id: 'meal-5',
-    title: 'Tortilla francesa de claras con espinacas',
-    type: 'Desayuno',
-    calories: 250,
-    protein: 22,
-    ingredients: ['Claras de huevo', 'Espinacas', 'Aceite de oliva'],
     isAllowed: true
   }
 ];
@@ -157,7 +148,7 @@ export default function App() {
       healthRestrictions: ['Sin lactosa'],
       equipment: ['Mancuernas', 'Esterilla'],
       injuries: ['Espalda baja'],
-      dislikedIngredients: ['Brócoli'], // Ejemplo de alimento rechazado
+      dislikedIngredients: ['Brócoli'],
       streakDays: 5,
       points: 320,
       createdAt: new Date().toISOString()
@@ -166,7 +157,6 @@ export default function App() {
   const [activeProfileId, setActiveProfileId] = useState<string | null>('prof-1');
   const [isCreatingProfile, setIsCreatingProfile] = useState<boolean>(false);
 
-  // Estados de control de PIN al cambiar de perfil
   const [profilePinTarget, setProfilePinTarget] = useState<UserProfile | null>(null);
   const [enteredPin, setEnteredPin] = useState<string>('');
   const [pinError, setPinError] = useState<boolean>(false);
@@ -174,9 +164,10 @@ export default function App() {
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
   const [newWeightInput, setNewWeightInput] = useState<string>('');
-  
-  // Estado para añadir nuevos alimentos a "No me gusta" de forma interactiva
   const [newDislikedInput, setNewDislikedInput] = useState<string>('');
+
+  // Estado para controlar qué ejercicio está mostrando su DEMO / GUÍA técnica detallada
+  const [activeDemoExerciseId, setActiveDemoExerciseId] = useState<string | null>(null);
 
   const [newProfileData, setNewProfileData] = useState({
     name: '',
@@ -260,7 +251,7 @@ export default function App() {
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
             <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
               <h2 style={{ fontSize: '18px', marginTop: 0 }}>Introduce PIN para {profilePinTarget.name}</h2>
-              <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '16px' }}>Prueba con: <strong style={{ color: t.text }}>1234</strong> (o 0000)</p>
+              <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '16px' }}>Prueba con: <strong style={{ color: t.text }}>1234</strong></p>
               <input 
                 type="password" 
                 maxLength={4}
@@ -309,9 +300,6 @@ export default function App() {
                     <option>Mejorar fuerza</option>
                   </select>
                 </label>
-                <label>Alimentos que NO te gustan (separados por coma):
-                  <input type="text" value={newProfileData.disliked} onChange={e => setNewProfileData({...newProfileData, disliked: e.target.value})} placeholder="Ej. Brócoli, Pescado..." style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
-                </label>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                   <button onClick={() => setIsCreatingProfile(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
                   <button onClick={() => {
@@ -325,10 +313,10 @@ export default function App() {
                       weight: newProfileData.weight,
                       goal: newProfileData.goal,
                       pin: '0000',
-                      healthRestrictions: [newProfileData.healthRestrictions],
-                      equipment: [newProfileData.equipment],
+                      healthRestrictions: [],
+                      equipment: ['Mancuernas'],
                       injuries: [],
-                      dislikedIngredients: newProfileData.disliked ? newProfileData.disliked.split(',').map(s => s.trim()) : [],
+                      dislikedIngredients: [],
                       streakDays: 1,
                       points: 50,
                       createdAt: new Date().toISOString()
@@ -346,7 +334,6 @@ export default function App() {
     );
   }
 
-  // Filtrado estricto de ejercicios por equipo y lesiones
   const filteredExercises = EXERCISE_LIBRARY.filter(ex => {
     if (selectedWorkoutFilter !== 'Todos' && ex.category !== selectedWorkoutFilter) return false;
     const hasEquipment = activeProfile?.equipment.some(eq => ex.equipmentNeeded.toLowerCase().includes(eq.toLowerCase())) || ex.equipmentNeeded === 'Esterilla';
@@ -356,22 +343,19 @@ export default function App() {
     return true;
   });
 
-  // Filtrado inteligente de menús: alérgenos + alimentos rechazados ("No me gusta")
   const smartFilteredMeals = MEAL_LIBRARY.filter(meal => {
-    // Control de alérgenos simulado (Lactosa)
     const hasAllergyConflict = !meal.isAllowed && activeProfile?.healthRestrictions.some(r => r.toLowerCase().includes('lactosa'));
     if (hasAllergyConflict) return false;
-
-    // Control de alimentos que NO le gustan al usuario
     const hasDislikedIngredient = meal.ingredients.some(ing => 
       activeProfile?.dislikedIngredients.some(disliked => ing.toLowerCase().includes(disliked.toLowerCase()))
     );
     if (hasDislikedIngredient) return false;
-
     return true;
   });
 
   const shoppingList = Array.from(new Set(smartFilteredMeals.flatMap(m => m.ingredients)));
+
+  const currentDemoExercise = EXERCISE_LIBRARY.find(ex => ex.id === activeDemoExerciseId);
 
   return (
     <div style={{
@@ -416,10 +400,10 @@ export default function App() {
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0, display: 'flex', justifyContent: 'space-between' }}>
               <span>🎯 Panel Personalizado</span>
-              <span style={{ fontSize: '11px', color: t.primary }}>Filtros de Gustos Activos</span>
+              <span style={{ fontSize: '11px', color: t.primary }}>Sistema Activo</span>
             </h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Objetivo: <strong>{activeProfile?.goal}</strong>. Se excluyen automáticamente los alimentos que no te gustan (<em>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</em>).
+              Objetivo: <strong>{activeProfile?.goal}</strong>. Con demostraciones técnicas integradas en cada movimiento.
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -447,7 +431,7 @@ export default function App() {
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios y Demostraciones Técnicas</h2>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {['Todos', 'Fuerza', 'Core'].map(cat => (
                 <button 
@@ -467,8 +451,18 @@ export default function App() {
                     <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
                     <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{ex.targetMuscle}</span>
                   </div>
-                  <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>💡 {ex.instructions}</p>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>💡 {ex.instructions.substring(0, 80)}...</p>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                    <button 
+                      onClick={() => setActiveDemoExerciseId(ex.id)}
+                      style={{ background: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
+                    >
+                      📺 Ver Demostración y Técnica
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
                     <input type="text" placeholder="Peso (kg)" style={{ width: '70px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
                     <input type="text" placeholder="Reps" style={{ width: '50px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
                     <select style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }}>
@@ -484,14 +478,49 @@ export default function App() {
         </div>
       )}
 
+      {/* Modal de Demostración Técnica de Ejercicios */}
+      {currentDemoExercise && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}`, maxHeight: '85vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h2 style={{ fontSize: '16px', margin: 0 }}>🎬 {currentDemoExercise.name}</h2>
+              <button onClick={() => setActiveDemoExerciseId(null)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: t.text }}>✕</button>
+            </div>
+            
+            <div style={{ backgroundColor: t.bg, borderRadius: '8px', padding: '12px', textAlign: 'center', marginBottom: '14px', border: `1px solid ${t.border}` }}>
+              <span style={{ fontSize: '32px' }}>🎯</span>
+              <p style={{ fontSize: '12px', color: t.textSecondary, margin: '4px 0 0 0' }}>Simulador de Demostración Visual / Zona: <strong>{currentDemoExercise.targetMuscle}</strong></p>
+            </div>
+
+            <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '10px', color: t.text }}>
+              <div>
+                <strong style={{ color: t.primary }}>📝 Instrucciones de Ejecución:</strong>
+                <p style={{ margin: '4px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>{currentDemoExercise.instructions}</p>
+              </div>
+              <div>
+                <strong style={{ color: t.danger }}>⚠️ Error Común a Evitar:</strong>
+                <p style={{ margin: '4px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>{currentDemoExercise.commonMistakes}</p>
+              </div>
+              <div>
+                <strong style={{ color: t.success }}>🔄 Alternativa Sugerida:</strong>
+                <p style={{ margin: '4px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>{currentDemoExercise.alternative}</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setActiveDemoExerciseId(null)}
+              style={{ width: '100%', marginTop: '16px', backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              Entendido, ¡A entrenar!
+            </button>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Menús Inteligentes y Gustos</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
-              Se omiten recetas que contengan alimentos que hayas marcado como "No me gustan" o alérgenos.
-            </p>
-
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {['Todos', 'Desayuno', 'Almuerzo', 'Snack', 'Cena'].map(cat => (
                 <button 
@@ -516,17 +545,15 @@ export default function App() {
                     <p style={{ fontSize: '11px', color: t.textSecondary, margin: '0 0 6px 0' }}>Ingredientes: {meal.ingredients.join(', ')}</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginTop: '6px' }}>
                       <span>🔥 {meal.calories} kcal | 🥩 {meal.protein}g proteína</span>
-                      <span style={{ color: t.success, fontWeight: '600' }}>✅ Apto a tu gusto</span>
+                      <span style={{ color: t.success, fontWeight: '600' }}>✅ Apto</span>
                     </div>
                   </div>
                 ))}
             </div>
           </div>
 
-          {/* Módulo de Lista de la Compra Automática basada en tus preferencias */}
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h3 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🛒 Lista de la Compra Automática</h3>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '10px' }}>Productos exactos a comprar sin lo que te disgusta:</p>
             <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px', color: t.text }}>
               {shoppingList.map((item, index) => (
                 <li key={index}>{item}</li>
@@ -575,17 +602,16 @@ export default function App() {
             <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary, marginBottom: '16px' }}>
               <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
               <p style={{ margin: 0 }}><strong>Objetivo:</strong> {activeProfile?.goal}</p>
-              <p style={{ margin: 0 }}><strong>Restricciones de Salud:</strong> {activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</p>
+              <p style={{ margin: 0 }}><strong>Restricciones:</strong> {activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</p>
               <p style={{ margin: 0 }}><strong>Alimentos que NO te gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
             </div>
 
-            {/* Añadir nuevo alimento rechazado al vuelo */}
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px' }}>
               <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir alimento que no te gusta:</h4>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input 
                   type="text" 
-                  placeholder="Ej. Tomate, Atún..." 
+                  placeholder="Ej. Tomate..." 
                   value={newDislikedInput}
                   onChange={e => setNewDislikedInput(e.target.value)}
                   style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
