@@ -33,7 +33,7 @@ interface UserProfile {
   goal: string;
   pin: string;
   healthRestrictions: string[];
-  equipment: string[];
+  equipment: string[]; // Materiales disponibles para entrenar
   injuries: string[];
   dislikedIngredients: string[];
   streakDays: number;
@@ -49,45 +49,57 @@ const EXERCISE_LIBRARY: Exercise[] = [
     targetMuscle: 'Piernas y Glúteos',
     equipmentNeeded: 'Mancuernas',
     difficulty: 'Principiante',
-    instructions: 'Mantén los pies al ancho de los hombros. Baja la cadera controlando el descenso como si fueras a sentarte, manteniendo el pecho erguido, y empuja con fuerza desde los talones para subir.',
-    commonMistakes: 'Dejar que las rodillas colapsen hacia adentro o curvar la espalda baja al descender.',
-    alternative: 'Sentadillas libres sin peso o con banda de resistencia',
+    instructions: 'Mantén los pies al ancho de los hombros. Baja la cadera controlando el descenso y empuja con fuerza desde los talones para subir.',
+    commonMistakes: 'Dejar que las rodillas colapsen hacia adentro.',
+    alternative: 'Sentadillas libres sin peso',
     contraindications: ['Rodilla', 'Espalda baja']
   },
   {
     id: 'ex-2',
-    name: 'Press de Banca o Floor Press',
+    name: 'Sentadillas Libres (Sin Peso)',
+    category: 'Fuerza',
+    targetMuscle: 'Piernas y Glúteos',
+    equipmentNeeded: 'Ninguno',
+    difficulty: 'Principiante',
+    instructions: 'Realiza el movimiento de sentadilla controlando la bajada utilizando únicamente el peso corporal.',
+    commonMistakes: 'Inclinarse demasiado hacia adelante.',
+    alternative: 'Sentadillas sumo',
+    contraindications: ['Rodilla']
+  },
+  {
+    id: 'ex-3',
+    name: 'Press de Banca con Mancuernas',
     category: 'Fuerza',
     targetMuscle: 'Pecho y Tríceps',
     equipmentNeeded: 'Mancuernas',
     difficulty: 'Intermedio',
-    instructions: 'Acuéstate boca arriba apoyando los pies firmes. Empuja las mancuernas hacia arriba de forma controlada contrayendo el pecho en la parte alta sin bloquear los codos por completo.',
-    commonMistakes: 'Arquear excesivamente la espalda baja o rebotar el peso en el pecho.',
-    alternative: 'Flexiones de pecho declinadas o con rodillas apoyadas',
+    instructions: 'Acuéstate boca arriba y empuja las mancuernas hacia arriba contrayendo el pecho.',
+    commonMistakes: 'Arquear excesivamente la espalda baja.',
+    alternative: 'Flexiones de pecho',
     contraindications: ['Hombro']
   },
   {
-    id: 'ex-3',
+    id: 'ex-4',
     name: 'Plancha Abdominal',
     category: 'Core',
     targetMuscle: 'Abdomen y Core',
     equipmentNeeded: 'Esterilla',
     difficulty: 'Principiante',
-    instructions: 'Mantén el cuerpo en línea recta apoyado sobre antebrazos y puntas de los pies. Contrae fuertemente el abdomen y los glúteos para evitar arquear la columna.',
-    commonMistakes: 'Dejar caer la cadera hacia el suelo o levantar los glúteos demasiado alto formando una "V".',
-    alternative: 'Plancha sobre rodillas o bird-dog',
+    instructions: 'Mantén el cuerpo en línea recta apoyado sobre antebrazos y puntas de los pies.',
+    commonMistakes: 'Dejar caer la cadera hacia el suelo.',
+    alternative: 'Plancha sobre rodillas',
     contraindications: ['Espalda baja']
   },
   {
-    id: 'ex-4',
+    id: 'ex-5',
     name: 'Remo con Mancuerna',
     category: 'Fuerza',
     targetMuscle: 'Espalda',
     equipmentNeeded: 'Mancuernas',
     difficulty: 'Principiante',
-    instructions: 'Inclina el tronco apoyando una mano y rodilla en un banco o soporte. Eleva la mancuerna hacia la cadera tirando con el codo y apretando los músculos de la espalda al llegar arriba.',
-    commonMistakes: 'Girar el torso o usar impulso de inercia con el cuerpo.',
-    alternative: 'Remo con banda elástica anclada a una puerta',
+    instructions: 'Inclina el tronco apoyando una mano y lleva la mancuerna hacia la cadera.',
+    commonMistakes: 'Girar el torso al elevar el peso.',
+    alternative: 'Remo con banda elástica',
     contraindications: ['Espalda baja']
   }
 ];
@@ -146,7 +158,7 @@ export default function App() {
       goal: 'Ganar músculo',
       pin: '1234',
       healthRestrictions: ['Sin lactosa'],
-      equipment: ['Mancuernas', 'Esterilla'],
+      equipment: ['Mancuernas', 'Esterilla', 'Ninguno'],
       injuries: ['Espalda baja'],
       dislikedIngredients: ['Brócoli'],
       streakDays: 5,
@@ -165,9 +177,10 @@ export default function App() {
   const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
   const [newWeightInput, setNewWeightInput] = useState<string>('');
   const [newDislikedInput, setNewDislikedInput] = useState<string>('');
-
-  // Estado para controlar qué ejercicio está mostrando su DEMO / GUÍA técnica detallada
   const [activeDemoExerciseId, setActiveDemoExerciseId] = useState<string | null>(null);
+
+  // Estado para añadir nuevo material en el perfil
+  const [newEquipmentInput, setNewEquipmentInput] = useState<string>('');
 
   const [newProfileData, setNewProfileData] = useState({
     name: '',
@@ -314,7 +327,7 @@ export default function App() {
                       goal: newProfileData.goal,
                       pin: '0000',
                       healthRestrictions: [],
-                      equipment: ['Mancuernas'],
+                      equipment: ['Mancuernas', 'Ninguno'],
                       injuries: [],
                       dislikedIngredients: [],
                       streakDays: 1,
@@ -334,12 +347,20 @@ export default function App() {
     );
   }
 
+  // Filtrado estricto de ejercicios basado en los materiales que el usuario ha indicado que posee
   const filteredExercises = EXERCISE_LIBRARY.filter(ex => {
     if (selectedWorkoutFilter !== 'Todos' && ex.category !== selectedWorkoutFilter) return false;
-    const hasEquipment = activeProfile?.equipment.some(eq => ex.equipmentNeeded.toLowerCase().includes(eq.toLowerCase())) || ex.equipmentNeeded === 'Esterilla';
+    
+    // Comprueba si el usuario tiene el equipo necesario registrado en su perfil
+    const hasEquipment = activeProfile?.equipment.some(eq => 
+      ex.equipmentNeeded.toLowerCase() === 'ninguno' || eq.toLowerCase().includes(ex.equipmentNeeded.toLowerCase())
+    );
     if (!hasEquipment) return false;
+
+    // Comprueba si hay conflicto de lesiones
     const hasInjuryConflict = activeProfile?.injuries.some(injury => ex.contraindications?.includes(injury));
     if (hasInjuryConflict) return false;
+
     return true;
   });
 
@@ -354,7 +375,6 @@ export default function App() {
   });
 
   const shoppingList = Array.from(new Set(smartFilteredMeals.flatMap(m => m.ingredients)));
-
   const currentDemoExercise = EXERCISE_LIBRARY.find(ex => ex.id === activeDemoExerciseId);
 
   return (
@@ -400,10 +420,10 @@ export default function App() {
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0, display: 'flex', justifyContent: 'space-between' }}>
               <span>🎯 Panel Personalizado</span>
-              <span style={{ fontSize: '11px', color: t.primary }}>Sistema Activo</span>
+              <span style={{ fontSize: '11px', color: t.primary }}>Materiales Configurados</span>
             </h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Objetivo: <strong>{activeProfile?.goal}</strong>. Con demostraciones técnicas integradas en cada movimiento.
+              Objetivo: <strong>{activeProfile?.goal}</strong>. Tus materiales disponibles (<em>{activeProfile?.equipment.join(', ') || 'Ninguno'}</em>) filtran los entrenamientos de forma automática.
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -431,7 +451,7 @@ export default function App() {
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios y Demostraciones Técnicas</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados a tu Material</h2>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {['Todos', 'Fuerza', 'Core'].map(cat => (
                 <button 
@@ -445,40 +465,46 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {filteredExercises.map(ex => (
-                <div key={ex.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
-                    <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{ex.targetMuscle}</span>
-                  </div>
-                  <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>💡 {ex.instructions.substring(0, 80)}...</p>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                    <button 
-                      onClick={() => setActiveDemoExerciseId(ex.id)}
-                      style={{ background: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
-                    >
-                      📺 Ver Demostración y Técnica
-                    </button>
-                  </div>
+              {filteredExercises.length === 0 ? (
+                <p style={{ fontSize: '13px', color: t.danger, textAlign: 'center', margin: '20px 0' }}>
+                  No hay ejercicios para el material seleccionado. Ve a <strong>Perfil</strong> y añade tu equipamiento disponible.
+                </p>
+              ) : (
+                filteredExercises.map(ex => (
+                  <div key={ex.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
+                      <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>Req: {ex.equipmentNeeded}</span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>💡 {ex.instructions.substring(0, 80)}...</p>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                      <button 
+                        onClick={() => setActiveDemoExerciseId(ex.id)}
+                        style={{ background: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
+                      >
+                        📺 Ver Demostración y Técnica
+                      </button>
+                    </div>
 
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
-                    <input type="text" placeholder="Peso (kg)" style={{ width: '70px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
-                    <input type="text" placeholder="Reps" style={{ width: '50px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
-                    <select style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }}>
-                      <option>Normal (RPE 7-8)</option>
-                      <option>Fácil 🟢</option>
-                      <option>Difícil 🔴</option>
-                    </select>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
+                      <input type="text" placeholder="Peso (kg)" style={{ width: '70px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
+                      <input type="text" placeholder="Reps" style={{ width: '50px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
+                      <select style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }}>
+                        <option>Normal (RPE 7-8)</option>
+                        <option>Fácil 🟢</option>
+                        <option>Difícil 🔴</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Demostración Técnica de Ejercicios */}
+      {/* Modal de Demostración Técnica */}
       {currentDemoExercise && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}`, maxHeight: '85vh', overflowY: 'auto' }}>
@@ -489,7 +515,7 @@ export default function App() {
             
             <div style={{ backgroundColor: t.bg, borderRadius: '8px', padding: '12px', textAlign: 'center', marginBottom: '14px', border: `1px solid ${t.border}` }}>
               <span style={{ fontSize: '32px' }}>🎯</span>
-              <p style={{ fontSize: '12px', color: t.textSecondary, margin: '4px 0 0 0' }}>Simulador de Demostración Visual / Zona: <strong>{currentDemoExercise.targetMuscle}</strong></p>
+              <p style={{ fontSize: '12px', color: t.textSecondary, margin: '4px 0 0 0' }}>Demostración Visual / Material: <strong>{currentDemoExercise.equipmentNeeded}</strong></p>
             </div>
 
             <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '10px', color: t.text }}>
@@ -511,7 +537,7 @@ export default function App() {
               onClick={() => setActiveDemoExerciseId(null)}
               style={{ width: '100%', marginTop: '16px', backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
             >
-              Entendido, ¡A entrenar!
+              Entendido
             </button>
           </div>
         </div>
@@ -598,12 +624,41 @@ export default function App() {
       {activeTab === 'perfil' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>👤 Configuración y Gustos</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>👤 Configuración, Materiales y Gustos</h2>
             <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary, marginBottom: '16px' }}>
               <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
               <p style={{ margin: 0 }}><strong>Objetivo:</strong> {activeProfile?.goal}</p>
-              <p style={{ margin: 0 }}><strong>Restricciones:</strong> {activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</p>
+              <p style={{ margin: 0 }}><strong>Materiales Disponibles:</strong> <span style={{ color: t.primary, fontWeight: '600' }}>{activeProfile?.equipment.join(', ') || 'Ninguno'}</span></p>
               <p style={{ margin: 0 }}><strong>Alimentos que NO te gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
+            </div>
+
+            {/* Sección para añadir o quitar Materiales */}
+            <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
+              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir material disponible (Ej. Bandas, Mancuernas):</h4>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Ej. Bandas elásticas..." 
+                  value={newEquipmentInput}
+                  onChange={e => setNewEquipmentInput(e.target.value)}
+                  style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+                />
+                <button 
+                  onClick={() => {
+                    if (!newEquipmentInput) return;
+                    setProfiles(profiles.map(p => {
+                      if (p.id === activeProfileId) {
+                        return { ...p, equipment: [...p.equipment, newEquipmentInput.trim()] };
+                      }
+                      return p;
+                    }));
+                    setNewEquipmentInput('');
+                  }}
+                  style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Añadir
+                </button>
+              </div>
             </div>
 
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px' }}>
