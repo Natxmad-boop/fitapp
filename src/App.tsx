@@ -10,6 +10,7 @@ interface Exercise {
   instructions: string;
   commonMistakes: string;
   alternative: string;
+  contraindications?: string[]; // Lesiones o restricciones que lo prohíben
 }
 
 interface Meal {
@@ -33,6 +34,7 @@ interface UserProfile {
   pin: string;
   healthRestrictions: string[];
   equipment: string[];
+  injuries: string[];
   streakDays: number;
   points: number;
   createdAt: string;
@@ -48,7 +50,8 @@ const EXERCISE_LIBRARY: Exercise[] = [
     difficulty: 'Principiante',
     instructions: 'Mantén los pies al ancho de los hombros, baja la cadera controlando el descenso y empuja desde los talones.',
     commonMistakes: 'Dejar que las rodillas colapsen hacia adentro.',
-    alternative: 'Sentadillas libres sin peso'
+    alternative: 'Sentadillas libres sin peso',
+    contraindications: ['Rodilla', 'Espalda baja']
   },
   {
     id: 'ex-2',
@@ -59,7 +62,8 @@ const EXERCISE_LIBRARY: Exercise[] = [
     difficulty: 'Intermedio',
     instructions: 'Acuéstate boca arriba, empuja las mancuernas hacia arriba de forma controlada contrayendo el pecho.',
     commonMistakes: 'Arquear excesivamente la espalda baja.',
-    alternative: 'Flexiones de pecho'
+    alternative: 'Flexiones de pecho',
+    contraindications: ['Hombro']
   },
   {
     id: 'ex-3',
@@ -70,7 +74,8 @@ const EXERCISE_LIBRARY: Exercise[] = [
     difficulty: 'Principiante',
     instructions: 'Mantén el cuerpo en línea recta apoyado sobre antebrazos y puntas de los pies, contrayendo el abdomen.',
     commonMistakes: 'Dejar caer la cadera hacia el suelo.',
-    alternative: 'Plancha sobre rodillas'
+    alternative: 'Plancha sobre rodillas',
+    contraindications: ['Espalda baja']
   },
   {
     id: 'ex-4',
@@ -81,7 +86,8 @@ const EXERCISE_LIBRARY: Exercise[] = [
     difficulty: 'Principiante',
     instructions: 'Inclina el tronco apoyando una mano y lleva la mancuerna hacia la cadera apretando la espalda.',
     commonMistakes: 'Girar el torso al elevar el peso.',
-    alternative: 'Remo con banda elástica'
+    alternative: 'Remo con banda elástica',
+    contraindications: ['Espalda baja']
   }
 ];
 
@@ -140,6 +146,7 @@ export default function App() {
       pin: '1234',
       healthRestrictions: ['Sin lactosa'],
       equipment: ['Mancuernas', 'Esterilla'],
+      injuries: ['Espalda baja'],
       streakDays: 5,
       points: 320,
       createdAt: new Date().toISOString()
@@ -147,6 +154,11 @@ export default function App() {
   ]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>('prof-1');
   const [isCreatingProfile, setIsCreatingProfile] = useState<boolean>(false);
+
+  // Estados de control de PIN al cambiar de perfil
+  const [profilePinTarget, setProfilePinTarget] = useState<UserProfile | null>(null);
+  const [enteredPin, setEnteredPin] = useState<string>('');
+  const [pinError, setPinError] = useState<boolean>(false);
 
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
@@ -161,7 +173,8 @@ export default function App() {
     goal: 'Perder grasa',
     pin: '0000',
     healthRestrictions: 'Sin lactosa',
-    equipment: 'Mancuernas'
+    equipment: 'Mancuernas',
+    injuries: 'Ninguna'
   });
 
   const activeProfile = profiles.find(p => p.id === activeProfileId);
@@ -194,21 +207,26 @@ export default function App() {
     danger: '#dc2626'
   };
 
+  // Selector de perfiles con Verificación de PIN Real
   if (!activeProfileId) {
     return (
       <div style={{ fontFamily: '-apple-system, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', color: t.text, backgroundColor: t.bg, minHeight: '100vh', boxSizing: 'border-box' }}>
         <h1 style={{ fontSize: '22px', textAlign: 'center', marginBottom: '8px' }}>FitApp Pro 🏆</h1>
-        <p style={{ textAlign: 'center', fontSize: '13px', color: t.textSecondary, marginBottom: '24px' }}>Selecciona o crea un perfil independiente</p>
+        <p style={{ textAlign: 'center', fontSize: '13px', color: t.textSecondary, marginBottom: '24px' }}>Selecciona tu perfil seguro</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {profiles.map(p => (
             <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
-                <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {p.goal} | 🔥 Racha: {p.streakDays} días</p>
+                <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {p.goal} | 🔒 PIN Configurado</p>
               </div>
               <button 
-                onClick={() => setActiveProfileId(p.id)}
+                onClick={() => {
+                  setProfilePinTarget(p);
+                  setEnteredPin('');
+                  setPinError(false);
+                }}
                 style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
               >
                 Entrar ➔
@@ -223,6 +241,36 @@ export default function App() {
             + Crear Nuevo Perfil Independiente
           </button>
         </div>
+
+        {/* Modal de Validación de PIN */}
+        {profilePinTarget && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
+            <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
+              <h2 style={{ fontSize: '18px', marginTop: 0 }}>Introduce PIN para {profilePinTarget.name}</h2>
+              <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '16px' }}>Por defecto en perfiles de prueba: <strong style={{ color: t.text }}>1234</strong> (o 0000)</p>
+              <input 
+                type="password" 
+                maxLength={4}
+                value={enteredPin} 
+                onChange={e => setEnteredPin(e.target.value)}
+                placeholder="****"
+                style={{ width: '120px', textAlign: 'center', fontSize: '20px', letterSpacing: '8px', padding: '8px', borderRadius: '8px', border: `1px solid ${pinError ? t.danger : t.border}`, backgroundColor: t.bg, color: t.text, marginBottom: '12px' }} 
+              />
+              {pinError && <p style={{ color: t.danger, fontSize: '11px', margin: '0 0 10px 0' }}>PIN incorrecto. Inténtalo de nuevo.</p>}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => setProfilePinTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
+                <button onClick={() => {
+                  if (enteredPin === profilePinTarget.pin) {
+                    setActiveProfileId(profilePinTarget.id);
+                    setProfilePinTarget(null);
+                  } else {
+                    setPinError(true);
+                  }
+                }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Acceder</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isCreatingProfile && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
@@ -248,8 +296,8 @@ export default function App() {
                     <option>Mejorar fuerza</option>
                   </select>
                 </label>
-                <label>Restricción Médica / Alergia:
-                  <input type="text" value={newProfileData.healthRestrictions} onChange={e => setNewProfileData({...newProfileData, healthRestrictions: e.target.value})} placeholder="Ej. Sin lactosa..." style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
+                <label>Lesiones o Zonas a Evitar:
+                  <input type="text" value={newProfileData.injuries} onChange={e => setNewProfileData({...newProfileData, injuries: e.target.value})} placeholder="Ej. Espalda baja, Hombro..." style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                   <button onClick={() => setIsCreatingProfile(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
@@ -264,8 +312,9 @@ export default function App() {
                       weight: newProfileData.weight,
                       goal: newProfileData.goal,
                       pin: '0000',
-                      healthRestrictions: newProfileData.healthRestrictions ? [newProfileData.healthRestrictions] : [],
+                      healthRestrictions: [newProfileData.healthRestrictions],
                       equipment: [newProfileData.equipment],
+                      injuries: newProfileData.injuries !== 'Ninguna' ? [newProfileData.injuries] : [],
                       streakDays: 1,
                       points: 50,
                       createdAt: new Date().toISOString()
@@ -282,6 +331,25 @@ export default function App() {
       </div>
     );
   }
+
+  // Filtrado dinámico estricto por reglas (Objetivo, Material y Lesiones)
+  const filteredExercises = EXERCISE_LIBRARY.filter(ex => {
+    if (selectedWorkoutFilter !== 'Todos' && ex.category !== selectedWorkoutFilter) return false;
+    // Comprobar si el equipo está disponible en el perfil
+    const hasEquipment = activeProfile?.equipment.some(eq => ex.equipmentNeeded.toLowerCase().includes(eq.toLowerCase())) || ex.equipmentNeeded === 'Esterilla';
+    if (!hasEquipment) return false;
+    // Comprobar si cruza con alguna lesión activa del perfil
+    const hasInjuryConflict = activeProfile?.injuries.some(injury => ex.contraindications?.includes(injury));
+    if (hasInjuryConflict) return false;
+    return true;
+  });
+
+  // Generador de Lista de la Compra Automática
+  const allowedMeals = MEAL_LIBRARY.filter(meal => {
+    const hasAllergyConflict = !meal.isAllowed && activeProfile?.healthRestrictions.some(r => r.toLowerCase().includes('lactosa'));
+    return !hasAllergyConflict;
+  });
+  const shoppingList = Array.from(new Set(allowedMeals.flatMap(m => m.ingredients)));
 
   return (
     <div style={{
@@ -325,11 +393,11 @@ export default function App() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0, display: 'flex', justifyContent: 'space-between' }}>
-              <span>🎯 ¿Qué hago hoy?</span>
-              <span style={{ fontSize: '11px', color: t.primary }}>Sistema Inteligente</span>
+              <span>🎯 Generador Dinámico Inteligente</span>
+              <span style={{ fontSize: '11px', color: t.primary }}>Reglas Activas</span>
             </h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Objetivo: <strong>{activeProfile?.goal}</strong> | Equipamiento: (<em>{activeProfile?.equipment.join(', ')}</em>).
+              Sesión optimizada para tu objetivo de <strong>{activeProfile?.goal}</strong>, filtrando material disponible y excluyendo lesiones registradas (<strong style={{ color: t.danger }}>{activeProfile?.injuries.join(', ') || 'Ninguna'}</strong>).
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -357,7 +425,11 @@ export default function App() {
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Generador de Entrenamientos</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados por Reglas</h2>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
+              Se han excluido automáticamente los ejercicios incompatibles con tus lesiones.
+            </p>
+
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {['Todos', 'Fuerza', 'Core'].map(cat => (
                 <button 
@@ -371,9 +443,10 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {EXERCISE_LIBRARY
-                .filter(ex => selectedWorkoutFilter === 'Todos' || ex.category === selectedWorkoutFilter)
-                .map(ex => (
+              {filteredExercises.length === 0 ? (
+                <p style={{ fontSize: '13px', color: t.textSecondary, textAlign: 'center', padding: '20px 0' }}>No hay ejercicios disponibles con los filtros y restricciones actuales.</p>
+              ) : (
+                filteredExercises.map(ex => (
                   <div key={ex.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
@@ -390,7 +463,8 @@ export default function App() {
                       </select>
                     </div>
                   </div>
-                ))}
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -399,7 +473,7 @@ export default function App() {
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Nutrición e Ingredientes</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Nutrición Inteligente</h2>
             <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
               Restricciones activas: <strong style={{ color: t.danger }}>{activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</strong>
             </p>
@@ -441,13 +515,24 @@ export default function App() {
                 })}
             </div>
           </div>
+
+          {/* Módulo de Lista de la Compra Automática */}
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🛒 Lista de la Compra Automática</h3>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '10px' }}>Ingredientes consolidados de tus recetas aptas sin alérgenos:</p>
+            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px', color: t.text }}>
+              {shoppingList.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
 
       {activeTab === 'progreso' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>📈 Progreso y Métricas (Fase 7)</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>📈 Progreso y Métricas</h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '16px' }}>
               Peso actual registrado: <strong style={{ color: t.text }}>{activeProfile?.weight} kg</strong>
             </p>
@@ -483,6 +568,7 @@ export default function App() {
             <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
             <p style={{ margin: 0 }}><strong>Objetivo:</strong> {activeProfile?.goal}</p>
             <p style={{ margin: 0 }}><strong>Restricciones:</strong> {activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</p>
+            <p style={{ margin: 0 }}><strong>Lesiones Activas:</strong> {activeProfile?.injuries.join(', ') || 'Ninguna'}</p>
             <p style={{ margin: 0 }}><strong>Equipamiento:</strong> {activeProfile?.equipment.join(', ')}</p>
           </div>
         </div>
