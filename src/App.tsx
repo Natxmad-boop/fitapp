@@ -24,6 +24,7 @@ interface UserProfile {
   name: string;
   weight: number;
   goal: string[];
+  allergies: string[]; // NUEVO: Alergias o intolerancias del usuario
 }
 
 interface MealIdea {
@@ -32,7 +33,8 @@ interface MealIdea {
   title: string;
   description: string;
   caloriesApprox: string;
-  ingredients: string[]; // Ingredientes clave para el filtrado
+  ingredients: string[]; 
+  allergens: string[]; // NUEVO: Alérgenos presentes en la receta
 }
 
 const AVAILABLE_GOALS = [
@@ -43,20 +45,22 @@ const AVAILABLE_GOALS = [
   'Movilidad y salud'
 ];
 
-// Lista de ingredientes predefinidos para seleccionar
+// Lista ampliada de ingredientes para seleccionar
 const AVAILABLE_INGREDIENTS = [
-  'Pollo',
-  'Arroz',
-  'Brócoli',
-  'Zanahoria',
-  'Lomo',
+  'Pollo', 'Ternera', 'Lomo', 'Salmón', 'Atún', 'Merluza', 'Huevo', 
+  'Arroz', 'Patata', 'Avena', 'Pan integral', 'Garbanzos', 'Lentejas',
+  'Brócoli', 'Zanahoria', 'Espinacas', 'Tomate', 'Aguacate', 'Calabacín',
+  'Queso fresco', 'Yogur', 'Plátano', 'Manzana', 'Nueces', 'Almendras'
+];
+
+// Lista de alérgenos e intolerancias disponibles
+const AVAILABLE_ALLERGIES = [
+  'Gluten',
+  'Lactosa',
+  'Frutos secos',
+  'Pescado',
   'Huevo',
-  'Aguacate',
-  'Salmón',
-  'Avena',
-  'Plátano',
-  'Ternera',
-  'Patata'
+  'Marisco'
 ];
 
 const EXERCISES: Exercise[] = [
@@ -252,7 +256,8 @@ const MEALS: MealIdea[] = [
     title: 'Pechuga de pollo a la plancha con arroz y brócoli', 
     description: 'Pechuga marinada a la plancha acompañada de arroz blanco y brócoli al vapor.', 
     caloriesApprox: '450 kcal',
-    ingredients: ['Pollo', 'Arroz', 'Brócoli'] 
+    ingredients: ['Pollo', 'Arroz', 'Brócoli'],
+    allergens: [] 
   },
   { 
     id: 'm2', 
@@ -260,7 +265,8 @@ const MEALS: MealIdea[] = [
     title: 'Lomo adobado salteado con zanahorias y patata', 
     description: 'Tiras de lomo adobado con patata asada y bastoncitos de zanahoria tierna.', 
     caloriesApprox: '490 kcal',
-    ingredients: ['Lomo', 'Zanahoria', 'Patata'] 
+    ingredients: ['Lomo', 'Zanahoria', 'Patata'],
+    allergens: [] 
   },
   { 
     id: 'm3', 
@@ -268,7 +274,8 @@ const MEALS: MealIdea[] = [
     title: 'Tostada integral con aguacate y huevo pochado', 
     description: 'Pan integral, medio aguacate machacado por encima y un huevo pochado.', 
     caloriesApprox: '320 kcal',
-    ingredients: ['Huevo', 'Aguacate'] 
+    ingredients: ['Pan integral', 'Aguacate', 'Huevo'],
+    allergens: ['Gluten', 'Huevo'] 
   },
   { 
     id: 'm4', 
@@ -276,7 +283,8 @@ const MEALS: MealIdea[] = [
     title: 'Salmón al horno con brócoli y zanahorias', 
     description: 'Lomo de salmón fresco al horno con guarnición de verduras crujientes.', 
     caloriesApprox: '510 kcal',
-    ingredients: ['Salmón', 'Brócoli', 'Zanahoria'] 
+    ingredients: ['Salmón', 'Brócoli', 'Zanahoria'],
+    allergens: ['Pescado'] 
   },
   { 
     id: 'm5', 
@@ -284,15 +292,17 @@ const MEALS: MealIdea[] = [
     title: 'Ternera magra con arroz y patata', 
     description: 'Filete de ternera a la plancha con arroz blanco y patata cocida.', 
     caloriesApprox: '580 kcal',
-    ingredients: ['Ternera', 'Arroz', 'Patata'] 
+    ingredients: ['Ternera', 'Arroz', 'Patata'],
+    allergens: [] 
   },
   { 
     id: 'm6', 
     type: 'Desayuno', 
-    title: 'Porridge de avena con plátano', 
-    description: 'Copos de avena cocidos con leche o bebida vegetal y rodajas de plátano.', 
+    title: 'Porridge de avena con plátano y almendras', 
+    description: 'Copos de avena cocidos con yogur y trocitos de plátano y almendras.', 
     caloriesApprox: '380 kcal',
-    ingredients: ['Avena', 'Plátano'] 
+    ingredients: ['Avena', 'Yogur', 'Plátano', 'Almendras'],
+    allergens: ['Gluten', 'Lactosa', 'Frutos secos'] 
   },
   { 
     id: 'm7', 
@@ -300,7 +310,8 @@ const MEALS: MealIdea[] = [
     title: 'Tortilla francesa con lomo y ensalada de zanahoria', 
     description: 'Tortilla de dos huevos acompañada de unos taquitos de lomo y zanahoria rallada.', 
     caloriesApprox: '410 kcal',
-    ingredients: ['Huevo', 'Lomo', 'Zanahoria'] 
+    ingredients: ['Huevo', 'Lomo', 'Zanahoria'],
+    allergens: ['Huevo'] 
   },
   { 
     id: 'm8', 
@@ -308,7 +319,35 @@ const MEALS: MealIdea[] = [
     title: 'Tortitas de arroz con aguacate y huevo', 
     description: 'Snack energético salado con base de aguacate y huevo cocido picado.', 
     caloriesApprox: '250 kcal',
-    ingredients: ['Aguacate', 'Huevo'] 
+    ingredients: ['Arroz', 'Aguacate', 'Huevo'],
+    allergens: ['Huevo'] 
+  },
+  {
+    id: 'm9',
+    type: 'Almuerzo',
+    title: 'Garbanzos salteados con espinacas y tomate',
+    description: 'Plato de legumbres rápido y ligero salteado con espinacas frescas.',
+    caloriesApprox: '390 kcal',
+    ingredients: ['Garbanzos', 'Espinacas', 'Tomate'],
+    allergens: []
+  },
+  {
+    id: 'm10',
+    type: 'Cena',
+    title: 'Merluza al vapor con calabacín y patata',
+    description: 'Filete de merluza tierno acompañado de rodajas de calabacín y patata.',
+    caloriesApprox: '340 kcal',
+    ingredients: ['Merluza', 'Calabacín', 'Patata'],
+    allergens: ['Pescado']
+  },
+  {
+    id: 'm11',
+    type: 'Snack',
+    title: 'Yogur con nueces y manzana troceada',
+    description: 'Yogur fresco mezclado con frutos secos y trozos de manzana crujiente.',
+    caloriesApprox: '270 kcal',
+    ingredients: ['Yogur', 'Nueces', 'Manzana'],
+    allergens: ['Lactosa', 'Frutos secos']
   }
 ];
 
@@ -316,8 +355,8 @@ export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
-      { id: 'user_1', name: 'Nacho', weight: 70, goal: ['Ganar fuerza'] },
-      { id: 'user_2', name: 'Lucía', weight: 60, goal: ['Perder grasa'] }
+      { id: 'user_1', name: 'Nacho', weight: 70, goal: ['Ganar fuerza'], allergies: [] },
+      { id: 'user_2', name: 'Lucía', weight: 60, goal: ['Perder grasa'], allergies: [] }
     ];
   });
 
@@ -338,7 +377,7 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
 
-  // NUEVO ESTADO: Ingredientes seleccionados para filtrar la nutrición (por defecto vacío para mostrar todo o los que marque)
+  // Ingredientes seleccionados para filtrar la nutrición
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
 
   // Formulario registro entreno
@@ -350,6 +389,7 @@ export default function App() {
   const [newUserName, setNewUserName] = useState<string>('');
   const [newUserWeight, setNewUserWeight] = useState<string>('');
   const [newUserGoals, setNewUserGoals] = useState<string[]>(['Ganar fuerza']);
+  const [newUserAllergies, setNewUserAllergies] = useState<string[]>([]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
@@ -385,6 +425,17 @@ export default function App() {
     handleUpdateActiveProfile('goal', updatedGoals);
   };
 
+  const handleToggleActiveAllergy = (allergyOption: string) => {
+    const currentAllergies = profile.allergies || [];
+    let updatedAllergies;
+    if (currentAllergies.includes(allergyOption)) {
+      updatedAllergies = currentAllergies.filter(a => a !== allergyOption);
+    } else {
+      updatedAllergies = [...currentAllergies, allergyOption];
+    }
+    handleUpdateActiveProfile('allergies', updatedAllergies);
+  };
+
   const handleToggleNewUserGoal = (goalOption: string) => {
     if (newUserGoals.includes(goalOption)) {
       if (newUserGoals.length === 1) return;
@@ -394,7 +445,14 @@ export default function App() {
     }
   };
 
-  // Función para alternar ingredientes favoritos en la pestaña de nutrición
+  const handleToggleNewUserAllergy = (allergyOption: string) => {
+    if (newUserAllergies.includes(allergyOption)) {
+      setNewUserAllergies(newUserAllergies.filter(a => a !== allergyOption));
+    } else {
+      setNewUserAllergies([...newUserAllergies, allergyOption]);
+    }
+  };
+
   const handleToggleIngredient = (ingredient: string) => {
     if (selectedIngredients.includes(ingredient)) {
       setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
@@ -412,7 +470,8 @@ export default function App() {
       id: newId,
       name: newUserName.trim(),
       weight: Number(newUserWeight) || 65,
-      goal: newUserGoals
+      goal: newUserGoals,
+      allergies: newUserAllergies
     };
 
     setProfilesList([...profilesList, newUser]);
@@ -420,6 +479,7 @@ export default function App() {
     setNewUserName('');
     setNewUserWeight('');
     setNewUserGoals(['Ganar fuerza']);
+    setNewUserAllergies([]);
     alert(`¡Perfil de ${newUser.name} creado y seleccionado con éxito! 🎉`);
   };
 
@@ -485,10 +545,22 @@ export default function App() {
     return true;
   });
 
-  // Filtrado de recetas: si hay ingredientes marcados, muestra las recetas que contengan AL MENOS UNO de los ingredientes seleccionados. Si no hay ninguno marcado, muestra todas.
+  // FILTRADO DE RECETAS: 
+  // 1. Oculta automáticamente si contiene algún alérgeno que el usuario tenga marcado.
+  // 2. Si hay ingredientes favoritos marcados, muestra las que contengan al menos uno de ellos.
   const filteredMeals = MEALS.filter(meal => {
-    if (selectedIngredients.length === 0) return true;
-    return meal.ingredients.some(ing => selectedIngredients.includes(ing));
+    const userAllergies = profile.allergies || [];
+    
+    // Si la receta contiene un alérgeno que el usuario tiene registrado, se descarta por seguridad
+    const hasForbiddenAllergen = meal.allergens.some(allergen => userAllergies.includes(allergen));
+    if (hasForbiddenAllergen) return false;
+
+    // Filtrado opcional por ingredientes favoritos seleccionados
+    if (selectedIngredients.length > 0) {
+      return meal.ingredients.some(ing => selectedIngredients.includes(ing));
+    }
+
+    return true;
   });
 
   const t = isDarkMode ? {
@@ -608,6 +680,13 @@ export default function App() {
       {/* PESTAÑA: NUTRICIÓN Y SELECCIÓN DE INGREDIENTES */}
       {activeTab === 'nutricion' && (
         <div>
+          {/* Aviso si tiene alérgenos activos */}
+          {profile.allergies && profile.allergies.length > 0 && (
+            <div style={{ backgroundColor: isDarkMode ? '#7f1d1d' : '#fee2e2', border: `1px solid ${isDarkMode ? '#991b1b' : '#fecaca'}`, borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', fontSize: '11px', color: isDarkMode ? '#fca5a5' : '#991b1b' }}>
+              🛡️ <strong>Filtro de seguridad activo:</strong> Se están ocultando recetas con tus alergias o intolerancias marcadas ({profile.allergies.join(', ')}).
+            </div>
+          )}
+
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
             <h2 style={{ fontSize: '14px', marginTop: 0, marginBottom: '6px' }}>🛒 ¿Qué ingredientes tienes o te apetece comer?</h2>
             <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Pincha para marcar tus favoritos y te daremos ideas adaptadas:</p>
@@ -643,12 +722,12 @@ export default function App() {
           </div>
 
           <h3 style={{ fontSize: '15px', marginBottom: '10px' }}>
-            Ideas de Comidas ({filteredMeals.length}) {selectedIngredients.length > 0 ? 'filtradas' : 'totales'}
+            Ideas de Comidas ({filteredMeals.length})
           </h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {filteredMeals.length === 0 ? (
-              <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>No hay recetas que coincidan con todos los ingredientes seleccionados.</p>
+              <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '20px' }}>No hay recetas disponibles que cumplan con tus ingredientes seleccionados y tus restricciones de alérgenos.</p>
             ) : (
               filteredMeals.map(meal => (
                 <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
@@ -659,7 +738,7 @@ export default function App() {
                   <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
                   <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
                   
-                  {/* Etiquetas de ingredientes de la receta */}
+                  {/* Ingredientes de la receta */}
                   <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
                     {meal.ingredients.map(ing => (
                       <span key={ing} style={{ fontSize: '9px', backgroundColor: t.bg, border: `1px solid ${t.border}`, color: t.textSec, padding: '2px 6px', borderRadius: '4px' }}>
@@ -667,6 +746,17 @@ export default function App() {
                       </span>
                     ))}
                   </div>
+
+                  {/* Alérgenos de la receta si los tiene */}
+                  {meal.allergens.length > 0 && (
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                      {meal.allergens.map(al => (
+                        <span key={al} style={{ fontSize: '8px', backgroundColor: isDarkMode ? '#451a03' : '#fef3c7', color: isDarkMode ? '#fde047' : '#92400e', padding: '1px 4px', borderRadius: '3px' }}>
+                          ⚠️ Contiene {al}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -799,6 +889,7 @@ export default function App() {
                 />
               </label>
 
+              {/* Objetivos */}
               <div>
                 <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Objetivos (puedes marcar varios):</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -817,6 +908,31 @@ export default function App() {
                       >
                         <span style={{ fontSize: '14px' }}>{isSelected ? '✅' : '⬜'}</span>
                         <span style={{ fontWeight: isSelected ? '600' : 'normal' }}>{goalOption}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Alergias / Intolerancias */}
+              <div>
+                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600', marginTop: '6px' }}>🛡️ Alergias o Intolerancias (excluye recetas):</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {AVAILABLE_ALLERGIES.map(allergyOption => {
+                    const isSelected = profile.allergies?.includes(allergyOption);
+                    return (
+                      <div 
+                        key={allergyOption}
+                        onClick={() => handleToggleActiveAllergy(allergyOption)}
+                        style={{ 
+                          display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', cursor: 'pointer',
+                          backgroundColor: isSelected ? (isDarkMode ? '#7f1d1d' : '#fee2e2') : t.bg,
+                          border: `1px solid ${isSelected ? '#ef4444' : t.border}`,
+                          color: isSelected ? (isDarkMode ? '#fca5a5' : '#991b1b') : t.textSec
+                        }}
+                      >
+                        <span style={{ fontSize: '14px' }}>{isSelected ? '🚫' : '⬜'}</span>
+                        <span style={{ fontWeight: isSelected ? '600' : 'normal' }}>{allergyOption}</span>
                       </div>
                     );
                   })}
@@ -867,6 +983,30 @@ export default function App() {
                       >
                         <span style={{ fontSize: '12px' }}>{isSelected ? '✅' : '⬜'}</span>
                         <span>{goalOption}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Selecciona sus alérgenos:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {AVAILABLE_ALLERGIES.map(allergyOption => {
+                    const isSelected = newUserAllergies.includes(allergyOption);
+                    return (
+                      <div 
+                        key={allergyOption}
+                        onClick={() => handleToggleNewUserKey => handleToggleNewUserAllergy(allergyOption)}
+                        style={{ 
+                          display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer',
+                          backgroundColor: isSelected ? (isDarkMode ? '#7f1d1d' : '#fee2e2') : t.bg,
+                          border: `1px solid ${isSelected ? '#ef4444' : t.border}`,
+                          color: t.text
+                        }}
+                      >
+                        <span style={{ fontSize: '12px' }}>{isSelected ? '🚫' : '⬜'}</span>
+                        <span>{allergyOption}</span>
                       </div>
                     );
                   })}
