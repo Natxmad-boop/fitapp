@@ -10,7 +10,7 @@ interface Exercise {
   instructions: string;
   commonMistakes: string;
   alternative: string;
-  contraindications?: string[]; // Lesiones o restricciones que lo prohíben
+  contraindications?: string[];
 }
 
 interface Meal {
@@ -35,6 +35,7 @@ interface UserProfile {
   healthRestrictions: string[];
   equipment: string[];
   injuries: string[];
+  dislikedIngredients: string[]; // Tus preferencias de alimentos que NO te gustan
   streakDays: number;
   points: number;
   createdAt: string;
@@ -117,7 +118,7 @@ const MEAL_LIBRARY: Meal[] = [
     calories: 310,
     protein: 25,
     ingredients: ['Proteína Whey', 'Leche de vaca', 'Plátano'],
-    isAllowed: false
+    isAllowed: false // Contiene lactosa
   },
   {
     id: 'meal-4',
@@ -126,6 +127,15 @@ const MEAL_LIBRARY: Meal[] = [
     calories: 450,
     protein: 35,
     ingredients: ['Salmón', 'Espárragos', 'Limón', 'Especias'],
+    isAllowed: true
+  },
+  {
+    id: 'meal-5',
+    title: 'Tortilla francesa de claras con espinacas',
+    type: 'Desayuno',
+    calories: 250,
+    protein: 22,
+    ingredients: ['Claras de huevo', 'Espinacas', 'Aceite de oliva'],
     isAllowed: true
   }
 ];
@@ -147,6 +157,7 @@ export default function App() {
       healthRestrictions: ['Sin lactosa'],
       equipment: ['Mancuernas', 'Esterilla'],
       injuries: ['Espalda baja'],
+      dislikedIngredients: ['Brócoli'], // Ejemplo de alimento rechazado
       streakDays: 5,
       points: 320,
       createdAt: new Date().toISOString()
@@ -163,6 +174,9 @@ export default function App() {
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
   const [newWeightInput, setNewWeightInput] = useState<string>('');
+  
+  // Estado para añadir nuevos alimentos a "No me gusta" de forma interactiva
+  const [newDislikedInput, setNewDislikedInput] = useState<string>('');
 
   const [newProfileData, setNewProfileData] = useState({
     name: '',
@@ -174,7 +188,8 @@ export default function App() {
     pin: '0000',
     healthRestrictions: 'Sin lactosa',
     equipment: 'Mancuernas',
-    injuries: 'Ninguna'
+    injuries: 'Ninguna',
+    disliked: ''
   });
 
   const activeProfile = profiles.find(p => p.id === activeProfileId);
@@ -207,7 +222,6 @@ export default function App() {
     danger: '#dc2626'
   };
 
-  // Selector de perfiles con Verificación de PIN Real
   if (!activeProfileId) {
     return (
       <div style={{ fontFamily: '-apple-system, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', color: t.text, backgroundColor: t.bg, minHeight: '100vh', boxSizing: 'border-box' }}>
@@ -242,12 +256,11 @@ export default function App() {
           </button>
         </div>
 
-        {/* Modal de Validación de PIN */}
         {profilePinTarget && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
             <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
               <h2 style={{ fontSize: '18px', marginTop: 0 }}>Introduce PIN para {profilePinTarget.name}</h2>
-              <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '16px' }}>Por defecto en perfiles de prueba: <strong style={{ color: t.text }}>1234</strong> (o 0000)</p>
+              <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '16px' }}>Prueba con: <strong style={{ color: t.text }}>1234</strong> (o 0000)</p>
               <input 
                 type="password" 
                 maxLength={4}
@@ -256,7 +269,7 @@ export default function App() {
                 placeholder="****"
                 style={{ width: '120px', textAlign: 'center', fontSize: '20px', letterSpacing: '8px', padding: '8px', borderRadius: '8px', border: `1px solid ${pinError ? t.danger : t.border}`, backgroundColor: t.bg, color: t.text, marginBottom: '12px' }} 
               />
-              {pinError && <p style={{ color: t.danger, fontSize: '11px', margin: '0 0 10px 0' }}>PIN incorrecto. Inténtalo de nuevo.</p>}
+              {pinError && <p style={{ color: t.danger, fontSize: '11px', margin: '0 0 10px 0' }}>PIN incorrecto.</p>}
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setProfilePinTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
                 <button onClick={() => {
@@ -296,8 +309,8 @@ export default function App() {
                     <option>Mejorar fuerza</option>
                   </select>
                 </label>
-                <label>Lesiones o Zonas a Evitar:
-                  <input type="text" value={newProfileData.injuries} onChange={e => setNewProfileData({...newProfileData, injuries: e.target.value})} placeholder="Ej. Espalda baja, Hombro..." style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
+                <label>Alimentos que NO te gustan (separados por coma):
+                  <input type="text" value={newProfileData.disliked} onChange={e => setNewProfileData({...newProfileData, disliked: e.target.value})} placeholder="Ej. Brócoli, Pescado..." style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                   <button onClick={() => setIsCreatingProfile(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
@@ -314,7 +327,8 @@ export default function App() {
                       pin: '0000',
                       healthRestrictions: [newProfileData.healthRestrictions],
                       equipment: [newProfileData.equipment],
-                      injuries: newProfileData.injuries !== 'Ninguna' ? [newProfileData.injuries] : [],
+                      injuries: [],
+                      dislikedIngredients: newProfileData.disliked ? newProfileData.disliked.split(',').map(s => s.trim()) : [],
                       streakDays: 1,
                       points: 50,
                       createdAt: new Date().toISOString()
@@ -332,24 +346,32 @@ export default function App() {
     );
   }
 
-  // Filtrado dinámico estricto por reglas (Objetivo, Material y Lesiones)
+  // Filtrado estricto de ejercicios por equipo y lesiones
   const filteredExercises = EXERCISE_LIBRARY.filter(ex => {
     if (selectedWorkoutFilter !== 'Todos' && ex.category !== selectedWorkoutFilter) return false;
-    // Comprobar si el equipo está disponible en el perfil
     const hasEquipment = activeProfile?.equipment.some(eq => ex.equipmentNeeded.toLowerCase().includes(eq.toLowerCase())) || ex.equipmentNeeded === 'Esterilla';
     if (!hasEquipment) return false;
-    // Comprobar si cruza con alguna lesión activa del perfil
     const hasInjuryConflict = activeProfile?.injuries.some(injury => ex.contraindications?.includes(injury));
     if (hasInjuryConflict) return false;
     return true;
   });
 
-  // Generador de Lista de la Compra Automática
-  const allowedMeals = MEAL_LIBRARY.filter(meal => {
+  // Filtrado inteligente de menús: alérgenos + alimentos rechazados ("No me gusta")
+  const smartFilteredMeals = MEAL_LIBRARY.filter(meal => {
+    // Control de alérgenos simulado (Lactosa)
     const hasAllergyConflict = !meal.isAllowed && activeProfile?.healthRestrictions.some(r => r.toLowerCase().includes('lactosa'));
-    return !hasAllergyConflict;
+    if (hasAllergyConflict) return false;
+
+    // Control de alimentos que NO le gustan al usuario
+    const hasDislikedIngredient = meal.ingredients.some(ing => 
+      activeProfile?.dislikedIngredients.some(disliked => ing.toLowerCase().includes(disliked.toLowerCase()))
+    );
+    if (hasDislikedIngredient) return false;
+
+    return true;
   });
-  const shoppingList = Array.from(new Set(allowedMeals.flatMap(m => m.ingredients)));
+
+  const shoppingList = Array.from(new Set(smartFilteredMeals.flatMap(m => m.ingredients)));
 
   return (
     <div style={{
@@ -393,11 +415,11 @@ export default function App() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0, display: 'flex', justifyContent: 'space-between' }}>
-              <span>🎯 Generador Dinámico Inteligente</span>
-              <span style={{ fontSize: '11px', color: t.primary }}>Reglas Activas</span>
+              <span>🎯 Panel Personalizado</span>
+              <span style={{ fontSize: '11px', color: t.primary }}>Filtros de Gustos Activos</span>
             </h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Sesión optimizada para tu objetivo de <strong>{activeProfile?.goal}</strong>, filtrando material disponible y excluyendo lesiones registradas (<strong style={{ color: t.danger }}>{activeProfile?.injuries.join(', ') || 'Ninguna'}</strong>).
+              Objetivo: <strong>{activeProfile?.goal}</strong>. Se excluyen automáticamente los alimentos que no te gustan (<em>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</em>).
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -425,11 +447,7 @@ export default function App() {
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados por Reglas</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
-              Se han excluido automáticamente los ejercicios incompatibles con tus lesiones.
-            </p>
-
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados</h2>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
               {['Todos', 'Fuerza', 'Core'].map(cat => (
                 <button 
@@ -443,28 +461,24 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {filteredExercises.length === 0 ? (
-                <p style={{ fontSize: '13px', color: t.textSecondary, textAlign: 'center', padding: '20px 0' }}>No hay ejercicios disponibles con los filtros y restricciones actuales.</p>
-              ) : (
-                filteredExercises.map(ex => (
-                  <div key={ex.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
-                      <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{ex.targetMuscle}</span>
-                    </div>
-                    <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>💡 {ex.instructions}</p>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <input type="text" placeholder="Peso (kg)" style={{ width: '70px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
-                      <input type="text" placeholder="Reps" style={{ width: '50px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
-                      <select style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }}>
-                        <option>Normal (RPE 7-8)</option>
-                        <option>Fácil 🟢</option>
-                        <option>Difícil 🔴</option>
-                      </select>
-                    </div>
+              {filteredExercises.map(ex => (
+                <div key={ex.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
+                    <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{ex.targetMuscle}</span>
                   </div>
-                ))
-              )}
+                  <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>💡 {ex.instructions}</p>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input type="text" placeholder="Peso (kg)" style={{ width: '70px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
+                    <input type="text" placeholder="Reps" style={{ width: '50px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
+                    <select style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }}>
+                      <option>Normal (RPE 7-8)</option>
+                      <option>Fácil 🟢</option>
+                      <option>Difícil 🔴</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -473,9 +487,9 @@ export default function App() {
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Nutrición Inteligente</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Menús Inteligentes y Gustos</h2>
             <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>
-              Restricciones activas: <strong style={{ color: t.danger }}>{activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</strong>
+              Se omiten recetas que contengan alimentos que hayas marcado como "No me gustan" o alérgenos.
             </p>
 
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
@@ -491,35 +505,28 @@ export default function App() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {MEAL_LIBRARY
+              {smartFilteredMeals
                 .filter(meal => selectedMealFilter === 'Todos' || meal.type === selectedMealFilter)
-                .map(meal => {
-                  const hasAllergyConflict = !meal.isAllowed && activeProfile?.healthRestrictions.some(r => r.toLowerCase().includes('lactosa'));
-                  return (
-                    <div key={meal.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${hasAllergyConflict ? t.danger : t.border}`, opacity: hasAllergyConflict ? 0.7 : 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <strong style={{ fontSize: '13px' }}>{meal.title}</strong>
-                        <span style={{ fontSize: '10px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{meal.type}</span>
-                      </div>
-                      <p style={{ fontSize: '11px', color: t.textSecondary, margin: '0 0 6px 0' }}>Ingredientes: {meal.ingredients.join(', ')}</p>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginTop: '6px' }}>
-                        <span>🔥 {meal.calories} kcal | 🥩 {meal.protein}g proteína</span>
-                        {hasAllergyConflict ? (
-                          <span style={{ color: t.danger, fontWeight: '600' }}>⚠️ Alerta Alérgeno</span>
-                        ) : (
-                          <span style={{ color: t.success, fontWeight: '600' }}>✅ Apto</span>
-                        )}
-                      </div>
+                .map(meal => (
+                  <div key={meal.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <strong style={{ fontSize: '13px' }}>{meal.title}</strong>
+                      <span style={{ fontSize: '10px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{meal.type}</span>
                     </div>
-                  );
-                })}
+                    <p style={{ fontSize: '11px', color: t.textSecondary, margin: '0 0 6px 0' }}>Ingredientes: {meal.ingredients.join(', ')}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginTop: '6px' }}>
+                      <span>🔥 {meal.calories} kcal | 🥩 {meal.protein}g proteína</span>
+                      <span style={{ color: t.success, fontWeight: '600' }}>✅ Apto a tu gusto</span>
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
 
-          {/* Módulo de Lista de la Compra Automática */}
+          {/* Módulo de Lista de la Compra Automática basada en tus preferencias */}
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h3 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🛒 Lista de la Compra Automática</h3>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '10px' }}>Ingredientes consolidados de tus recetas aptas sin alérgenos:</p>
+            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '10px' }}>Productos exactos a comprar sin lo que te disgusta:</p>
             <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px', color: t.text }}>
               {shoppingList.map((item, index) => (
                 <li key={index}>{item}</li>
@@ -562,14 +569,44 @@ export default function App() {
       )}
 
       {activeTab === 'perfil' && (
-        <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>👤 Configuración de Perfil</h2>
-          <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary }}>
-            <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
-            <p style={{ margin: 0 }}><strong>Objetivo:</strong> {activeProfile?.goal}</p>
-            <p style={{ margin: 0 }}><strong>Restricciones:</strong> {activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</p>
-            <p style={{ margin: 0 }}><strong>Lesiones Activas:</strong> {activeProfile?.injuries.join(', ') || 'Ninguna'}</p>
-            <p style={{ margin: 0 }}><strong>Equipamiento:</strong> {activeProfile?.equipment.join(', ')}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>👤 Configuración y Gustos</h2>
+            <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary, marginBottom: '16px' }}>
+              <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
+              <p style={{ margin: 0 }}><strong>Objetivo:</strong> {activeProfile?.goal}</p>
+              <p style={{ margin: 0 }}><strong>Restricciones de Salud:</strong> {activeProfile?.healthRestrictions.join(', ') || 'Ninguna'}</p>
+              <p style={{ margin: 0 }}><strong>Alimentos que NO te gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
+            </div>
+
+            {/* Añadir nuevo alimento rechazado al vuelo */}
+            <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px' }}>
+              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir alimento que no te gusta:</h4>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Ej. Tomate, Atún..." 
+                  value={newDislikedInput}
+                  onChange={e => setNewDislikedInput(e.target.value)}
+                  style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
+                />
+                <button 
+                  onClick={() => {
+                    if (!newDislikedInput) return;
+                    setProfiles(profiles.map(p => {
+                      if (p.id === activeProfileId) {
+                        return { ...p, dislikedIngredients: [...p.dislikedIngredients, newDislikedInput.trim()] };
+                      }
+                      return p;
+                    }));
+                    setNewDislikedInput('');
+                  }}
+                  style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Bloquear
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
