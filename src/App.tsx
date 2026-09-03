@@ -62,6 +62,7 @@ const AVAILABLE_ALLERGIES = [
 ];
 
 const EXERCISES: Exercise[] = [
+  // --- CASA ---
   { 
     id: '1', 
     name: 'Sentadillas Libres', 
@@ -134,14 +135,56 @@ const EXERCISES: Exercise[] = [
   },
   { 
     id: '8', 
-    name: 'Press Militar', 
+    name: 'Press Militar con Botellas', 
     location: 'Casa', 
     category: 'Fuerza', 
-    equipment: 'Mancuernas / Botellas', 
+    equipment: 'Botellas de agua', 
     homeSubstitute: 'Dos botellas de agua o bricks de leche',
     instructions: 'Eleva el peso por encima de la cabeza de forma controlada.',
     videoUrl: 'https://www.youtube.com/results?search_query=press+de+hombros+en+casa+con+botellas'
   },
+  { 
+    id: 'c1', 
+    name: 'Fondos de Tríceps en Silla', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Silla o sofá firme', 
+    homeSubstitute: 'Borde de la cama o silla estable',
+    instructions: 'Manos al borde de la silla, baja la cadera flexionando los codos y empuja para subir.',
+    videoUrl: 'https://www.youtube.com/results?search_query=fondos+de+triceps+en+silla'
+  },
+  { 
+    id: 'c2', 
+    name: 'Mountain Climbers', 
+    location: 'Casa', 
+    category: 'Cardio', 
+    equipment: 'Peso corporal', 
+    homeSubstitute: 'Ninguno',
+    instructions: 'En posición de plancha alta, lleva alternativamente las rodillas hacia el pecho de forma dinámica.',
+    videoUrl: 'https://www.youtube.com/results?search_query=como+hacer+mountain+climbers'
+  },
+  { 
+    id: 'c3', 
+    name: 'Peso Muerto Rumano con Garrafa', 
+    location: 'Casa', 
+    category: 'Fuerza', 
+    equipment: 'Garrafa de agua', 
+    homeSubstitute: 'Mochila pesada',
+    instructions: 'Espalda recta, flexiona ligeramente las rodillas y lleva la cadera hacia atrás sintiendo los isquios.',
+    videoUrl: 'https://www.youtube.com/results?search_query=peso+muerto+con+garrafa+en+casa'
+  },
+  { 
+    id: 'c4', 
+    name: 'Bird-Dog (Perro-Pájaro)', 
+    location: 'Casa', 
+    category: 'Movilidad', 
+    equipment: 'Peso corporal', 
+    homeSubstitute: 'Esterilla o alfombra',
+    instructions: 'En cuadrupedia, extiende simultáneamente el brazo derecho y la pierna izquierda manteniendo el equilibrio.',
+    videoUrl: 'https://www.youtube.com/results?search_query=ejercicio+bird+dog+espalda'
+  },
+
+  // --- GIMNASIO ---
   { 
     id: '9', 
     name: 'Press de Banca Plano', 
@@ -214,12 +257,12 @@ const EXERCISES: Exercise[] = [
   },
   { 
     id: '16', 
-    name: 'Elevaciones Laterales', 
+    name: 'Elevaciones Laterales con Mancuernas', 
     location: 'Gimnasio', 
     category: 'Fuerza', 
     equipment: 'Mancuernas', 
     homeSubstitute: 'No aplica',
-    instructions: 'Eleva los brazos hacia los lados hasta la altura de los hombros.',
+    instructions: 'Eleva los brazos hacia los lados hasta la altura de los hombros con una ligera flexión de codo.',
     videoUrl: 'https://www.youtube.com/results?search_query=elevaciones+laterales+mancuernas'
   },
   { 
@@ -241,6 +284,56 @@ const EXERCISES: Exercise[] = [
     homeSubstitute: 'No aplica',
     instructions: 'Mantén un ritmo constante aeróbico durante el tiempo establecido.',
     videoUrl: 'https://www.youtube.com/results?search_query=como+correr+en+cinta+de+gimnasio'
+  },
+  { 
+    id: 'g1', 
+    name: 'Peso Muerto Convencional', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Barra olímpica y discos', 
+    homeSubstitute: 'No aplica',
+    instructions: 'Pies al ancho de cadera, agarre mixto o prono, mantén la espalda neutra y eleva extendiendo cadera y rodillas.',
+    videoUrl: 'https://www.youtube.com/results?search_query=peso+muerto+convencional+tecnica'
+  },
+  { 
+    id: 'g2', 
+    name: 'Press Inclinado con Mancuernas', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Banco inclinado y mancuernas', 
+    homeSubstitute: 'No aplica',
+    instructions: 'Banco a unos 30-45 grados, baja las mancuernas controlando la zona superior del pecho y empuja arriba.',
+    videoUrl: 'https://www.youtube.com/results?search_query=press+inclinado+con+mancuernas'
+  },
+  { 
+    id: 'g3', 
+    name: 'Jalón al Pecho en Polea', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Máquina de polea alta', 
+    homeSubstitute: 'No aplica',
+    instructions: 'Agarre ancho, saca pecho y tira de la barra hacia la parte alta del esternón.',
+    videoUrl: 'https://www.youtube.com/results?search_query=jalon+al+pecho+en+polea+alta'
+  },
+  { 
+    id: 'g4', 
+    name: 'Elevación de Talones en Máquina (Gemelos)', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Máquina de gemelos', 
+    homeSubstitute: 'No aplica',
+    instructions: 'Apoya la punta de los pies, baja estirando el gemelo al máximo y eleve con fuerza.',
+    videoUrl: 'https://www.youtube.com/results?search_query=elevacion+de+talones+gemelos+maquina'
+  },
+  { 
+    id: 'g5', 
+    name: 'Curl de Bíceps con Barra Z', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Barra Z y discos', 
+    homeSubstitute: 'No aplica',
+    instructions: 'De pie, codos fijos a los costados y eleva la barra contrayendo los bíceps de forma estricta.',
+    videoUrl: 'https://www.youtube.com/results?search_query=curl+de+biceps+con+barra+z'
   }
 ];
 
@@ -372,18 +465,13 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
 
-  // Ingredientes seleccionados para filtrar la nutrición y generar menús
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-
-  // Menú del día generado dinámicamente
   const [dailyMenu, setDailyMenu] = useState<{ desayuno?: MealIdea; almuerzo?: MealIdea; cena?: MealIdea; snack?: MealIdea }>({});
 
-  // Formulario registro entreno
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>(EXERCISES[0].name);
   const [weightUsedInput, setWeightUsedInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
 
-  // Nuevo usuario inputs
   const [newUserName, setNewUserName] = useState<string>('');
   const [newUserWeight, setNewUserWeight] = useState<string>('');
   const [newUserGoals, setNewUserGoals] = useState<string[]>(['Ganar fuerza']);
@@ -537,18 +625,12 @@ export default function App() {
     alert(`🏥 Sustituto sugerido por molestia:\n\n👉 En lugar de "${currentEx.name}", te recomendamos hacer:\n⭐ ${randomAlternative.name} (${randomAlternative.category} - ${randomAlternative.location})\n\n💡 Material: ${randomAlternative.equipment}`);
   };
 
-  // Generador inteligente de menú del día adaptado a alérgenos e ingredientes seleccionados
   const generateDailyMenu = () => {
     const userAllergies = profile.allergies || [];
-
-    // Filtrar recetas seguras (sin alérgenos del usuario)
     let safeMeals = MEALS.filter(meal => !meal.allergens.some(al => userAllergies.includes(al)));
-
-    // Si hay ingredientes seleccionados, dar prioridad a los que los contengan
     const matchingMeals = safeMeals.filter(meal => 
       selectedIngredients.length === 0 || meal.ingredients.some(ing => selectedIngredients.includes(ing))
     );
-
     const pool = matchingMeals.length > 0 ? matchingMeals : safeMeals;
 
     const breakfasts = pool.filter(m => m.type === 'Desayuno');
@@ -593,7 +675,6 @@ export default function App() {
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '16px', paddingBottom: '90px', backgroundColor: t.bg, color: t.text, minHeight: '100vh', boxSizing: 'border-box' }}>
       
-      {/* Cabecera */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
           <h1 style={{ fontSize: '18px', margin: 0, color: t.primary }}>FitApp Pro ⚡</h1>
@@ -629,7 +710,7 @@ export default function App() {
 
             <h3 style={{ fontSize: '13px', margin: '10px 0 6px 0', color: t.textSec }}>Filtrar por tipo:</h3>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              {['Todos', 'Fuerza', 'Core', 'Cardio'].map(cat => (
+              {['Todos', 'Fuerza', 'Core', 'Cardio', 'Movilidad'].map(cat => (
                 <button 
                   key={cat} 
                   onClick={() => setSelectedCategory(cat)}
@@ -698,7 +779,7 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: NUTRICIÓN Y SELECCIÓN DE INGREDIENTES */}
+      {/* PESTAÑA: NUTRICIÓN */}
       {activeTab === 'nutricion' && (
         <div>
           {profile.allergies && profile.allergies.length > 0 && (
@@ -782,7 +863,7 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: MENÚ DEL DÍA INTELIGENTE */}
+      {/* PESTAÑA: MENÚ DEL DÍA */}
       {activeTab === 'menu' && (
         <div>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px', textAlign: 'center' }}>
@@ -804,8 +885,6 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              
-              {/* Desayuno */}
               {dailyMenu.desayuno && (
                 <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -817,7 +896,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Almuerzo */}
               {dailyMenu.almuerzo && (
                 <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -829,7 +907,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Snack */}
               {dailyMenu.snack && (
                 <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -841,7 +918,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Cena */}
               {dailyMenu.cena && (
                 <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -852,13 +928,12 @@ export default function App() {
                   <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.cena.description}</p>
                 </div>
               )}
-
             </div>
           )}
         </div>
       )}
 
-      {/* PESTAÑA: PROGRESO Y AVANCES */}
+      {/* PESTAÑA: PROGRESO */}
       {activeTab === 'progreso' && (
         <div>
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '16px' }}>
@@ -922,10 +997,9 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: PERFIL Y MULTI-USUARIO */}
+      {/* PESTAÑA: PERFIL */}
       {activeTab === 'perfil' && profile && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>👥 Gestión de Usuarios</h2>
             <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Selecciona para cambiar o elimina los perfiles que ya no uses:</p>
@@ -1028,7 +1102,6 @@ export default function App() {
                   })}
                 </div>
               </div>
-
             </div>
           </div>
 
@@ -1107,11 +1180,10 @@ export default function App() {
               </button>
             </form>
           </div>
-
         </div>
       )}
 
-      {/* Barra de Navegación Inferior */}
+      {/* Navegación Inferior */}
       <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.card, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
         <button onClick={() => setActiveTab('entreno')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'entreno' ? '700' : '400', color: activeTab === 'entreno' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <span style={{ fontSize: '18px' }}>🏋️</span> Entreno
