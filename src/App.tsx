@@ -1,16 +1,37 @@
 import React, { useState } from 'react';
 
+interface Profile {
+  id: string;
+  name: string;
+  pin: string;
+  goal: string;
+}
+
 export default function App() {
+  // Estado de perfiles y sesión
+  const [profiles, setProfiles] = useState<Profile[]>([
+    { id: '1', name: 'Usuario Principal', pin: '1234', goal: 'Ganar músculo' },
+  ]);
+  const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
+  const [enteringPin, setEnteringPin] = useState<string>('');
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('');
+  
+  // Modal para crear nuevo perfil
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [newProfileName, setNewProfileName] = useState('');
+  const [newProfilePin, setNewProfilePin] = useState('');
+  const [newProfileGoal, setNewProfileGoal] = useState('Perder grasa');
+
+  // Navegación principal (Fase 1)
   const [activeTab, setActiveTab] = useState<'home' | 'training' | 'nutrition' | 'progress' | 'profile'>('home');
 
-  // Estilos limpios, deportivos y mobile-first
   const styles = {
     container: {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       maxWidth: '480px',
       margin: '0 auto',
       padding: '16px',
-      paddingBottom: '90px',
+      paddingBottom: activeProfile ? '90px' : '16px',
       backgroundColor: '#0f172a',
       color: '#f8fafc',
       minHeight: '100vh',
@@ -55,6 +76,40 @@ export default function App() {
       margin: 0,
       lineHeight: '1.4',
     },
+    input: {
+      width: '100%',
+      padding: '10px',
+      borderRadius: '8px',
+      border: '1px solid #475569',
+      backgroundColor: '#0f172a',
+      color: '#f8fafc',
+      fontSize: '14px',
+      marginBottom: '10px',
+      boxSizing: 'border-box' as const,
+    },
+    button: {
+      backgroundColor: '#0284c7',
+      color: '#ffffff',
+      border: 'none',
+      padding: '12px 16px',
+      borderRadius: '8px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      width: '100%',
+      textAlign: 'center' as const,
+      fontSize: '14px',
+      marginBottom: '8px',
+    },
+    secondaryButton: {
+      backgroundColor: '#334155',
+      color: '#f8fafc',
+      border: 'none',
+      padding: '8px 12px',
+      borderRadius: '6px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      fontSize: '12px',
+    },
     nav: {
       position: 'fixed' as const,
       bottom: 0,
@@ -83,67 +138,184 @@ export default function App() {
     }),
   };
 
+  // Manejo de inicio de sesión por PIN
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const profile = profiles.find((p) => p.id === selectedProfileId);
+    if (profile && profile.pin === enteringPin) {
+      setActiveProfile(profile);
+      setEnteringPin('');
+    } else {
+      alert('PIN incorrecto o perfil no seleccionado.');
+    }
+  };
+
+  const handleCreateProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProfileName.trim() || newProfilePin.length !== 4) {
+      alert('Introduce un nombre y un PIN válido de 4 dígitos.');
+      return;
+    }
+    const newProf: Profile = {
+      id: Date.now().toString(),
+      name: newProfileName,
+      pin: newProfilePin,
+      goal: newProfileGoal,
+    };
+    setProfiles([...profiles, newProf]);
+    setNewProfileName('');
+    setNewProfilePin('');
+    setIsCreatingProfile(false);
+  };
+
+  // SI NO HAY PERFIL ACTIVO: PANTALLA DE SELECCIÓN Y PIN (FASE 2)
+  if (!activeProfile) {
+    return (
+      <div style={styles.container}>
+        <header style={styles.header}>
+          <div>
+            <h1 style={styles.logo}>FitSystem ⚡</h1>
+            <p style={styles.subTitle}>Seguridad y Perfiles Independientes</p>
+          </div>
+          <span style={{ fontSize: '12px', backgroundColor: '#334155', padding: '4px 8px', borderRadius: '6px', color: '#38bdf8' }}>Fase 2</span>
+        </header>
+
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>🔒 Selecciona tu Perfil</h2>
+          {!isCreatingProfile ? (
+            <div>
+              <form onSubmit={handleLogin}>
+                <select
+                  value={selectedProfileId}
+                  onChange={(e) => setSelectedProfileId(e.target.value)}
+                  style={styles.input}
+                >
+                  <option value="">-- Elige un perfil --</option>
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.goal})
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="password"
+                  maxLength={4}
+                  placeholder="PIN de 4 dígitos"
+                  value={enteringPin}
+                  onChange={(e) => setEnteringPin(e.target.value)}
+                  style={styles.input}
+                />
+
+                <button type="submit" style={styles.button}>Acceder al Perfil</button>
+              </form>
+
+              <button
+                style={{ ...styles.secondaryButton, width: '100%', marginTop: '10px', padding: '10px' }}
+                onClick={() => setIsCreatingProfile(true)}
+              >
+                + Crear Nuevo Perfil
+              </button>
+            </div>
+          ) : (
+            <div>
+              <h3 style={{ fontSize: '14px', color: '#38bdf8', marginBottom: '10px' }}>Nuevo Perfil</h3>
+              <form onSubmit={handleCreateProfile}>
+                <input
+                  type="text"
+                  placeholder="Nombre"
+                  value={newProfileName}
+                  onChange={(e) => setNewProfileName(e.target.value)}
+                  style={styles.input}
+                />
+                <input
+                  type="password"
+                  maxLength={4}
+                  placeholder="PIN de 4 dígitos"
+                  value={newProfilePin}
+                  onChange={(e) => setNewProfilePin(e.target.value)}
+                  style={styles.input}
+                />
+                <input
+                  type="text"
+                  placeholder="Objetivo principal"
+                  value={newProfileGoal}
+                  onChange={(e) => setNewProfileGoal(e.target.value)}
+                  style={styles.input}
+                />
+                <button type="submit" style={styles.button}>Guardar Perfil</button>
+                <button
+                  type="button"
+                  style={{ ...styles.secondaryButton, width: '100%' }}
+                  onClick={() => setIsCreatingProfile(false)}
+                >
+                  Cancelar
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // SI HAY PERFIL ACTIVO: MUESTRA LA APLICACIÓN Y LA NAVEGACIÓN (FASE 1 & 2)
   return (
     <div style={styles.container}>
       <header style={styles.header}>
         <div>
           <h1 style={styles.logo}>FitSystem ⚡</h1>
-          <p style={styles.subTitle}>Entrenamiento, Nutrición y Progreso</p>
+          <p style={styles.subTitle}>Activo: <strong>{activeProfile.name}</strong></p>
         </div>
-        <span style={{ fontSize: '12px', backgroundColor: '#334155', padding: '4px 8px', borderRadius: '6px', color: '#38bdf8' }}>Fase 1</span>
+        <button style={styles.secondaryButton} onClick={() => setActiveProfile(null)}>
+          🔒 Bloquear / Salir
+        </button>
       </header>
 
       {/* VISTA 1: INICIO */}
       {activeTab === 'home' && (
         <div>
           <div style={styles.card}>
-            <h2 style={styles.cardTitle}>🏠 Panel de Inicio</h2>
-            <p style={styles.text}>Bienvenido a tu ecosistema inteligente. Aquí visualizaras el resumen diario, tu entrenamiento programado y tus objetivos en las próximas fases.</p>
+            <h2 style={styles.cardTitle}>🏠 Panel de Inicio ({activeProfile.name})</h2>
+            <p style={styles.text}>Objetivo actual: <strong>{activeProfile.goal}</strong></p>
           </div>
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>¿Qué hago hoy?</h2>
-            <p style={styles.text}>El sistema inteligente te indicará tu sesión óptima diaria en cuanto conectemos la lógica de entrenamiento.</p>
+            <p style={styles.text}>Aislamiento de perfil verificado mediante autenticación local por PIN, preparado para conectar con la seguridad RLS de Supabase.</p>
           </div>
         </div>
       )}
 
       {/* VISTA 2: ENTRENAR */}
       {activeTab === 'training' && (
-        <div>
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>🏋️ Zona de Entrenamiento</h2>
-            <p style={styles.text}>Preparado para la gestión de calentamientos, series, pesos, tiempos de descanso y alternativas de ejercicios.</p>
-          </div>
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>🏋️ Zona de Entrenamiento</h2>
+          <p style={styles.text}>Rutinas y registros exclusivos del perfil de {activeProfile.name}.</p>
         </div>
       )}
 
       {/* VISTA 3: NUTRICIÓN */}
       {activeTab === 'nutrition' && (
-        <div>
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>🍽️ Nutrición y Menús</h2>
-            <p style={styles.text}>Aquí se integrarán los menús personalizados, adaptaciones por tiempo o presupuesto y la lista de la compra automática.</p>
-          </div>
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>🍽️ Nutrición y Menús</h2>
+          <p style={styles.text}>Alimentación y restricciones configuradas para {activeProfile.name}.</p>
         </div>
       )}
 
       {/* VISTA 4: PROGRESO */}
       {activeTab === 'progress' && (
-        <div>
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>📈 Seguimiento de Progreso</h2>
-            <p style={styles.text}>Espacio reservado para el control de peso corporal, medidas, evolución de fuerza y fotografías privadas.</p>
-          </div>
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>📈 Seguimiento de Progreso</h2>
+          <p style={styles.text}>Pesos, medidas y datos privados del perfil.</p>
         </div>
       )}
 
       {/* VISTA 5: PERFIL */}
       {activeTab === 'profile' && (
-        <div>
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>👤 Configuración del Perfil</h2>
-            <p style={styles.text}>Gestión de perfiles independientes protegidos por PIN y preferencias de equipamiento y salud.</p>
-          </div>
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>👤 Configuración del Perfil</h2>
+          <p style={styles.text}>Nombre: {activeProfile.name}</p>
+          <p style={styles.text}>PIN protegido de 4 dígitos configurado correctamente.</p>
         </div>
       )}
 
