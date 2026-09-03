@@ -28,6 +28,8 @@ interface UserProfile {
   trainingDaysPerWeek: number;
   reminderTime: string;
   selectedDays: string[];
+  workoutLocation: 'Casa' | 'Gimnasio';
+  homeEquipment: string[];
 }
 
 interface MealIdea {
@@ -40,16 +42,10 @@ interface MealIdea {
   allergens: string[];
 }
 
-interface CustomWorkoutRoutine {
-  id: string;
-  name: string;
-  exercises: string[];
-}
-
 interface AutoRoutineDay {
   day: string;
   focus: string;
-  exercises: string[];
+  exercises: Exercise[];
 }
 
 const INITIAL_INGREDIENTS = [
@@ -58,46 +54,70 @@ const INITIAL_INGREDIENTS = [
   'Fresa', 'Queso batido', 'Yogur griego', 'Leche', 'Proteína en polvo'
 ];
 
+const AVAILABLE_HOME_TOOLS = [
+  'Bandas elásticas', 'Mancuernas', 'Silla / Banco', 'Esterilla', 'Barra dominadas'
+];
+
 const EXERCISES: Exercise[] = [
   { 
     id: 'c_emp_1', 
-    name: 'Flexiones Declinadas con Banda', 
+    name: 'Flexiones Declinadas', 
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Bandas elásticas y silla', 
-    homeSubstitute: 'Flexiones normales en suelo',
-    instructions: 'Pies elevados en silla, banda cruzada en la espalda para añadir resistencia.',
-    videoUrl: 'https://www.youtube.com/results?search_query=flexiones+declinadas+con+bandas'
+    homeSubstitute: 'Si no tienes bandas, haz flexiones normales en el suelo apoyando las rodillas si es necesario.',
+    instructions: 'Pies elevados en silla, manos en el suelo a la altura de los hombros. Baja el pecho de forma controlada.',
+    videoUrl: 'https://www.youtube.com/results?search_query=flexiones+declinadas+correctas'
   },
   { 
     id: 'c_trac_1', 
-    name: 'Remo al Pecho con Banda', 
+    name: 'Remo con Banda Elástica', 
     location: 'Casa', 
     category: 'Fuerza', 
     equipment: 'Bandas elásticas', 
-    homeSubstitute: 'Remo con mochila pesada',
-    instructions: 'Pisa la banda, sujeta los extremos y rema hacia las costillas apretando la espalda.',
+    homeSubstitute: 'Si no tienes bandas, usa una mochila cargada con libros y haz remo inclinado a una mano.',
+    instructions: 'Pisa la banda con ambos pies, cruza los extremos para más tensión y tira hacia las costillas apretando la espalda.',
     videoUrl: 'https://www.youtube.com/results?search_query=remo+con+banda+elastica+espalda'
   },
   { 
     id: 'c_leg_1', 
-    name: 'Sentadillas Búlgaras con Banda', 
+    name: 'Sentadillas Búlgaras', 
     location: 'Casa', 
     category: 'Fuerza', 
-    equipment: 'Bandas elásticas y silla', 
-    homeSubstitute: 'Zancadas estáticas',
-    instructions: 'Apoya un pie en la silla detrás, pasa la banda por el pie delantero y sujeta en los hombros.',
-    videoUrl: 'https://www.youtube.com/results?search_query=sentadillas+bulgaras+con+banda+elastica'
+    equipment: 'Silla / Banco', 
+    homeSubstitute: 'Si te cuesta el equilibrio, apóyate ligeramente a una pared o haz zancadas estáticas normales.',
+    instructions: 'Coloca el empeine de un pie en una silla detrás de ti y baja la cadera manteniendo el torso erguido.',
+    videoUrl: 'https://www.youtube.com/results?search_query=sentadillas+bulgaras+tecnica'
   },
   { 
     id: 'c_core_1', 
-    name: 'Plancha Abdominal con Toque de Hombros', 
+    name: 'Plancha Abdominal con Toque', 
     location: 'Casa', 
     category: 'Core', 
-    equipment: 'Peso corporal', 
-    homeSubstitute: 'Plancha estática',
-    instructions: 'En posición de plancha alta, toca alternativamente tus hombros sin girar la cadera.',
+    equipment: 'Esterilla', 
+    homeSubstitute: 'Si te molestan las muñecas, mantén una plancha estática sobre antebrazos.',
+    instructions: 'En posición de plancha alta, eleva una mano para tocar el hombro opuesto intentando no rotar la cadera.',
     videoUrl: 'https://www.youtube.com/results?search_query=plancha+con+toque+de+hombros'
+  },
+  { 
+    id: 'g_emp_1', 
+    name: 'Press de Banca con Barra', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Banco y Barra con discos', 
+    homeSubstitute: 'Sustituible por press con mancuernas o flexiones pesadas en casa.',
+    instructions: 'Tumbado en el banco, baja la barra de forma controlada hacia la línea media del pecho y empuja hacia arriba.',
+    videoUrl: 'https://www.youtube.com/results?search_query=press+de+banca+con+barra+tecnica'
+  },
+  { 
+    id: 'g_trac_1', 
+    name: 'Jalón al Pecho en Polea', 
+    location: 'Gimnasio', 
+    category: 'Fuerza', 
+    equipment: 'Máquina de polea alta', 
+    homeSubstitute: 'Dominadas asistidas o remo con bandas en casa.',
+    instructions: 'Sujeta la barra con las manos un poco más abiertas que los hombros y tira hacia la parte alta del pecho.',
+    videoUrl: 'https://www.youtube.com/results?search_query=jalon+al+pecho+en+polea+tecnica'
   }
 ];
 
@@ -128,13 +148,23 @@ export default function App() {
   const [profilesList, setProfilesList] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('fitapp_profiles_directory');
     return saved ? JSON.parse(saved) : [
-      { id: 'user_1', name: 'Eli', weight: 50, goal: ['Ganar fuerza'], allergies: [], trainingDaysPerWeek: 3, reminderTime: '09:00', selectedDays: ['Lun', 'Mié', 'Vie'] }
+      { 
+        id: 'user_1', 
+        name: 'Eli', 
+        weight: 50, 
+        goal: ['Ganar fuerza'], 
+        allergies: [], 
+        trainingDaysPerWeek: 3, 
+        reminderTime: '09:00', 
+        selectedDays: ['Lun', 'Mié', 'Vie'],
+        workoutLocation: 'Casa',
+        homeEquipment: ['Bandas elásticas', 'Silla / Banco', 'Esterilla']
+      }
     ];
   });
 
   const [activeUserId, setActiveUserId] = useState<string>(() => {
-    const savedId = localStorage.getItem('fitapp_active_user_id');
-    return savedId || 'user_1';
+    return localStorage.getItem('fitapp_active_user_id') || 'user_1';
   });
 
   const profile = profilesList.find(p => p.id === activeUserId) || profilesList[0];
@@ -166,17 +196,15 @@ export default function App() {
 
   const [waterReminderActive, setWaterReminderActive] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Por defecto en modo oscuro que luce más moderno
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>(['Plátano', 'Yogur griego', 'Avena']);
   const [smoothieSeed, setSmoothieSeed] = useState<number>(0);
-  
-  const [dailyMenu, setDailyMenu] = useState<{ desayuno?: MealIdea; almuerzo?: MealIdea; cena?: MealIdea; snack?: MealIdea; bebida?: MealIdea }>({});
+  const [dailyMenu, setDailyMenu] = useState<{ desayuno?: MealIdea; almuerzo?: MealIdea; cena?: MealIdea; bebida?: MealIdea }>({});
 
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>(EXERCISES[0].name);
   const [weightUsedInput, setWeightUsedInput] = useState<string>('');
   const [notesInput, setNotesInput] = useState<string>('');
-
   const [newIngName, setNewIngName] = useState<string>('');
   const [newMealTitle, setNewMealTitle] = useState<string>('');
   const [newMealDesc, setNewMealDesc] = useState<string>('');
@@ -184,72 +212,6 @@ export default function App() {
 
   const [restTimerSeconds, setRestTimerSeconds] = useState<number>(0);
   const [isResting, setIsResting] = useState<boolean>(false);
-
-  useEffect(() => {
-    const checkInterval = setInterval(() => {
-      const now = new Date();
-      const currentHours = String(now.getHours()).padStart(2, '0');
-      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-      const currentTimeStr = `${currentHours}:${currentMinutes}`;
-
-      const currentDayIndex = now.getDay();
-      const mapDays: Record<number, string> = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 0: 'Dom' };
-      const currentDayName = mapDays[currentDayIndex];
-
-      if (Notification.permission === 'granted') {
-        if (profile.reminderTime === currentTimeStr && profile.selectedDays?.includes(currentDayName)) {
-          new Notification('FitApp Pro ⚡ Entreno', {
-            body: `¡Hola ${profile.name}! Es hora de tu entrenamiento de hoy (${currentDayName}). ¡A por todas! 💪`,
-            icon: '🏋️'
-          });
-        }
-      }
-    }, 30000);
-
-    return () => clearInterval(checkInterval);
-  }, [profile.reminderTime, profile.selectedDays, profile.name]);
-
-  useEffect(() => {
-    let waterInterval: any = null;
-    if (waterReminderActive) {
-      waterInterval = setInterval(() => {
-        if (Notification.permission === 'granted') {
-          new Notification('💧 FitApp Pro - Hidratación', {
-            body: `¡Hora de beber un vaso de agua! Llevas ${waterGlasses}/8 vasos hoy. 🌊`,
-            icon: '🥤'
-          });
-        }
-      }, 3600000);
-    }
-    return () => clearInterval(waterInterval);
-  }, [waterReminderActive, waterGlasses]);
-
-  const requestNotificationPermission = () => {
-    if (!('Notification' in window)) {
-      alert('⚠️ Este navegador no soporta notificaciones.');
-      return;
-    }
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        alert('🔔 ¡Permiso de notificaciones concedido con éxito!');
-      } else {
-        alert('❌ Permiso denegado.');
-      }
-    });
-  };
-
-  useEffect(() => {
-    let interval: any = null;
-    if (isResting && restTimerSeconds > 0) {
-      interval = setInterval(() => {
-        setRestTimerSeconds(prev => prev - 1);
-      }, 1000);
-    } else if (restTimerSeconds === 0 && isResting) {
-      setIsResting(false);
-      alert('⏰ ¡Tiempo de descanso finalizado! A por la siguiente serie 💪');
-    }
-    return () => clearInterval(interval);
-  }, [isResting, restTimerSeconds]);
 
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
@@ -287,27 +249,35 @@ export default function App() {
     const updatedDays = currentDays.includes(dayKey)
       ? currentDays.filter(d => d !== dayKey)
       : [...currentDays, dayKey];
-    
-    const updatedProfiles = profilesList.map(p => p.id === profile.id ? { ...p, selectedDays: updatedDays, trainingDaysPerWeek: updatedDays.length } : p);
-    setProfilesList(updatedProfiles);
+    handleUpdateActiveProfile('selectedDays', updatedDays);
+  };
+
+  const handleToggleHomeEquipment = (tool: string) => {
+    const currentTools = profile.homeEquipment || [];
+    const updatedTools = currentTools.includes(tool)
+      ? currentTools.filter(t => t !== tool)
+      : [...currentTools, tool];
+    handleUpdateActiveProfile('homeEquipment', updatedTools);
   };
 
   const getAutoGeneratedRoutine = (): AutoRoutineDay[] => {
     const days = profile.selectedDays || [];
+    const locationFilter = profile.workoutLocation || 'Casa';
+    const poolExercises = EXERCISES.filter(ex => ex.location === locationFilter);
+
     return days.map((day, index) => {
-      let focus = 'Full Body Fuerza';
-      let exercises = ['Flexiones Declinadas con Banda', 'Remo al Pecho con Banda', 'Sentadillas Búlgaras con Banda'];
+      let focus = locationFilter === 'Casa' ? 'Full Body en Casa' : 'Fuerza Gimnasio';
+      let routineExs = poolExercises.length > 0 ? poolExercises : EXERCISES;
       
-      if (index % 3 === 1) {
-        focus = 'Core & Movilidad';
-        exercises = ['Plancha Abdominal con Toque de Hombros', 'Movilidad de Cadera', 'Sentadillas Búlgaras con Banda'];
-      } else if (index % 3 === 2) {
-        focus = 'Tren Superior & Push';
-        exercises = ['Flexiones Declinadas con Banda', 'Remo al Pecho con Banda', 'Plancha Abdominal con Toque de Hombros'];
+      if (index % 2 === 1 && poolExercises.length > 1) {
+        routineExs = [poolExercises[1], poolExercises[0], poolExercises[poolExercises.length - 1] || poolExercises[0]];
       }
-      return { day, focus, exercises };
+
+      return { day, focus, exercises: routineExs.slice(0, 3) };
     });
   };
+
+  const autoRoutine = getAutoGeneratedRoutine();
 
   const handleToggleIngredient = (ingredient: string) => {
     setSelectedIngredients(prev => 
@@ -318,8 +288,7 @@ export default function App() {
   const handleAddIngredientSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = newIngName.trim();
-    if (!cleanName) return;
-    if (customIngredients.includes(cleanName)) return;
+    if (!cleanName || customIngredients.includes(cleanName)) return;
     setCustomIngredients([...customIngredients, cleanName]);
     setNewIngName('');
   };
@@ -386,75 +355,88 @@ export default function App() {
   const currentStyleIndex = smoothieSeed % smoothieStyles.length;
   const generatedSmartSmoothie = {
     title: selectedIngredients.length > 0 ? `Batido ${smoothieStyles[currentStyleIndex]} de ${selectedIngredients.slice(0, 2).join(' y ')}` : 'Batido Energético Base',
-    description: selectedIngredients.length > 0 ? `Combinación optimizada con tus ingredientes: ${selectedIngredients.join(', ')}.` : 'Selecciona ingredientes en Nutrición para personalizarlo.',
+    description: selectedIngredients.length > 0 ? `Combinación optimizada con tus ingredientes: ${selectedIngredients.join(', ')}.` : 'Selecciona ingredientes en Nutrición.',
     caloriesApprox: `${180 + ((selectedIngredients.length * 25 + smoothieSeed * 15) % 150)} kcal`
   };
 
-  const autoRoutine = getAutoGeneratedRoutine();
-
-  // Diseño UI Tokens modernos y limpios
   const t = isDarkMode ? {
-    bg: '#090d16', 
-    card: '#111827', 
-    cardHover: '#1f2937',
-    text: '#f9fafb', 
-    textSec: '#9ca3af', 
-    primary: '#3b82f6', 
-    primaryGlow: 'rgba(59, 130, 246, 0.15)',
-    border: '#1f2937',
-    accentGrad: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    navBg: 'rgba(17, 24, 39, 0.85)'
+    bg: '#090d16', card: '#111827', text: '#f9fafb', textSec: '#9ca3af', primary: '#3b82f6', border: '#1f2937', accentGrad: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', navBg: 'rgba(17, 24, 39, 0.85)'
   } : {
-    bg: '#f3f4f6', 
-    card: '#ffffff', 
-    cardHover: '#f9fafb',
-    text: '#111827', 
-    textSec: '#4b5563', 
-    primary: '#2563eb', 
-    primaryGlow: 'rgba(37, 99, 235, 0.1)',
-    border: '#e5e7eb',
-    accentGrad: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-    navBg: 'rgba(255, 255, 255, 0.85)'
+    bg: '#f3f4f6', card: '#ffffff', text: '#111827', textSec: '#4b5563', primary: '#2563eb', border: '#e5e7eb', accentGrad: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', navBg: 'rgba(255, 255, 255, 0.85)'
   };
 
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', paddingBottom: '110px', backgroundColor: t.bg, color: t.text, minHeight: '100vh', boxSizing: 'border-box' }}>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', paddingBottom: '110px', backgroundColor: t.bg, color: t.text, minHeight: '100vh', boxSizing: 'border-box' }}>
       
-      {/* Cabecera estilizada */}
+      {/* Cabecera */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: `1px solid ${t.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: t.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '18px', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}>
-            ⚡
-          </div>
+          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: t.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '18px' }}>⚡</div>
           <div>
-            <h1 style={{ fontSize: '17px', fontWeight: '800', margin: 0, letterSpacing: '-0.3px' }}>FitApp Pro</h1>
+            <h1 style={{ fontSize: '17px', fontWeight: '800', margin: 0 }}>FitApp Pro</h1>
             <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Hola, <strong style={{ color: t.primary }}>{profile?.name}</strong> ({profile?.weight} kg)</p>
           </div>
         </div>
-        <button 
-          onClick={() => setIsDarkMode(!isDarkMode)} 
-          style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '15px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
-        >
-          {isDarkMode ? '☀️' : '🌙'}
-        </button>
+        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
       </header>
-
-      {/* Alerta de descanso flotante */}
-      {isResting && (
-        <div style={{ background: t.accentGrad, color: '#fff', padding: '12px 16px', borderRadius: '12px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', boxShadow: '0 8px 20px rgba(37,99,235,0.3)', animation: 'pulse 2s infinite' }}>
-          <span style={{ fontSize: '13px' }}>⏱️ Descanso: {Math.floor(restTimerSeconds / 60)}:{('0' + (restTimerSeconds % 60)).slice(-2)} min</span>
-          <button onClick={() => setIsResting(false)} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: '600' }}>Saltar ⏹️</button>
-        </div>
-      )}
 
       {/* PESTAÑA: ENTRENAMIENTO */}
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* Selector de días moderno */}
+          {/* Selector de Lugar y Materiales en Casa */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '8px' }}>📅 Días de Entrenamiento</h2>
-            <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 12px 0' }}>Selecciona tus días para autogenerar la rutina:</p>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>📍 ¿Dónde vas a entrenar?</h2>
+            
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+              {(['Casa', 'Gimnasio'] as const).map(loc => {
+                const isSelected = profile.workoutLocation === loc;
+                return (
+                  <button
+                    key={loc}
+                    onClick={() => handleUpdateActiveProfile('workoutLocation', loc)}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '12px',
+                      backgroundColor: isSelected ? t.primary : t.bg,
+                      color: isSelected ? '#fff' : t.text,
+                      border: `1px solid ${isSelected ? t.primary : t.border}`
+                    }}
+                  >
+                    {loc === 'Casa' ? '🏠 En Casa' : '🏋️ Gimnasio'}
+                  </button>
+                );
+              })}
+            </div>
+
+            {profile.workoutLocation === 'Casa' && (
+              <div>
+                <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 8px 0' }}>Material disponible en casa:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {AVAILABLE_HOME_TOOLS.map(tool => {
+                    const hasTool = profile.homeEquipment?.includes(tool);
+                    return (
+                      <button
+                        key={tool}
+                        onClick={() => handleToggleHomeEquipment(tool)}
+                        style={{
+                          padding: '6px 10px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', fontWeight: '600',
+                          backgroundColor: hasTool ? 'rgba(16, 185, 129, 0.15)' : t.bg,
+                          color: hasTool ? '#10b981' : t.textSec,
+                          border: `1px solid ${hasTool ? '#10b981' : t.border}`
+                        }}
+                      >
+                        {hasTool ? '✓ ' : '+ '} {tool}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Días de Entrenamiento */}
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '8px' }}>📅 Días de Entrenamiento</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px' }}>
               {DAYS_LIST.map(day => {
                 const isSelected = profile.selectedDays?.includes(day);
@@ -464,11 +446,9 @@ export default function App() {
                     onClick={() => handleToggleSpecificDay(day)}
                     style={{
                       flex: 1, padding: '10px 0', borderRadius: '10px', cursor: 'pointer', fontSize: '11px', fontWeight: '700',
-                      transition: 'all 0.2s ease',
                       backgroundColor: isSelected ? t.primary : t.bg,
                       color: isSelected ? '#fff' : t.text,
-                      border: `1px solid ${isSelected ? t.primary : t.border}`,
-                      boxShadow: isSelected ? '0 4px 12px rgba(37,99,235,0.3)' : 'none'
+                      border: `1px solid ${isSelected ? t.primary : t.border}`
                     }}
                   >
                     {day}
@@ -478,105 +458,80 @@ export default function App() {
             </div>
           </div>
 
-          {/* Rutina Generada Automáticamente */}
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.primary, margin: '0 0 12px 0' }}>🤖 Planificación Inteligente</h3>
+          {/* Rutina Generada con Vídeos y Sustitutos */}
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.primary, margin: '0 0 12px 0' }}>🤖 Rutina Adaptada ({profile.workoutLocation})</h3>
+            
             {autoRoutine.length === 0 ? (
-              <p style={{ fontSize: '12px', color: t.textSec, margin: 0, textAlign: 'center', padding: '10px 0' }}>Selecciona al menos un día arriba para crear tu rutina.</p>
+              <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center' }}>Selecciona días arriba.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {autoRoutine.map((item, idx) => (
                   <div key={idx} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <strong style={{ fontSize: '13px', color: t.text }}>Día {item.day}</strong>
-                      <span style={{ fontSize: '10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>{item.focus}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <strong style={{ fontSize: '13px' }}>Día {item.day}</strong>
+                      <span style={{ fontSize: '10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '2px 8px', borderRadius: '6px', fontWeight: '700' }}>{item.focus}</span>
                     </div>
-                    <ul style={{ margin: '4px 0 0 16px', padding: 0, fontSize: '12px', color: t.textSec }}>
-                      {item.exercises.map((exName, i) => (
-                        <li key={i} style={{ margin: '3px 0' }}>{exName}</li>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {item.exercises.map((ex, i) => (
+                        <div key={i} style={{ backgroundColor: t.card, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <strong style={{ fontSize: '12px', color: t.text }}>{ex.name}</strong>
+                            <a 
+                              href={ex.videoUrl} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              style={{ fontSize: '10px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: t.primary, padding: '3px 8px', borderRadius: '6px', textDecoration: 'none', fontWeight: '700' }}
+                            >
+                              ▶️ Ver Vídeo
+                            </a>
+                          </div>
+                          <p style={{ fontSize: '11px', color: t.textSec, margin: '4px 0 2px 0' }}>💡 <strong>Cómo hacerlo:</strong> {ex.instructions}</p>
+                          <p style={{ fontSize: '10px', color: '#f59e0b', margin: '2px 0 0 0' }}>🛠️ <strong>Alternativa si no tienes material:</strong> {ex.homeSubstitute}</p>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Modo Libre de Registro */}
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚡ Registro Modo Libre</h3>
+          {/* Registro Modo Libre */}
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚡ Registro Modo Libre</h3>
             <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
-              <div>
-                <label style={{ fontSize: '11px', color: t.textSec, display: 'block', marginBottom: '4px' }}>Ejercicio:</label>
-                <select value={selectedExerciseName} onChange={e => setSelectedExerciseName(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }}>
-                  {EXERCISES.map(ex => (<option key={ex.id} value={ex.name}>{ex.name}</option>))}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: '11px', color: t.textSec, display: 'block', marginBottom: '4px' }}>Peso utilizado:</label>
-                <input type="text" placeholder="Ej: 10 kg o peso corporal..." value={weightUsedInput} onChange={e => setWeightUsedInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: '11px', color: t.textSec, display: 'block', marginBottom: '4px' }}>Notas:</label>
-                <input type="text" placeholder="Sensaciones, repeticiones..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px', fontSize: '13px', boxShadow: '0 4px 12px rgba(37,99,235,0.25)' }}>Guardar Serie Libre 🚀</button>
+              <select value={selectedExerciseName} onChange={e => setSelectedExerciseName(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }}>
+                {EXERCISES.map(ex => (<option key={ex.id} value={ex.name}>{ex.name}</option>))}
+              </select>
+              <input type="text" placeholder="Peso utilizado (ej: 10 kg)..." value={weightUsedInput} onChange={e => setWeightUsedInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
+              <input type="text" placeholder="Notas..." value={notesInput} onChange={e => setNotesInput(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
+              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>Guardar Serie 🚀</button>
             </form>
-          </div>
-
-          {/* Notificaciones y Recordatorios */}
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>🔔 Avisos y Notificaciones</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: t.bg, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}` }}>
-                <span style={{ fontSize: '12px', fontWeight: '600' }}>Hora de aviso de entreno:</span>
-                <input 
-                  type="time" 
-                  value={profile.reminderTime || '09:00'} 
-                  onChange={e => handleUpdateActiveProfile('reminderTime', e.target.value)}
-                  style={{ padding: '6px 10px', borderRadius: '8px', border: `1px solid ${t.border}`, backgroundColor: t.card, color: t.text, fontSize: '12px', outline: 'none' }}
-                />
-              </div>
-              <button 
-                onClick={requestNotificationPermission} 
-                style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '11px', borderRadius: '12px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold', width: '100%', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}
-              >
-                🔔 Sincronizar Permisos en el Móvil
-              </button>
-            </div>
           </div>
         </div>
       )}
 
-      {/* PESTAÑA: NUTRICIÓN Y AGUA */}
+      {/* PESTAÑA: NUTRICIÓN */}
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
-          {/* Tarjeta de agua moderna */}
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, margin: 0 }}>💧 Hidratación Diaria</h2>
+              <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, margin: 0 }}>💧 Hidratación</h2>
               <span style={{ fontSize: '13px', fontWeight: '800', color: t.primary }}>{waterGlasses} / 8 vasos</span>
             </div>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '12px' }}>
-              <button onClick={() => setWaterGlasses(prev => Math.max(0, prev - 1))} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontWeight: 'bold' }}>➖</button>
-              <div style={{ flex: 1, backgroundColor: t.bg, borderRadius: '10px', height: '14px', overflow: 'hidden', border: `1px solid ${t.border}`, padding: '1px' }}>
-                <div style={{ width: `${Math.min(100, (waterGlasses / 8) * 100)}%`, background: 'linear-gradient(90deg, #38bdf8 0%, #0284c7 100%)', height: '100%', borderRadius: '8px', transition: 'width 0.3s ease' }}></div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button onClick={() => setWaterGlasses(prev => Math.max(0, prev - 1))} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '10px 14px', cursor: 'pointer' }}>➖</button>
+              <div style={{ flex: 1, backgroundColor: t.bg, borderRadius: '10px', height: '14px', overflow: 'hidden', border: `1px solid ${t.border}` }}>
+                <div style={{ width: `${Math.min(100, (waterGlasses / 8) * 100)}%`, background: '#38bdf8', height: '100%' }}></div>
               </div>
-              <button onClick={() => setWaterGlasses(prev => prev + 1)} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(56,189,248,0.3)' }}>➕</button>
+              <button onClick={() => setWaterGlasses(prev => prev + 1)} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer' }}>➕</button>
             </div>
-            <button 
-              onClick={() => setWaterReminderActive(!waterReminderActive)}
-              style={{ width: '100%', backgroundColor: waterReminderActive ? '#ef4444' : t.bg, color: waterReminderActive ? '#fff' : t.text, border: `1px solid ${waterReminderActive ? '#ef4444' : t.border}`, padding: '10px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-            >
-              {waterReminderActive ? '🔕 Desactivar alarma horaria de agua' : '🔔 Activar recordatorio periódico de agua'}
-            </button>
           </div>
 
-          {/* Filtro de ingredientes */}
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '8px' }}>🛒 ¿Qué tienes en casa?</h2>
-            <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 12px 0' }}>Selecciona tus ingredientes para filtrar platos:</p>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '8px' }}>🛒 Ingredientes en casa</h2>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {customIngredients.map(ing => {
                 const isSelected = selectedIngredients.includes(ing);
@@ -586,11 +541,9 @@ export default function App() {
                     onClick={() => handleToggleIngredient(ing)}
                     style={{
                       padding: '7px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '11px', fontWeight: '600',
-                      transition: 'all 0.2s',
                       backgroundColor: isSelected ? t.primary : t.bg,
                       color: isSelected ? '#fff' : t.text,
-                      border: `1px solid ${isSelected ? t.primary : t.border}`,
-                      boxShadow: isSelected ? '0 4px 10px rgba(37,99,235,0.2)' : 'none'
+                      border: `1px solid ${isSelected ? t.primary : t.border}`
                     }}
                   >
                     {isSelected ? '✓ ' : '+ '} {ing}
@@ -603,13 +556,10 @@ export default function App() {
           <h3 style={{ fontSize: '14px', fontWeight: '800', margin: '4px 0 0 4px' }}>🍳 Platos Disponibles ({solidMealsList.length})</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {solidMealsList.map(meal => (
-              <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '14px', padding: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>{meal.type}</span>
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: t.textSec }}>⚡ {meal.caloriesApprox}</span>
-                </div>
-                <strong style={{ fontSize: '13px', display: 'block', margin: '6px 0 4px 0', fontWeight: '700' }}>{meal.title}</strong>
-                <p style={{ fontSize: '12px', color: t.textSec, margin: '0' }}>{meal.description}</p>
+              <div key={meal.id} style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '14px', padding: '14px' }}>
+                <span style={{ fontSize: '10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>{meal.type}</span>
+                <strong style={{ fontSize: '13px', display: 'block', margin: '6px 0 4px 0' }}>{meal.title}</strong>
+                <p style={{ fontSize: '12px', color: t.textSec, margin: 0 }}>{meal.description}</p>
               </div>
             ))}
           </div>
@@ -619,29 +569,24 @@ export default function App() {
       {/* PESTAÑA: BATIDOS */}
       {activeTab === 'batidos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#8b5cf6', margin: 0 }}>🪄 Batido Inteligente</h2>
-              <button 
-                onClick={() => setSmoothieSeed(prev => prev + 1)} 
-                style={{ background: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', color: t.text, fontWeight: '700' }}
-              >
-                🔄 Otro batido
-              </button>
+              <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: '#8b5cf6', margin: 0 }}>🪄 Batido Inteligente</h2>
+              <button onClick={() => setSmoothieSeed(prev => prev + 1)} style={{ background: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}>🔄 Otro</button>
             </div>
             <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '12px', padding: '14px' }}>
-              <strong style={{ fontSize: '13px', display: 'block', margin: '0 0 4px 0', fontWeight: '700' }}>{generatedSmartSmoothie.title}</strong>
+              <strong style={{ fontSize: '13px', display: 'block', margin: '0 0 4px 0' }}>{generatedSmartSmoothie.title}</strong>
               <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 8px 0' }}>{generatedSmartSmoothie.description}</p>
               <span style={{ fontSize: '12px', fontWeight: '700', color: '#8b5cf6' }}>⚡ Aprox. {generatedSmartSmoothie.caloriesApprox}</span>
             </div>
           </div>
 
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>🥤 Crear Batido Personalizado</h3>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>🥤 Crear Batido</h3>
             <form onSubmit={handleAddBatidoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
-              <input type="text" placeholder="Nombre del batido..." value={newMealTitle} onChange={e => setNewMealTitle(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
+              <input type="text" placeholder="Nombre..." value={newMealTitle} onChange={e => setNewMealTitle(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
               <input type="text" placeholder="Calorías (ej: 250 kcal)..." value={newMealCalories} onChange={e => setNewMealCalories(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
-              <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', boxShadow: '0 4px 12px rgba(139,92,246,0.25)' }}>Guardar Batido 🚀</button>
+              <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>Guardar Batido 🚀</button>
             </form>
           </div>
         </div>
@@ -649,11 +594,11 @@ export default function App() {
 
       {/* PESTAÑA: DESPENSA */}
       {activeTab === 'despensa' && (
-        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🧀 Ampliar Despensa</h2>
+        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🧀 Ampliar Despensa</h2>
           <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
-            <input type="text" placeholder="Ej: Fresa, Nueces, Queso..." value={newIngName} onChange={e => setNewIngName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
-            <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', boxShadow: '0 4px 10px rgba(37,99,235,0.2)' }}>Añadir ➕</button>
+            <input type="text" placeholder="Ej: Fresa, Nueces..." value={newIngName} onChange={e => setNewIngName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
+            <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
           </form>
         </div>
       )}
@@ -661,25 +606,25 @@ export default function App() {
       {/* PESTAÑA: MENÚ */}
       {activeTab === 'menu' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🍽️ Generador de Menú Diario</h2>
-            <button onClick={generateDailyMenu} style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', width: '100%', boxShadow: '0 4px 12px rgba(37,99,235,0.25)' }}>🎲 Generar Menú Aleatorio</button>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🍽️ Menú Diario</h2>
+            <button onClick={generateDailyMenu} style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '12px 16px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', width: '100%' }}>🎲 Generar Menú</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {dailyMenu.desayuno && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}`, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}><strong style={{fontSize:'12px', color: t.primary}}>🌅 Desayuno:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.desayuno.title}</div></div>}
-            {dailyMenu.bebida && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}`, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}><strong style={{fontSize:'12px', color:'#8b5cf6'}}>🥤 Batido:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.bebida.title}</div></div>}
-            {dailyMenu.almuerzo && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}`, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}><strong style={{fontSize:'12px', color: t.primary}}>☀️ Almuerzo:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.almuerzo.title}</div></div>}
-            {dailyMenu.cena && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}`, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}><strong style={{fontSize:'12px', color: t.primary}}>🌙 Cena:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.cena.title}</div></div>}
+            {dailyMenu.desayuno && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color: t.primary}}>🌅 Desayuno:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.desayuno.title}</div></div>}
+            {dailyMenu.bebida && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color:'#8b5cf6'}}>🥤 Batido:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.bebida.title}</div></div>}
+            {dailyMenu.almuerzo && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color: t.primary}}>☀️ Almuerzo:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.almuerzo.title}</div></div>}
+            {dailyMenu.cena && <div style={{ backgroundColor: t.card, padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}` }}><strong style={{fontSize:'12px', color: t.primary}}>🌙 Cena:</strong> <div style={{fontSize:'13px', marginTop:'2px'}}>{dailyMenu.cena.title}</div></div>}
           </div>
         </div>
       )}
 
       {/* PESTAÑA: PROGRESO */}
       {activeTab === 'progreso' && (
-        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>📈 Historial de Entrenamientos ({logs.length})</h2>
+        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>📈 Historial ({logs.length})</h2>
           {logs.length === 0 ? (
-            <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '10px 0' }}>No hay registros de entrenamiento aún.</p>
+            <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '10px 0' }}>No hay registros aún.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {logs.map(lg => (
@@ -688,7 +633,7 @@ export default function App() {
                     <span>📅 {lg.date}</span>
                     <strong style={{ color: t.primary }}>{lg.weightUsed}</strong>
                   </div>
-                  <strong style={{ fontSize: '13px', display: 'block', fontWeight: '700' }}>{lg.exerciseName}</strong>
+                  <strong style={{ fontSize: '13px', display: 'block' }}>{lg.exerciseName}</strong>
                   <p style={{ margin: '4px 0 0 0', color: t.textSec, fontSize: '11px' }}>{lg.notes}</p>
                 </div>
               ))}
@@ -699,49 +644,39 @@ export default function App() {
 
       {/* PESTAÑA: PERFIL */}
       {activeTab === 'perfil' && profile && (
-        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: t.textSec, marginTop: 0, marginBottom: '14px' }}>👤 Configuración de Perfil</h2>
+        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '14px' }}>👤 Perfil</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
             <label style={{ color: t.textSec, fontWeight: '600' }}>Nombre:
               <input type="text" value={profile.name} onChange={e => handleUpdateActiveProfile('name', e.target.value)} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
             </label>
-            <label style={{ color: t.textSec, fontWeight: '600' }}>Peso actual (kg):
+            <label style={{ color: t.textSec, fontWeight: '600' }}>Peso (kg):
               <input type="number" value={profile.weight} onChange={e => handleUpdateActiveProfile('weight', Number(e.target.value))} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
             </label>
           </div>
         </div>
       )}
 
-      {/* Barra de Navegación Inferior Estilizada (Glassmorphism) */}
-      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.navNavBg || t.navBg, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 16px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
+      {/* Barra de Navegación Inferior */}
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.navBg, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 16px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
         {[
           { id: 'entreno', label: 'Entreno', icon: '🏋️' },
           { id: 'nutricion', label: 'Nutrición', icon: '🥗' },
-          { id: 'batidos', label: 'Batidos', icon: '🥤', color: '#8b5cf6' },
+          { id: 'batidos', label: 'Batidos', icon: '🥤' },
           { id: 'despensa', label: 'Despensa', icon: '🛒' },
           { id: 'menu', label: 'Menú', icon: '🍽️' },
           { id: 'progreso', label: 'Progreso', icon: '📈' },
           { id: 'perfil', label: 'Perfil', icon: '👤' },
-        ].map(tab => {
-          const isActive = activeTab === tab.id;
-          const activeColor = tab.color || t.primary;
-          return (
-            <button 
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)} 
-              style={{ 
-                background: 'none', border: 'none', cursor: 'pointer', 
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
-                opacity: isActive ? 1 : 0.6,
-                transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>{tab.icon}</span>
-              <span style={{ fontSize: '9px', fontWeight: isActive ? '800' : '500', color: isActive ? activeColor : t.textSec }}>{tab.label}</span>
-            </button>
-          );
-        })}
+        ].map(tab => (
+          <button 
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)} 
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: activeTab === tab.id ? 1 : 0.6 }}
+          >
+            <span style={{ fontSize: '18px' }}>{tab.icon}</span>
+            <span style={{ fontSize: '9px', fontWeight: activeTab === tab.id ? '800' : '500', color: activeTab === tab.id ? t.primary : t.textSec }}>{tab.label}</span>
+          </button>
+        ))}
       </nav>
 
     </div>
