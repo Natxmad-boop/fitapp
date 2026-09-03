@@ -24,7 +24,7 @@ interface UserProfile {
   name: string;
   weight: number;
   goal: string[];
-  allergies: string[]; // NUEVO: Alergias o intolerancias del usuario
+  allergies: string[];
 }
 
 interface MealIdea {
@@ -34,7 +34,7 @@ interface MealIdea {
   description: string;
   caloriesApprox: string;
   ingredients: string[]; 
-  allergens: string[]; // NUEVO: Alérgenos presentes en la receta
+  allergens: string[];
 }
 
 const AVAILABLE_GOALS = [
@@ -45,7 +45,6 @@ const AVAILABLE_GOALS = [
   'Movilidad y salud'
 ];
 
-// Lista ampliada de ingredientes para seleccionar
 const AVAILABLE_INGREDIENTS = [
   'Pollo', 'Ternera', 'Lomo', 'Salmón', 'Atún', 'Merluza', 'Huevo', 
   'Arroz', 'Patata', 'Avena', 'Pan integral', 'Garbanzos', 'Lentejas',
@@ -53,7 +52,6 @@ const AVAILABLE_INGREDIENTS = [
   'Queso fresco', 'Yogur', 'Plátano', 'Manzana', 'Nueces', 'Almendras'
 ];
 
-// Lista de alérgenos e intolerancias disponibles
 const AVAILABLE_ALLERGIES = [
   'Gluten',
   'Lactosa',
@@ -64,7 +62,6 @@ const AVAILABLE_ALLERGIES = [
 ];
 
 const EXERCISES: Exercise[] = [
-  // --- CASA ---
   { 
     id: '1', 
     name: 'Sentadillas Libres', 
@@ -145,8 +142,6 @@ const EXERCISES: Exercise[] = [
     instructions: 'Eleva el peso por encima de la cabeza de forma controlada.',
     videoUrl: 'https://www.youtube.com/results?search_query=press+de+hombros+en+casa+con+botellas'
   },
-  
-  // --- GIMNASIO ---
   { 
     id: '9', 
     name: 'Press de Banca Plano', 
@@ -372,13 +367,16 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'progreso' | 'perfil'>('entreno');
+  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'menu' | 'progreso' | 'perfil'>('entreno');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<'Todos' | 'Casa' | 'Gimnasio'>('Todos');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
 
-  // Ingredientes seleccionados para filtrar la nutrición
+  // Ingredientes seleccionados para filtrar la nutrición y generar menús
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+
+  // Menú del día generado dinámicamente
+  const [dailyMenu, setDailyMenu] = useState<{ desayuno?: MealIdea; almuerzo?: MealIdea; cena?: MealIdea; snack?: MealIdea }>({});
 
   // Formulario registro entreno
   const [selectedExerciseName, setSelectedExerciseName] = useState<string>(EXERCISES[0].name);
@@ -539,23 +537,46 @@ export default function App() {
     alert(`🏥 Sustituto sugerido por molestia:\n\n👉 En lugar de "${currentEx.name}", te recomendamos hacer:\n⭐ ${randomAlternative.name} (${randomAlternative.category} - ${randomAlternative.location})\n\n💡 Material: ${randomAlternative.equipment}`);
   };
 
+  // Generador inteligente de menú del día adaptado a alérgenos e ingredientes seleccionados
+  const generateDailyMenu = () => {
+    const userAllergies = profile.allergies || [];
+
+    // Filtrar recetas seguras (sin alérgenos del usuario)
+    let safeMeals = MEALS.filter(meal => !meal.allergens.some(al => userAllergies.includes(al)));
+
+    // Si hay ingredientes seleccionados, dar prioridad a los que los contengan
+    const matchingMeals = safeMeals.filter(meal => 
+      selectedIngredients.length === 0 || meal.ingredients.some(ing => selectedIngredients.includes(ing))
+    );
+
+    const pool = matchingMeals.length > 0 ? matchingMeals : safeMeals;
+
+    const breakfasts = pool.filter(m => m.type === 'Desayuno');
+    const lunches = pool.filter(m => m.type === 'Almuerzo');
+    const dinners = pool.filter(m => m.type === 'Cena');
+    const snacks = pool.filter(m => m.type === 'Snack');
+
+    const getRandom = (arr: MealIdea[]) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : undefined;
+
+    setDailyMenu({
+      desayuno: getRandom(breakfasts),
+      almuerzo: getRandom(lunches),
+      cena: getRandom(dinners),
+      snack: getRandom(snacks)
+    });
+  };
+
   const filteredExercises = EXERCISES.filter(ex => {
     if (selectedLocation !== 'Todos' && ex.location !== selectedLocation) return false;
     if (selectedCategory !== 'Todos' && ex.category !== selectedCategory) return false;
     return true;
   });
 
-  // FILTRADO DE RECETAS: 
-  // 1. Oculta automáticamente si contiene algún alérgeno que el usuario tenga marcado.
-  // 2. Si hay ingredientes favoritos marcados, muestra las que contengan al menos uno de ellos.
   const filteredMeals = MEALS.filter(meal => {
     const userAllergies = profile.allergies || [];
-    
-    // Si la receta contiene un alérgeno que el usuario tiene registrado, se descarta por seguridad
     const hasForbiddenAllergen = meal.allergens.some(allergen => userAllergies.includes(allergen));
     if (hasForbiddenAllergen) return false;
 
-    // Filtrado opcional por ingredientes favoritos seleccionados
     if (selectedIngredients.length > 0) {
       return meal.ingredients.some(ing => selectedIngredients.includes(ing));
     }
@@ -680,7 +701,6 @@ export default function App() {
       {/* PESTAÑA: NUTRICIÓN Y SELECCIÓN DE INGREDIENTES */}
       {activeTab === 'nutricion' && (
         <div>
-          {/* Aviso si tiene alérgenos activos */}
           {profile.allergies && profile.allergies.length > 0 && (
             <div style={{ backgroundColor: isDarkMode ? '#7f1d1d' : '#fee2e2', border: `1px solid ${isDarkMode ? '#991b1b' : '#fecaca'}`, borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', fontSize: '11px', color: isDarkMode ? '#fca5a5' : '#991b1b' }}>
               🛡️ <strong>Filtro de seguridad activo:</strong> Se están ocultando recetas con tus alergias o intolerancias marcadas ({profile.allergies.join(', ')}).
@@ -738,7 +758,6 @@ export default function App() {
                   <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{meal.title}</strong>
                   <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 6px 0' }}>{meal.description}</p>
                   
-                  {/* Ingredientes de la receta */}
                   <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
                     {meal.ingredients.map(ing => (
                       <span key={ing} style={{ fontSize: '9px', backgroundColor: t.bg, border: `1px solid ${t.border}`, color: t.textSec, padding: '2px 6px', borderRadius: '4px' }}>
@@ -747,7 +766,6 @@ export default function App() {
                     ))}
                   </div>
 
-                  {/* Alérgenos de la receta si los tiene */}
                   {meal.allergens.length > 0 && (
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
                       {meal.allergens.map(al => (
@@ -761,6 +779,82 @@ export default function App() {
               ))
             )}
           </div>
+        </div>
+      )}
+
+      {/* PESTAÑA: MENÚ DEL DÍA INTELIGENTE */}
+      {activeTab === 'menu' && (
+        <div>
+          <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, marginBottom: '14px', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '15px', marginTop: 0, marginBottom: '6px' }}>🍽️ Generador de Menú Automático</h2>
+            <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '12px' }}>
+              Crea un menú completo para hoy basado en tus ingredientes marcados ({selectedIngredients.length} activos) y respetando tus alergias.
+            </p>
+            <button 
+              onClick={generateDailyMenu}
+              style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', width: '100%' }}
+            >
+              🎲 Generar / Actualizar Menú del Día
+            </button>
+          </div>
+
+          {!dailyMenu.desayuno && !dailyMenu.almuerzo && !dailyMenu.cena && !dailyMenu.snack ? (
+            <div style={{ textAlign: 'center', padding: '30px 10px', color: t.textSec, fontSize: '12px' }}>
+              👆 Pulsa el botón superior para generar tu propuesta de menú personalizado.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              
+              {/* Desayuno */}
+              {dailyMenu.desayuno && (
+                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', backgroundColor: '#f59e0b', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>🌅 Desayuno</span>
+                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.desayuno.caloriesApprox}</span>
+                  </div>
+                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.desayuno.title}</strong>
+                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.desayuno.description}</p>
+                </div>
+              )}
+
+              {/* Almuerzo */}
+              {dailyMenu.almuerzo && (
+                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', backgroundColor: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>☀️ Almuerzo</span>
+                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.almuerzo.caloriesApprox}</span>
+                  </div>
+                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.almuerzo.title}</strong>
+                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.almuerzo.description}</p>
+                </div>
+              )}
+
+              {/* Snack */}
+              {dailyMenu.snack && (
+                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', backgroundColor: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>🍎 Snack / Media Tarde</span>
+                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.snack.caloriesApprox}</span>
+                  </div>
+                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.snack.title}</strong>
+                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.snack.description}</p>
+                </div>
+              )}
+
+              {/* Cena */}
+              {dailyMenu.cena && (
+                <div style={{ backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', backgroundColor: '#0ea5e9', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>🌙 Cena</span>
+                    <span style={{ fontSize: '10px', color: t.textSec, fontWeight: '600' }}>⚡ {dailyMenu.cena.caloriesApprox}</span>
+                  </div>
+                  <strong style={{ fontSize: '13px', display: 'block', margin: '4px 0' }}>{dailyMenu.cena.title}</strong>
+                  <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 6px 0' }}>{dailyMenu.cena.description}</p>
+                </div>
+              )}
+
+            </div>
+          )}
         </div>
       )}
 
@@ -832,7 +926,6 @@ export default function App() {
       {activeTab === 'perfil' && profile && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* Selector y Borrado de Perfiles */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>👥 Gestión de Usuarios</h2>
             <p style={{ fontSize: '11px', color: t.textSec, marginBottom: '10px' }}>Selecciona para cambiar o elimina los perfiles que ya no uses:</p>
@@ -868,7 +961,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Editar Perfil Activo */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>⚙️ Configurar a: {profile.name}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
@@ -889,7 +981,6 @@ export default function App() {
                 />
               </label>
 
-              {/* Objetivos */}
               <div>
                 <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Objetivos (puedes marcar varios):</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -914,7 +1005,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Alergias / Intolerancias */}
               <div>
                 <span style={{ display: 'block', marginBottom: '6px', fontWeight: '600', marginTop: '6px' }}>🛡️ Alergias o Intolerancias (excluye recetas):</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -942,7 +1032,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Crear Nuevo Usuario */}
           <div style={{ backgroundColor: t.card, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '15px', marginTop: 0 }}>➕ Añadir Nuevo Perfil</h2>
             <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', marginTop: '10px' }}>
@@ -997,7 +1086,7 @@ export default function App() {
                     return (
                       <div 
                         key={allergyOption}
-                        onClick={() => handleToggleNewUserKey => handleToggleNewUserAllergy(allergyOption)}
+                        onClick={() => handleToggleNewUserAllergy(allergyOption)}
                         style={{ 
                           display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer',
                           backgroundColor: isSelected ? (isDarkMode ? '#7f1d1d' : '#fee2e2') : t.bg,
@@ -1029,6 +1118,9 @@ export default function App() {
         </button>
         <button onClick={() => setActiveTab('nutricion')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'nutricion' ? '700' : '400', color: activeTab === 'nutricion' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <span style={{ fontSize: '18px' }}>🥗</span> Nutrición
+        </button>
+        <button onClick={() => setActiveTab('menu')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'menu' ? '700' : '400', color: activeTab === 'menu' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span style={{ fontSize: '18px' }}>🍽️</span> Menú
         </button>
         <button onClick={() => setActiveTab('progreso')} style={{ background: 'none', border: 'none', fontSize: '11px', fontWeight: activeTab === 'progreso' ? '700' : '400', color: activeTab === 'progreso' ? t.primary : t.textSec, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <span style={{ fontSize: '18px' }}>📈</span> Progreso
