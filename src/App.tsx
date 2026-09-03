@@ -191,7 +191,7 @@ export default function App() {
 
       if (error) throw error;
       
-      let rawProfiles = (data || []).filter(p => p.name !== 'Carlos Trainer');
+      let rawProfiles = (data || []).filter(p => p && p.name && p.name.trim() !== 'Carlos Trainer');
       let mappedProfiles: UserProfile[] = rawProfiles.map(p => ({
         id: p.id,
         user_id: p.user_id,
@@ -737,7 +737,7 @@ export default function App() {
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button onClick={() => setIsEditingGoals(false)} style={{ flex: 1, padding: '6px', borderRadius: '6px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, fontSize: '12px', cursor: 'pointer' }}>Cancelar</button>
                   <button onClick={async () => {
-                    if (tempGoals.length ===0 || !activeProfile) return;
+                    if (tempGoals.length === 0 || !activeProfile) return;
                     const newGoalStr = tempGoals.join(', ');
                     const { error } = await supabase.from('profiles').update({ goal: newGoalStr }).eq('id', activeProfile.id);
                     if (!error) {
@@ -804,7 +804,7 @@ export default function App() {
           return (
             <button
               key={tab.id}
-2              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as any)}
               style={{
                 background: 'none',
                 border: 'none',
