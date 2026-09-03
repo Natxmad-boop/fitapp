@@ -303,7 +303,6 @@ export default function App() {
     return 0;
   });
 
-  // Navegación ampliada con 'ejercicios' (Biblioteca libre)
   const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'menu' | 'progreso' | 'ejercicios' | 'batidos' | 'herramientas' | 'despensa' | 'perfil'>('entreno');
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -325,6 +324,10 @@ export default function App() {
   const [newMealTitle, setNewMealTitle] = useState<string>('');
   const [newMealDesc, setNewMealDesc] = useState<string>('');
   const [newMealCalories, setNewMealCalories] = useState<string>('');
+
+  // Estado para crear un NUEVO perfil
+  const [newProfileName, setNewProfileName] = useState<string>('');
+  const [newProfileWeight, setNewProfileWeight] = useState<string>('60');
 
   useEffect(() => {
     localStorage.setItem('fitapp_profiles_directory', JSON.stringify(profilesList));
@@ -355,6 +358,32 @@ export default function App() {
   const handleUpdateActiveProfile = (field: keyof UserProfile, value: any) => {
     const updated = profilesList.map(p => p.id === profile.id ? { ...p, [field]: value } : p);
     setProfilesList(updated);
+  };
+
+  const handleCreateNewProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProfileName.trim()) return;
+
+    const newId = 'user_' + Date.now();
+    const createdUser: UserProfile = {
+      id: newId,
+      name: newProfileName.trim(),
+      weight: Number(newProfileWeight) || 60,
+      goal: ['Salud y bienestar'],
+      allergies: [],
+      trainingDaysPerWeek: 3,
+      reminderTime: '09:00',
+      selectedDays: ['Lun', 'Mié', 'Vie'],
+      workoutLocation: 'Casa',
+      homeEquipment: DEFAULT_HOME_TOOLS,
+      gymEquipment: DEFAULT_GYM_TOOLS
+    };
+
+    setProfilesList([...profilesList, createdUser]);
+    setActiveUserId(newId);
+    setNewProfileName('');
+    setNewProfileWeight('60');
+    alert(`¡Perfil de ${createdUser.name} creado con éxito! 🎉`);
   };
 
   const handleToggleSpecificDay = (dayKey: string) => {
@@ -510,7 +539,7 @@ export default function App() {
           <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: t.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '18px' }}>⚡</div>
           <div>
             <h1 style={{ fontSize: '17px', fontWeight: '800', margin: 0 }}>FitApp Pro</h1>
-            <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Hola, <strong style={{ color: t.primary }}>{profile?.name}</strong> ({profile?.weight} kg)</p>
+            <p style={{ fontSize: '11px', color: t.textSec, margin: '2px 0 0 0' }}>Usuario activo: <strong style={{ color: t.primary }}>{profile?.name}</strong> ({profile?.weight} kg)</p>
           </div>
         </div>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
@@ -719,7 +748,7 @@ export default function App() {
         <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
           <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>📈 Historial ({logs.length})</h2>
           {logs.length === 0 ? (
-            <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '10px 0' }}>No hay registros aún.</p>
+            <p style={{ fontSize: '12px', color: t.textSec, textAlign: 'center', padding: '10px 0' }}>No hay registros aún para este perfil.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {logs.map(lg => (
@@ -737,12 +766,12 @@ export default function App() {
         </div>
       )}
 
-      {/* NUEVA PESTAÑA: BIBLIOTECA LIBRE DE EJERCICIOS (Casa o Gimnasio con explicación y vídeo) */}
+      {/* PESTAÑA: BIBLIOTECA DE EJERCICIOS */}
       {activeTab === 'ejercicios' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>📖 Biblioteca Libre de Ejercicios</h2>
-            <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 12px 0' }}>¿Entreno libre hoy? Elige qué tipo de ejercicio quieres consultar u ojear:</p>
+            <p style={{ fontSize: '11px', color: t.textSec, margin: '0 0 12px 0' }}>Elige el tipo de ejercicios que quieres consultar con explicaciones y vídeos:</p>
             
             <div style={{ display: 'flex', gap: '8px' }}>
               {(['Casa', 'Gimnasio', 'Todas'] as const).map(opt => {
@@ -859,22 +888,61 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: PERFIL */}
+      {/* PESTAÑA: PERFIL Y MULTIPERFIL */}
       {activeTab === 'perfil' && profile && (
-        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '14px' }}>👤 Perfil</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
-            <label style={{ color: t.textSec, fontWeight: '600' }}>Nombre:
-              <input type="text" value={profile.name} onChange={e => handleUpdateActiveProfile('name', e.target.value)} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
-            </label>
-            <label style={{ color: t.textSec, fontWeight: '600' }}>Peso (kg):
-              <input type="number" value={profile.weight} onChange={e => handleUpdateActiveProfile('weight', Number(e.target.value))} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
-            </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
+          {/* Selector de perfiles existentes */}
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>👥 Cambiar de Perfil</h2>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {profilesList.map(p => {
+                const isCurrent = p.id === activeUserId;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setActiveUserId(p.id)}
+                    style={{
+                      padding: '8px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: '700',
+                      backgroundColor: isCurrent ? t.primary : t.bg,
+                      color: isCurrent ? '#fff' : t.text,
+                      border: `1px solid ${isCurrent ? t.primary : t.border}`
+                    }}
+                  >
+                    👤 {p.name} ({p.weight} kg) {isCurrent && '✓'}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Crear un nuevo perfil */}
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>➕ Crear Nuevo Perfil</h3>
+            <form onSubmit={handleCreateNewProfile} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+              <input type="text" placeholder="Nombre (ej: Marc)..." value={newProfileName} onChange={e => setNewProfileName(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
+              <input type="number" placeholder="Peso inicial (kg)..." value={newProfileWeight} onChange={e => setNewProfileWeight(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
+              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>Crear y Activar Perfil 🚀</button>
+            </form>
+          </div>
+
+          {/* Editar el perfil actual */}
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚙️ Editar Perfil Actual: {profile.name}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+              <label style={{ color: t.textSec, fontWeight: '600' }}>Nombre:
+                <input type="text" value={profile.name} onChange={e => handleUpdateActiveProfile('name', e.target.value)} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
+              </label>
+              <label style={{ color: t.textSec, fontWeight: '600' }}>Peso (kg):
+                <input type="number" value={profile.weight} onChange={e => handleUpdateActiveProfile('weight', Number(e.target.value))} style={{ width: '100%', padding: '10px 12px', marginTop: '4px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none', boxSizing: 'border-box' }} />
+              </label>
+            </div>
+          </div>
+
         </div>
       )}
 
-      {/* MENÚ DESPLEGABLE "MÁS" (Incluye la nueva Biblioteca de Ejercicios, Batidos, Utilidades, Despensa y Perfil) */}
+      {/* MENÚ DESPLEGABLE "MÁS" */}
       {isMoreMenuOpen && (
         <div style={{ position: 'fixed', bottom: '75px', left: '20px', right: '20px', maxWidth: '440px', margin: '0 auto', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '20px', padding: '14px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 101, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
           {[
@@ -921,7 +989,7 @@ export default function App() {
           );
         })}
 
-        {/* Botón "Más" para desplegar la sección de Ejercicios libres y herramientas secundarias */}
+        {/* Botón "Más" para desplegar la sección de Biblioteca de Ejercicios y herramientas secundarias */}
         <button 
           onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} 
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: ['ejercicios', 'batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? 1 : 0.6, flex: 1 }}
