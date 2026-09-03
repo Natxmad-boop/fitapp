@@ -32,12 +32,7 @@ interface UserProfile {
   gender: string;
   height: number;
   weight: number;
-  goal: string;
-  secondary_goal?: string;
-  body_priorities?: string[];
-  level?: string;
-  days_per_week?: number;
-  session_duration?: number;
+  goal: string | string[];
   pin_hash: string | null;
   healthRestrictions: string[];
   medications: string[];
@@ -192,7 +187,6 @@ export default function App() {
   const [newMedicationInput, setNewMedicationInput] = useState<string>('');
   const [newDiseaseInput, setNewDiseaseInput] = useState<string>('');
 
-  // Nuevos estados para Ideas de Menús y Generador de Ejercicios por Objetivo/Días
   const [customMealIdea, setCustomMealIdea] = useState<string>('');
   const [savedMeals, setSavedMeals] = useState<string[]>([]);
   const [trainingGoalChoice, setTrainingGoalChoice] = useState<string>('Hipertrofia');
@@ -204,7 +198,7 @@ export default function App() {
     gender: 'Masculino',
     height: 175,
     weight: 70,
-    goal: 'Perder grasa',
+    goals: [] as string[],
     pin: '0000'
   });
 
@@ -249,11 +243,6 @@ export default function App() {
         height: p.height,
         weight: p.weight,
         goal: p.goal,
-        secondary_goal: p.secondary_goal,
-        body_priorities: p.body_priorities,
-        level: p.level,
-        days_per_week: p.days_per_week,
-        session_duration: p.session_duration,
         pin_hash: p.pin_hash,
         healthRestrictions: p.allergies || [],
         medications: p.medication || [],
@@ -315,60 +304,24 @@ export default function App() {
       <div style={{ fontFamily: '-apple-system, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '24px', color: '#111', backgroundColor: '#f8fafc', minHeight: '100vh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <h1 style={{ fontSize: '24px', textAlign: 'center', marginBottom: '6px', color: '#0284c7' }}>FitApp Pro 🏆</h1>
-          <p style={{ textAlign: 'center', fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>
-            {authMode === 'login' && 'Inicia sesión en tu cuenta segura'}
-            {authMode === 'register' && 'Crea tu cuenta en Supabase Auth'}
-            {authMode === 'forgot' && 'Recupera acceso a tu cuenta'}
-          </p>
+          <p style={{ textAlign: 'center', fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>Inicia sesión en tu cuenta segura</p>
 
           {authError && <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '8px', fontSize: '12px', marginBottom: '14px' }}>{authError}</div>}
-          {authSuccessMsg && <div style={{ backgroundColor: '#dcfce7', color: '#16a34a', padding: '10px', borderRadius: '8px', fontSize: '12px', marginBottom: '14px' }}>{authSuccessMsg}</div>}
-
+          
           <form onSubmit={async (e) => {
             e.preventDefault();
             setAuthError(null);
-            setAuthSuccessMsg(null);
-            if (authMode === 'login') {
-              const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
-              if (error) setAuthError(error.message);
-            } else if (authMode === 'register') {
-              const { error } = await supabase.auth.signUp({ email: authEmail, password: authPassword });
-              if (error) setAuthError(error.message);
-              else setAuthSuccessMsg('¡Registro exitoso! Comprueba tu correo o inicia sesión.');
-            } else if (authMode === 'forgot') {
-              const { error } = await supabase.auth.resetPasswordForEmail(authEmail);
-              if (error) setAuthError(error.message);
-              else setAuthSuccessMsg('Se ha enviado un enlace de recuperación a tu correo.');
-            }
+            const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
+            if (error) setAuthError(error.message);
           }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <label style={{ fontSize: '13px', fontWeight: '500' }}>Correo electrónico:
               <input type="email" required value={authEmail} onChange={e => setAuthEmail(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box' }} />
             </label>
-
-            {authMode !== 'forgot' && (
-              <label style={{ fontSize: '13px', fontWeight: '500' }}>Contraseña:
-                <input type="password" required value={authPassword} onChange={e => setAuthPassword(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box' }} />
-              </label>
-            )}
-
-            <button type="submit" style={{ backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', marginTop: '6px' }}>
-              {authMode === 'login' && 'Iniciar Sesión'}
-              {authMode === 'register' && 'Registrarse'}
-              {authMode === 'forgot' && 'Enviar enlace'}
-            </button>
+            <label style={{ fontSize: '13px', fontWeight: '500' }}>Contraseña:
+              <input type="password" required value={authPassword} onChange={e => setAuthPassword(e.target.value)} style={{ width: '100%', padding: '10px', marginTop: '4px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box' }} />
+            </label>
+            <button type="submit" style={{ backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', marginTop: '6px' }}>Iniciar Sesión</button>
           </form>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '16px', color: '#0284c7' }}>
-            {authMode === 'login' && (
-              <>
-                <span style={{ cursor: 'pointer' }} onClick={() => { setAuthMode('register'); setAuthError(null); setAuthSuccessMsg(null); }}>¿No tienes cuenta? Regístrate</span>
-                <span style={{ cursor: 'pointer' }} onClick={() => { setAuthMode('forgot'); setAuthError(null); setAuthSuccessMsg(null); }}>¿Olvidaste tu contraseña?</span>
-              </>
-            )}
-            {authMode !== 'login' && (
-              <span style={{ cursor: 'pointer', width: '100%', textAlign: 'center' }} onClick={() => { setAuthMode('login'); setAuthError(null); setAuthSuccessMsg(null); }}>← Volver al inicio de sesión</span>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -399,7 +352,7 @@ export default function App() {
               <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {p.goal} | 🔒 Protegido con PIN seguro</p>
+                  <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {Array.isArray(p.goal) ? p.goal.join(', ') : p.goal} | 🔒 Protegido con PIN</p>
                 </div>
                 <button 
                   onClick={() => {
@@ -468,7 +421,7 @@ export default function App() {
 
         {isCreatingProfile && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
-            <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}` }}>
+            <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}`, maxHeight: '90vh', overflowY: 'auto' }}>
               <h2 style={{ fontSize: '18px', marginTop: 0 }}>Nuevo Perfil</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
                 <label>Nombre:
@@ -482,14 +435,27 @@ export default function App() {
                     <input type="number" value={newProfileData.weight} onChange={e => setNewProfileData({...newProfileData, weight: Number(e.target.value)})} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                   </label>
                 </div>
-                <label>Objetivo Principal:
-                  <select value={newProfileData.goal} onChange={e => setNewProfileData({...newProfileData, goal: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}>
-                    <option>Perder grasa</option>
-                    <option>Ganar músculo</option>
-                    <option>Recomposición corporal</option>
-                    <option>Mejorar fuerza</option>
-                  </select>
-                </label>
+                
+                {/* Selector múltiple de objetivos principales */}
+                <label style={{ fontWeight: '600' }}>Objetivos Principales (puedes marcar varios):</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: t.bg, padding: '10px', borderRadius: '6px', border: `1px solid ${t.border}` }}>
+                  {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza', 'Aumentar resistencia', 'Mejorar salud y movilidad'].map((option) => (
+                    <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={newProfileData.goals.includes(option)}
+                        onChange={(e) => {
+                          const updatedGoals = e.target.checked 
+                            ? [...newProfileData.goals, option]
+                            : newProfileData.goals.filter(g => g !== option);
+                          setNewProfileData({ ...newProfileData, goals: updatedGoals });
+                        }}
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+
                 <label>PIN de Seguridad (4 dígitos):
                   <input type="password" maxLength={4} value={newProfileData.pin} onChange={e => setNewProfileData({...newProfileData, pin: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
@@ -505,7 +471,7 @@ export default function App() {
                       gender: newProfileData.gender,
                       height: newProfileData.height,
                       weight: newProfileData.weight,
-                      goal: newProfileData.goal,
+                      goal: newProfileData.goals.join(', ') || 'Perder grasa',
                       pin_hash: pinHashed,
                       equipment: ['Mancuernas', 'Ninguno'],
                       streak_days: 1,
@@ -540,8 +506,6 @@ export default function App() {
   });
 
   const smartFilteredMeals = MEAL_LIBRARY.filter(meal => {
-    const hasAllergyConflict = !meal.isAllowed && activeProfile?.healthRestrictions.some(r => r.toLowerCase().includes('lactosa'));
-    if (hasAllergyConflict) return false;
     const hasDislikedIngredient = meal.ingredients.some(ing => 
       activeProfile?.dislikedIngredients.some(disliked => ing.toLowerCase().includes(disliked.toLowerCase()))
     );
@@ -576,7 +540,6 @@ export default function App() {
           <button 
             onClick={() => setActiveProfileId(null)} 
             style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', fontSize: '12px', color: t.textSecondary }}
-            title="Cambiar Perfil"
           >
             👥
           </button>
@@ -593,12 +556,9 @@ export default function App() {
       {activeTab === 'inicio' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0, display: 'flex', justifyContent: 'space-between' }}>
-              <span>🎯 Panel Personalizado Supabase</span>
-              <span style={{ fontSize: '11px', color: t.primary }}>Seguro y Persistente</span>
-            </h2>
+            <h2 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🎯 Panel Personalizado Supabase</h2>
             <p style={{ fontSize: '13px', color: t.textSecondary, lineHeight: '1.4', marginBottom: '12px' }}>
-              Objetivo: <strong>{activeProfile?.goal}</strong>. Tus datos están sincronizados en tiempo real mediante RLS.
+              Objetivo(s): <strong>{Array.isArray(activeProfile?.goal) ? activeProfile?.goal.join(', ') : activeProfile?.goal}</strong>.
             </p>
             <button 
               onClick={() => setActiveTab('entrenar')}
@@ -607,30 +567,14 @@ export default function App() {
               Comenzar Entrenamiento 🚀
             </button>
           </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 1, backgroundColor: t.cardBg, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
-              <span style={{ fontSize: '20px' }}>🔥</span>
-              <h3 style={{ fontSize: '14px', margin: '6px 0 2px 0' }}>{activeProfile?.streakDays} Días</h3>
-              <p style={{ fontSize: '11px', color: t.textSecondary, margin: 0 }}>Racha Activa</p>
-            </div>
-            <div style={{ flex: 1, backgroundColor: t.cardBg, borderRadius: '12px', padding: '14px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
-              <span style={{ fontSize: '20px' }}>⭐</span>
-              <h3 style={{ fontSize: '14px', margin: '6px 0 2px 0' }}>{activeProfile?.points} Pts</h3>
-              <p style={{ fontSize: '11px', color: t.textSecondary, margin: 0 }}>Disciplina</p>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* 2. SECCIÓN ENTRENAR (Con Generador de Rutinas según Objetivo y Días) */}
+      {/* 2. SECCIÓN ENTRENAR */}
       {activeTab === 'entrenar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* NUEVO: Generador dinámico de rutinas según Objetivo y Días */}
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>⚙️ Planificador de Rutinas a Medida</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>Selecciona tu meta actual y los días disponibles para estructurar tu planificación semanal:</p>
-            
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', marginBottom: '14px' }}>
               <label>Objetivo de Entrenamiento:
                 <select 
@@ -654,126 +598,43 @@ export default function App() {
                   <option value={2}>2 días (Full Body)</option>
                   <option value={3}>3 días (Torso / Pierna / Full Body)</option>
                   <option value={4}>4 días (Upper / Lower)</option>
-                  <option value={5}>5 días (Rutina Weider / Empuje-Tirón-Pierna)</option>
+                  <option value={5}>5 días (Empuje-Tirón-Pierna)</option>
                 </select>
               </label>
             </div>
-
-            <div style={{ backgroundColor: t.bg, padding: '12px', borderRadius: '8px', border: `1px solid ${t.border}`, fontSize: '12px' }}>
-              <strong style={{ color: t.primary }}>📌 Estructura Recomendada ({daysAvailableChoice} días - {trainingGoalChoice}):</strong>
-              <p style={{ margin: '6px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>
-                {trainingGoalChoice === 'Hipertrofia' && `Plan de ${daysAvailableChoice} días enfocado en 3-4 series de 8-12 repeticiones con RIR 1-2 para estimular el crecimiento hipertrófico óptimo.`}
-                {trainingGoalChoice === 'Definición' && `Plan de ${daysAvailableChoice} días con alta densidad de trabajo, 3 series de 12-15 repeticiones y descansos cortos (45-60s) para maximizar el gasto calórico.`}
-                {trainingGoalChoice === 'Fuerza' && `Plan de ${daysAvailableChoice} días con 4-5 series de 3-6 repeticiones pesadas y descansos amplios (2-3 minutos) enfocados en ganancia de tensión mecánica.`}
-                {trainingGoalChoice === 'Salud' && `Plan de ${daysAvailableChoice} días equilibrado combinando movilidad, fuerza moderada y acondicionamiento cardiovascular.`}
-              </p>
-            </div>
           </div>
 
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados a tu Perfil</h2>
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
-              {['Todos', 'Fuerza', 'Core'].map(cat => (
-                <button 
-                  key={cat}
-                  onClick={() => setSelectedWorkoutFilter(cat)}
-                  style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${t.border}`, background: selectedWorkoutFilter === cat ? t.primary : t.cardBg, color: selectedWorkoutFilter === cat ? '#fff' : t.text, fontSize: '12px', cursor: 'pointer' }}
-                >
-                  {cat}
-                </button>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🏋️ Ejercicios Adaptados</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+              {filteredExercises.map(ex => (
+                <div key={ex.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
+                    <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>Req: {ex.equipmentNeeded}</span>
+                  </div>
+                  <button 
+                    onClick={() => setActiveDemoExerciseId(ex.id)}
+                    style={{ background: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', marginTop: '6px' }}
+                  >
+                    📺 Ver Demostración
+                  </button>
+                </div>
               ))}
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {filteredExercises.length === 0 ? (
-                <p style={{ fontSize: '13px', color: t.danger, textAlign: 'center', margin: '20px 0' }}>
-                  No hay ejercicios disponibles para tu selección o tus condiciones médicas actuales. Revisa tu <strong>Perfil</strong>.
-                </p>
-              ) : (
-                filteredExercises.map(ex => (
-                  <div key={ex.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <strong style={{ fontSize: '14px' }}>{ex.name}</strong>
-                      <span style={{ fontSize: '11px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>Req: {ex.equipmentNeeded}</span>
-                    </div>
-                    <p style={{ fontSize: '12px', color: t.textSecondary, margin: '0 0 8px 0' }}>💡 {ex.instructions.substring(0, 80)}...</p>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                      <button 
-                        onClick={() => setActiveDemoExerciseId(ex.id)}
-                        style={{ background: 'transparent', border: `1px solid ${t.primary}`, color: t.primary, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
-                      >
-                        📺 Ver Demostración y Técnica
-                      </button>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
-                      <input type="text" placeholder="Peso (kg)" style={{ width: '70px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
-                      <input type="text" placeholder="Reps" style={{ width: '50px', padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }} />
-                      <select style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text }}>
-                        <option>Normal (RPE 7-8)</option>
-                        <option>Fácil 🟢</option>
-                        <option>Difícil 🔴</option>
-                      </select>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </div>
       )}
 
-      {activeDemoExerciseId && currentDemoExercise && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
-          <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '400px', border: `1px solid ${t.border}`, maxHeight: '85vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h2 style={{ fontSize: '16px', margin: 0 }}>🎬 {currentDemoExercise.name}</h2>
-              <button onClick={() => setActiveDemoExerciseId(null)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: t.text }}>✕</button>
-            </div>
-            
-            <div style={{ backgroundColor: t.bg, borderRadius: '8px', padding: '12px', textAlign: 'center', marginBottom: '14px', border: `1px solid ${t.border}` }}>
-              <span style={{ fontSize: '32px' }}>🎯</span>
-              <p style={{ fontSize: '12px', color: t.textSecondary, margin: '4px 0 0 0' }}>Demostración Visual / Material: <strong>{currentDemoExercise.equipmentNeeded}</strong></p>
-            </div>
-
-            <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '10px', color: t.text }}>
-              <div>
-                <strong style={{ color: t.primary }}>📝 Instrucciones de Ejecución:</strong>
-                <p style={{ margin: '4px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>{currentDemoExercise.instructions}</p>
-              </div>
-              <div>
-                <strong style={{ color: t.danger }}>⚠️ Error Común a Evitar:</strong>
-                <p style={{ margin: '4px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>{currentDemoExercise.commonMistakes}</p>
-              </div>
-              <div>
-                <strong style={{ color: t.success }}>🔄 Alternativa Sugerida:</strong>
-                <p style={{ margin: '4px 0 0 0', color: t.textSecondary, lineHeight: '1.4' }}>{currentDemoExercise.alternative}</p>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setActiveDemoExerciseId(null)}
-              style={{ width: '100%', marginTop: '16px', backgroundColor: t.primary, color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
-            >
-              Entendido
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 3. SECCIÓN NUTRICIÓN (Con Ideas de Menús y Guardado Persistente en Supabase) */}
+      {/* 3. SECCIÓN NUTRICIÓN */}
       {activeTab === 'nutricion' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* NUEVO: Generador y Guardado de Ideas de Menús */}
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>💡 Ideas de Menús Personalizados</h2>
-            <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '12px' }}>Añade tus propias ideas de recetas o menús adaptados a tus calorías y guárdalos de forma persistente en tu perfil:</p>
-            
             <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
               <input 
                 type="text" 
-                placeholder="Ej. Bol de avena con frutos rojos y proteína..." 
+                placeholder="Ej. Bol de avena..." 
                 value={customMealIdea}
                 onChange={e => setCustomMealIdea(e.target.value)}
                 style={{ flex: 1, padding: '8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
@@ -782,125 +643,23 @@ export default function App() {
                 onClick={async () => {
                   if (!customMealIdea.trim() || !activeProfile) return;
                   const updatedSavedMeals = [...savedMeals, customMealIdea.trim()];
-                  
-                  // Guardado persistente en Supabase (campo de notas/metadatos o un array json si procede, simulado aquí actualizando los puntos y guardando localmente/tabla)
-                  const { error } = await supabase
-                    .from('profiles')
-                    .update({ points: activeProfile.points + 5 })
-                    .eq('id', activeProfile.id);
-
-                  if (!error) {
-                    setSavedMeals(updatedSavedMeals);
-                    setCustomMealIdea('');
-                    setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, points: p.points + 5 } : p));
-                    alert('¡Menú guardado con éxito!');
-                  } else {
-                    alert('Error al guardar en Supabase: ' + error.message);
-                  }
+                  setSavedMeals(updatedSavedMeals);
+                  setCustomMealIdea('');
                 }}
                 style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
               >
                 Guardar Menú 💾
               </button>
             </div>
-
-            {savedMeals.length > 0 && (
-              <div style={{ marginTop: '10px', borderTop: `1px solid ${t.border}`, paddingTop: '10px' }}>
-                <strong style={{ fontSize: '12px', color: t.text }}>Tus menús guardados personalizados:</strong>
-                <ul style={{ margin: '6px 0 0 0', paddingLeft: '16px', fontSize: '12px', color: t.textSecondary, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {savedMeals.map((meal, idx) => (
-                    <li key={idx}>{meal}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>🍽️ Menús Inteligentes y Gustos</h2>
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
-              {['Todos', 'Desayuno', 'Almuerzo', 'Snack', 'Cena'].map(cat => (
-                <button 
-                  key={cat}
-                  onClick={() => setSelectedMealFilter(cat)}
-                  style={{ padding: '6px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, background: selectedMealFilter === cat ? t.primary : t.cardBg, color: selectedMealFilter === cat ? '#fff' : t.text, fontSize: '11px', cursor: 'pointer' }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {smartFilteredMeals
-                .filter(meal => selectedMealFilter === 'Todos' || meal.type === selectedMealFilter)
-                .map(meal => (
-                  <div key={meal.id} style={{ padding: '12px', backgroundColor: t.bg, borderRadius: '8px', border: `1px solid ${t.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <strong style={{ fontSize: '13px' }}>{meal.title}</strong>
-                      <span style={{ fontSize: '10px', backgroundColor: t.border, padding: '2px 6px', borderRadius: '4px' }}>{meal.type}</span>
-                    </div>
-                    <p style={{ fontSize: '11px', color: t.textSecondary, margin: '0 0 6px 0' }}>Ingredientes: {meal.ingredients.join(', ')}</p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginTop: '6px' }}>
-                      <span>🔥 {meal.calories} kcal | 🥩 {meal.protein}g proteína</span>
-                      <span style={{ color: t.success, fontWeight: '600' }}>✅ Apto</span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '600', marginTop: 0 }}>🛒 Lista de la Compra Automática</h3>
-            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px', color: t.text }}>
-              {shoppingList.map((item, index) => (
-                <li key={index}>{item}</li>
-              ))}
-            </ul>
           </div>
         </div>
       )}
 
       {/* 4. SECCIÓN PROGRESO */}
       {activeTab === 'progreso' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>📈 Progreso y Métricas</h2>
-            <p style={{ fontSize: '13px', color: t.textSecondary, marginBottom: '16px' }}>
-              Peso actual registrado: <strong style={{ color: t.text }}>{activeProfile?.weight} kg</strong>
-            </p>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="number" 
-                placeholder="Nuevo peso (kg)" 
-                value={newWeightInput} 
-                onChange={e => setNewWeightInput(e.target.value)}
-                style={{ flex: 1, padding: '8px', fontSize: '13px', borderRadius: '8px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} 
-              />
-              <button 
-                onClick={async () => {
-                  if(!newWeightInput || !activeProfile) return;
-                  const val = Number(newWeightInput);
-                  const newPoints = activeProfile.points + 10;
-                  
-                  const { error } = await supabase
-                    .from('profiles')
-                    .update({ weight: val, points: newPoints })
-                    .eq('id', activeProfile.id);
-
-                  if (!error) {
-                    setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, weight: val, points: newPoints } : p));
-                    setNewWeightInput('');
-                  } else {
-                    alert('Error al actualizar peso: ' + error.message);
-                  }
-                }}
-                style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '13px' }}
-              >
-                Actualizar
-              </button>
-            </div>
-          </div>
+        <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: 0 }}>📈 Progreso y Métricas</h2>
+          <p style={{ fontSize: '13px', color: t.textSecondary }}>Peso actual: <strong style={{ color: t.text }}>{activeProfile?.weight} kg</strong></p>
         </div>
       )}
 
@@ -910,127 +669,39 @@ export default function App() {
           <div style={{ backgroundColor: t.cardBg, borderRadius: '12px', padding: '16px', border: `1px solid ${t.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>👤 Configuración y Salud</h2>
-              <button 
-                onClick={() => supabase.auth.signOut()} 
-                style={{ background: 'none', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '11px', color: t.danger }}
-              >
-                Cerrar Sesión General
-              </button>
             </div>
             
-            <div style={{ backgroundColor: isDarkMode ? '#1e1b4b' : '#eff6ff', border: `1px solid ${isDarkMode ? '#3730a3' : '#bfdbfe'}`, padding: '10px', borderRadius: '8px', marginBottom: '14px' }}>
-              <p style={{ fontSize: '11px', color: isDarkMode ? '#93c5fd' : '#1e40af', margin: 0, lineHeight: '1.4' }}>
-                ⚠️ <strong>Aviso Médico:</strong> Cualquier recomendación de ejercicio o nutrición debe ser consultada con un especialista médico o nutricionista antes de llevarla a la práctica.
-              </p>
-            </div>
-
             <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary, marginBottom: '16px' }}>
               <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
-              <p style={{ margin: 0 }}><strong>Objetivo:</strong> {activeProfile?.goal}</p>
-              <p style={{ margin: 0 }}><strong>Materiales Disponibles:</strong> <span style={{ color: t.primary, fontWeight: '600' }}>{activeProfile?.equipment.join(', ') || 'Ninguno'}</span></p>
-              <p style={{ margin: 0 }}><strong>Condiciones Médicas:</strong> <span style={{ color: t.warning }}>{activeProfile?.diseasesOrConditions.join(', ') || 'Ninguna'}</span></p>
-              <p style={{ margin: 0 }}><strong>Medicación Actual:</strong> <span style={{ color: t.warning }}>{activeProfile?.medications.join(', ') || 'Ninguna'}</span></p>
-              <p style={{ margin: 0 }}><strong>Alimentos que NO te gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
+              <p style={{ margin: 0 }}><strong>Objetivo(s):</strong> {Array.isArray(activeProfile?.goal) ? activeProfile?.goal.join(', ') : activeProfile?.goal}</p>
+              <p style={{ margin: 0 }}><strong>Alimentos Bloqueados / No Gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
             </div>
 
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Registrar Condición Médica:</h4>
+              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir alimento que no te gusta (Bloquear):</h4>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input 
                   type="text" 
-                  placeholder="Ej. Hipertensión, Asma..." 
-                  value={newDiseaseInput}
-                  onChange={e => setNewDiseaseInput(e.target.value)}
+                  placeholder="Ej. Tomate..." 
+                  value={newDislikedInput}
+                  onChange={e => setNewDislikedInput(e.target.value)}
                   style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
                 />
                 <button 
                   onClick={async () => {
-                    if (!newDiseaseInput || !activeProfile) return;
-                    const updatedRestrictions = [...activeProfile.diseasesOrConditions, newDiseaseInput.trim()];
-                    const { error } = await supabase.from('profiles').update({ restrictions: updatedRestrictions }).eq('id', activeProfile.id);
+                    if (!newDislikedInput || !activeProfile) return;
+                    const updatedDisliked = [...activeProfile.dislikedIngredients, newDislikedInput.trim()];
+                    const { error } = await supabase.from('profiles').update({ disliked_foods: updatedDisliked }).eq('id', activeProfile.id);
                     if (!error) {
-                      setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, diseasesOrConditions: updatedRestrictions } : p));
-                      setNewDiseaseInput('');
+                      setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, dislikedIngredients: updatedDisliked } : p));
+                      setNewDislikedInput('');
                     }
                   }}
-                  style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                  style={{ backgroundColor: t.danger, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
                 >
-                  Añadir
+                  Bloquear
                 </button>
               </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Registrar Medicación Actual:</h4>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input 
-                  type="text" 
-                  placeholder="Ej. Anticoagulantes..." 
-                  value={newMedicationInput}
-                  onChange={e => setNewMedicationInput(e.target.value)}
-                  style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
-                />
-                <button 
-                  onClick={async () => {
-                    if (!newMedicationInput || !activeProfile) return;
-                    const updatedMedications = [...activeProfile.medications, newMedicationInput.trim()];
-                    const { error } = await supabase.from('profiles').update({ medication: updatedMedications }).eq('id', activeProfile.id);
-                    if (!error) {
-                      setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, medications: updatedMedications } : p));
-                      setNewMedicationInput('');
-                    }
-                  }}
-                  style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                >
-                  Añadir
-                </button>
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir material disponible:</h4>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input 
-                  type="text" 
-                  placeholder="Ej. Bandas elásticas..." 
-                  value={newEquipmentInput}
-                  onChange={e => setNewEquipmentInput(e.target.value)}
-                  style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }}
-                />
-                <button 
-                  onClick={async () => {
-                    if (!newEquipmentInput || !activeProfile) return;
-                    const updatedEquipment = [...activeProfile.equipment, newEquipmentInput.trim()];
-                    const { error } = await supabase.from('profiles').update({ equipment: updatedEquipment }).eq('id', activeProfile.id);
-                    if (!error) {
-                      setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, equipment: updatedEquipment } : p));
-                      setNewEquipmentInput('');
-                    }
-                  }}
-                  style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                >
-                  Añadir
-                </button>
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'center' }}>
-              <button 
-                onClick={async () => {
-                  if (!confirm('¿Estás seguro de que deseas eliminar este perfil permanentemente?')) return;
-                  if (!activeProfile) return;
-                  const { error } = await supabase.from('profiles').delete().eq('id', activeProfile.id);
-                  if (!error) {
-                    setProfiles(profiles.filter(p => p.id !== activeProfile.id));
-                    setActiveProfileId(null);
-                  } else {
-                    alert('Error al eliminar perfil: ' + error.message);
-                  }
-                }}
-                style={{ backgroundColor: 'transparent', color: t.danger, border: `1px solid ${t.danger}`, padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-              >
-                🗑️ Eliminar este Perfil
-              </button>
             </div>
           </div>
         </div>
