@@ -313,8 +313,9 @@ export default function App() {
     return 0;
   });
 
-  // Pestañas ampliadas con "herramientas"
-  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'batidos' | 'herramientas' | 'despensa' | 'menu' | 'progreso' | 'perfil'>('entreno');
+  // Navegación reorganizada: pestañas limpias + cajón "Más"
+  const [activeTab, setActiveTab] = useState<'entreno' | 'nutricion' | 'menu' | 'progreso' | 'batidos' | 'herramientas' | 'despensa' | 'perfil'>('entreno');
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>(['Plátano', 'Yogur griego', 'Avena']);
@@ -503,13 +504,13 @@ export default function App() {
   };
 
   const t = isDarkMode ? {
-    bg: '#090d16', card: '#111827', text: '#f9fafb', textSec: '#9ca3af', primary: '#3b82f6', border: '#1f2937', accentGrad: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', navBg: 'rgba(17, 24, 39, 0.90)'
+    bg: '#090d16', card: '#111827', text: '#f9fafb', textSec: '#9ca3af', primary: '#3b82f6', border: '#1f2937', accentGrad: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', navBg: 'rgba(17, 24, 39, 0.95)'
   } : {
-    bg: '#f3f4f6', card: '#ffffff', text: '#111827', textSec: '#4b5563', primary: '#2563eb', border: '#e5e7eb', accentGrad: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', navBg: 'rgba(255, 255, 255, 0.90)'
+    bg: '#f3f4f6', card: '#ffffff', text: '#111827', textSec: '#4b5563', primary: '#2563eb', border: '#e5e7eb', accentGrad: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', navBg: 'rgba(255, 255, 255, 0.95)'
   };
 
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', paddingBottom: '110px', backgroundColor: t.bg, color: t.text, minHeight: '100vh', boxSizing: 'border-box' }}>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', maxWidth: '480px', margin: '0 auto', padding: '20px', paddingBottom: '110px', backgroundColor: t.bg, color: t.text, minHeight: '100vh', boxSizing: 'border-box', position: 'relative' }}>
       
       {/* Cabecera */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: `1px solid ${t.border}` }}>
@@ -527,7 +528,6 @@ export default function App() {
       {activeTab === 'entreno' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          {/* Selector de Lugar y Materiales en Casa */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}`, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>📍 ¿Dónde vas a entrenar?</h2>
             
@@ -577,7 +577,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Días de Entrenamiento */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '8px' }}>📅 Días de Entrenamiento</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px' }}>
@@ -601,7 +600,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Rutina Generada con Vídeos y Sustitutos */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.primary, margin: '0 0 12px 0' }}>🤖 Rutina Adaptada ({profile.workoutLocation})</h3>
             
@@ -641,7 +639,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Registro Modo Libre (Con gran variedad filtrada según Casa o Gimnasio) */}
           <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
             <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>⚡ Registro Modo Libre ({profile.workoutLocation})</h3>
             <form onSubmit={handleAddLog} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
@@ -709,71 +706,6 @@ export default function App() {
         </div>
       )}
 
-      {/* PESTAÑA: BATIDOS */}
-      {activeTab === 'batidos' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: '#8b5cf6', margin: 0 }}>🪄 Batido Inteligente</h2>
-              <button onClick={() => setSmoothieSeed(prev => prev + 1)} style={{ background: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}>🔄 Otro</button>
-            </div>
-            <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '12px', padding: '14px' }}>
-              <strong style={{ fontSize: '13px', display: 'block', margin: '0 0 4px 0' }}>{generatedSmartSmoothie.title}</strong>
-              <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 8px 0' }}>{generatedSmartSmoothie.description}</p>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#8b5cf6' }}>⚡ Aprox. {generatedSmartSmoothie.caloriesApprox}</span>
-            </div>
-          </div>
-
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>🥤 Crear Batido</h3>
-            <form onSubmit={handleAddBatidoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
-              <input type="text" placeholder="Nombre..." value={newMealTitle} onChange={e => setNewMealTitle(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
-              <input type="text" placeholder="Calorías (ej: 250 kcal)..." value={newMealCalories} onChange={e => setNewMealCalories(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
-              <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>Guardar Batido 🚀</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* NUEVA PESTAÑA: HERRAMIENTAS (Gestión de material en casa y gimnasio) */}
-      {activeTab === 'herramientas' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🛠️ Añadir Herramienta / Material en Casa</h2>
-            <form onSubmit={handleAddCustomHomeTool} style={{ display: 'flex', gap: '8px' }}>
-              <input type="text" placeholder="Ej: TRX, Rueda abdominal..." value={newHomeToolName} onChange={e => setNewHomeToolName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
-              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
-            </form>
-          </div>
-
-          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🏋️ Equipamiento en Gimnasio</h2>
-            <form onSubmit={handleAddCustomGymTool} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-              <input type="text" placeholder="Ej: Multipower, Prensa 45°..." value={newGymToolName} onChange={e => setNewGymToolName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
-              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
-            </form>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {(profile.gymEquipment || DEFAULT_GYM_TOOLS).map(eq => (
-                <span key={eq} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }}>
-                  🏋️ {eq}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PESTAÑA: DESPENSA */}
-      {activeTab === 'despensa' && (
-        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
-          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🧀 Ampliar Despensa</h2>
-          <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
-            <input type="text" placeholder="Ej: Fresa, Nueces..." value={newIngName} onChange={e => setNewIngName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
-            <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
-          </form>
-        </div>
-      )}
-
       {/* PESTAÑA: MENÚ */}
       {activeTab === 'menu' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -813,6 +745,71 @@ export default function App() {
         </div>
       )}
 
+      {/* PESTAÑA: BATIDOS */}
+      {activeTab === 'batidos' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: '#8b5cf6', margin: 0 }}>🪄 Batido Inteligente</h2>
+              <button onClick={() => setSmoothieSeed(prev => prev + 1)} style={{ background: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}>🔄 Otro</button>
+            </div>
+            <div style={{ backgroundColor: t.bg, border: '1px dashed #8b5cf6', borderRadius: '12px', padding: '14px' }}>
+              <strong style={{ fontSize: '13px', display: 'block', margin: '0 0 4px 0' }}>{generatedSmartSmoothie.title}</strong>
+              <p style={{ fontSize: '12px', color: t.textSec, margin: '0 0 8px 0' }}>{generatedSmartSmoothie.description}</p>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#8b5cf6' }}>⚡ Aprox. {generatedSmartSmoothie.caloriesApprox}</span>
+            </div>
+          </div>
+
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '12px' }}>🥤 Crear Batido</h3>
+            <form onSubmit={handleAddBatidoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+              <input type="text" placeholder="Nombre..." value={newMealTitle} onChange={e => setNewMealTitle(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
+              <input type="text" placeholder="Calorías (ej: 250 kcal)..." value={newMealCalories} onChange={e => setNewMealCalories(e.target.value)} style={{ padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, outline: 'none' }} />
+              <button type="submit" style={{ backgroundColor: '#8b5cf6', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>Guardar Batido 🚀</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* PESTAÑA: HERRAMIENTAS */}
+      {activeTab === 'herramientas' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🛠️ Añadir Herramienta / Material en Casa</h2>
+            <form onSubmit={handleAddCustomHomeTool} style={{ display: 'flex', gap: '8px' }}>
+              <input type="text" placeholder="Ej: TRX, Rueda abdominal..." value={newHomeToolName} onChange={e => setNewHomeToolName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
+              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
+            </form>
+          </div>
+
+          <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🏋️ Equipamiento en Gimnasio</h2>
+            <form onSubmit={handleAddCustomGymTool} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <input type="text" placeholder="Ej: Multipower, Prensa 45°..." value={newGymToolName} onChange={e => setNewGymToolName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
+              <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
+            </form>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {(profile.gymEquipment || DEFAULT_GYM_TOOLS).map(eq => (
+                <span key={eq} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }}>
+                  🏋️ {eq}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PESTAÑA: DESPENSA */}
+      {activeTab === 'despensa' && (
+        <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
+          <h2 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: t.textSec, marginTop: 0, marginBottom: '10px' }}>🧀 Ampliar Despensa</h2>
+          <form onSubmit={handleAddIngredientSubmit} style={{ display: 'flex', gap: '8px' }}>
+            <input type="text" placeholder="Ej: Fresa, Nueces..." value={newIngName} onChange={e => setNewIngName(e.target.value)} style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, fontSize: '12px', outline: 'none' }} />
+            <button type="submit" style={{ background: t.accentGrad, color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>Añadir ➕</button>
+          </form>
+        </div>
+      )}
+
       {/* PESTAÑA: PERFIL */}
       {activeTab === 'perfil' && profile && (
         <div style={{ backgroundColor: t.card, borderRadius: '16px', padding: '16px', border: `1px solid ${t.border}` }}>
@@ -828,27 +825,60 @@ export default function App() {
         </div>
       )}
 
-      {/* Barra de Navegación Inferior (Con Herramientas Integrada) */}
-      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.navBg, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', padding: '10px 0 16px 0', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
+      {/* MENÚ DESPLEGABLE "MÁS" (Para que la parte inferior no esté saturada) */}
+      {isMoreMenuOpen && (
+        <div style={{ position: 'fixed', bottom: '75px', left: '20px', right: '20px', maxWidth: '440px', margin: '0 auto', backgroundColor: t.card, border: `1px solid ${t.border}`, borderRadius: '20px', padding: '14px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 101, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          {[
+            { id: 'batidos', label: 'Batidos', icon: '🥤' },
+            { id: 'herramientas', label: 'Utilidades', icon: '🛠️' },
+            { id: 'despensa', label: 'Despensa', icon: '🛒' },
+            { id: 'perfil', label: 'Perfil', icon: '👤' },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id as any); setIsMoreMenuOpen(false); }}
+              style={{
+                background: activeTab === item.id ? 'rgba(59, 130, 246, 0.15)' : t.bg,
+                border: `1px solid ${activeTab === item.id ? t.primary : t.border}`,
+                borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: t.text
+              }}
+            >
+              <span style={{ fontSize: '18px' }}>{item.icon}</span>
+              <span style={{ fontSize: '12px', fontWeight: '700' }}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Barra de Navegación Inferior Limpia (4 accesos directos principales + botón "Más") */}
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.navBg, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px 10px 16px 10px', maxWidth: '480px', margin: '0 auto', zIndex: 100 }}>
         {[
           { id: 'entreno', label: 'Entreno', icon: '🏋️' },
           { id: 'nutricion', label: 'Nutrición', icon: '🥗' },
-          { id: 'batidos', label: 'Batidos', icon: '🥤' },
-          { id: 'herramientas', label: 'Utilidades', icon: '🛠️' },
-          { id: 'despensa', label: 'Despensa', icon: '🛒' },
           { id: 'menu', label: 'Menú', icon: '🍽️' },
           { id: 'progreso', label: 'Progreso', icon: '📈' },
-          { id: 'perfil', label: 'Perfil', icon: '👤' },
-        ].map(tab => (
-          <button 
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)} 
-            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: activeTab === tab.id ? 1 : 0.6 }}
-          >
-            <span style={{ fontSize: '18px' }}>{tab.icon}</span>
-            <span style={{ fontSize: '8px', fontWeight: activeTab === tab.id ? '800' : '500', color: activeTab === tab.id ? t.primary : t.textSec }}>{tab.label}</span>
-          </button>
-        ))}
+        ].map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button 
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id as any); setIsMoreMenuOpen(false); }} 
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: isActive ? 1 : 0.6, flex: 1 }}
+            >
+              <span style={{ fontSize: '20px' }}>{tab.icon}</span>
+              <span style={{ fontSize: '10px', fontWeight: isActive ? '800' : '500', color: isActive ? t.primary : t.textSec }}>{tab.label}</span>
+            </button>
+          );
+        })}
+
+        {/* Botón "Más" para desplegar las herramientas secundarias */}
+        <button 
+          onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} 
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', opacity: ['batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? 1 : 0.6, flex: 1 }}
+        >
+          <span style={{ fontSize: '20px' }}>📂</span>
+          <span style={{ fontSize: '10px', fontWeight: ['batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? '800' : '500', color: ['batidos', 'herramientas', 'despensa', 'perfil'].includes(activeTab) ? t.primary : t.textSec }}>Más</span>
+        </button>
       </nav>
 
     </div>
