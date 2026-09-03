@@ -81,7 +81,6 @@ export default function App() {
 
   const [profilePinTarget, setProfilePinTarget] = useState<UserProfile | null>(null);
   const [enteredPin, setEnteredPin] = useState<string>('');
-  const [pinError, setPinError] = useState<boolean>(false);
 
   const [selectedWorkoutFilter, setSelectedWorkoutFilter] = useState<string>('Todos');
   const [selectedMealFilter, setSelectedMealFilter] = useState<string>('Todos');
@@ -94,8 +93,7 @@ export default function App() {
     gender: 'Masculino',
     height: 175,
     weight: 70,
-    goals: ['Perder grasa', 'Ganar músculo'],
-    pin: '1234'
+    goals: ['Perder grasa', 'Ganar músculo']
   });
 
   useEffect(() => {
@@ -114,22 +112,15 @@ export default function App() {
 
   useEffect(() => {
     if (session?.user) {
-      fetchProfilesAndCleanCarlos();
+      fetchProfiles();
     } else {
       setProfiles([]);
       setActiveProfileId(null);
     }
   }, [session]);
 
-  const fetchProfilesAndCleanCarlos = async () => {
+  const fetchProfiles = async () => {
     try {
-      // Eliminar de forma absoluta cualquier perfil que contenga "Carlos"
-      await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', session.user.id)
-        .ilike('name', '%carlos%');
-
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -189,7 +180,7 @@ export default function App() {
             height: created.height,
             weight: created.weight,
             goal: ['Mejorar fuerza', 'Ganar músculo'],
-            pin_hash: '1234',
+            pin_hash: created.pin_hash,
             equipment: ['Mancuernas', 'Ninguno'],
             dislikedIngredients: [],
             streakDays: 1,
@@ -205,6 +196,18 @@ export default function App() {
     }
   };
 
+  const deleteProfileById = async (profileId: string, profileName: string) => {
+    if (confirm(`¿Seguro que deseas eliminar el perfil "${profileName}" de la base de datos?`)) {
+      const { error } = await supabase.from('profiles').delete().eq('id', profileId);
+      if (!error) {
+        alert('Perfil eliminado correctamente.');
+        await fetchProfiles();
+      } else {
+        alert('No se pudo eliminar: ' + error.message);
+      }
+    }
+  };
+
   const activeProfile = profiles.find(p => p.id === activeProfileId);
 
   const t = isDarkMode ? {
@@ -217,7 +220,6 @@ export default function App() {
     navBg: '#1e293b',
     navText: '#94a3b8',
     navActive: '#38bdf8',
-    success: '#22c55e',
     warning: '#f59e0b',
     danger: '#ef4444'
   } : {
@@ -230,7 +232,6 @@ export default function App() {
     navBg: '#ffffff',
     navText: '#64748b',
     navActive: '#0284c7',
-    success: '#16a34a',
     warning: '#d97706',
     danger: '#dc2626'
   };
@@ -269,18 +270,26 @@ export default function App() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {profiles.map(p => (
-            <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
-                <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivos: {p.goal.join(', ')}</p>
+          {profiles.map(p => {
+            const isCarlos = p.name.toLowerCase().includes('carlos');
+            return (
+              <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${isCarlos ? t.danger : t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: isCarlos ? t.danger : t.text }}>{p.name} {isCarlos && '(Antiguo)'}</h3>
+                  <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivos: {p.goal.join(', ')}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {isCarlos && (
+                    <button onClick={() => deleteProfileById(p.id, p.name)} style={{ backgroundColor: t.danger, color: '#fff', border: 'none', padding: '8px 10px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer' }}>Borrar</button>
+                  )}
+                  <button onClick={() => { setProfilePinTarget(p); setEnteredPin(''); }} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Entrar</button>
+                </div>
               </div>
-              <button onClick={() => { setProfilePinTarget(p); setEnteredPin(''); setPinError(false); }} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Entrar</button>
-            </div>
-          ))}
+            );
+          })}
 
           <button onClick={() => {
-            setNewProfileData({ name: '', age: 25, gender: 'Masculino', height: 175, weight: 70, goals: ['Perder grasa', 'Ganar músculo'], pin: '1234' });
+            setNewProfileData({ name: '', age: 25, gender: 'Masculino', height: 175, weight: 70, goals: ['Perder grasa', 'Ganar músculo'] });
             setIsCreatingProfile(true);
           }} style={{ backgroundColor: 'transparent', border: `2px dashed ${t.primary}`, color: t.primary, padding: '12px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600' }}>
             + Crear Nuevo Perfil
@@ -290,30 +299,17 @@ export default function App() {
         {profilePinTarget && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
             <div style={{ backgroundColor: t.cardBg, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', border: `1px solid ${t.border}`, textAlign: 'center' }}>
-              <h2 style={{ fontSize: '18px', marginTop: 0 }}>PIN para {profilePinTarget.name}</h2>
-              <input type="password" maxLength={4} value={enteredPin} onChange={e => setEnteredPin(e.target.value)} placeholder="****" style={{ width: '120px', textAlign: 'center', fontSize: '20px', letterSpacing: '8px', padding: '8px', borderRadius: '8px', border: `1px solid ${pinError ? t.danger : t.border}`, backgroundColor: t.bg, color: t.text, marginBottom: '8px' }} />
-              {pinError && <div style={{ color: t.danger, fontSize: '12px', marginBottom: '8px' }}>PIN incorrecto (Prueba 1234)</div>}
+              <h2 style={{ fontSize: '18px', marginTop: 0 }}>Acceso a {profilePinTarget.name}</h2>
+              <p style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '10px' }}>Introduce tu PIN o pulsa directamente acceder</p>
+              <input type="password" maxLength={6} value={enteredPin} onChange={e => setEnteredPin(e.target.value)} placeholder="PIN (ej: 1234)" style={{ width: '160px', textAlign: 'center', fontSize: '16px', padding: '8px', borderRadius: '8px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, marginBottom: '12px' }} />
               
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setProfilePinTarget(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
                 <button onClick={() => {
-                  if (enteredPin === '1234' || enteredPin === '' || profilePinTarget.pin_hash === enteredPin || profilePinTarget.pin_hash === null) {
-                    setActiveProfileId(profilePinTarget.id);
-                    setProfilePinTarget(null);
-                  } else {
-                    setPinError(true);
-                  }
-                }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Acceder</button>
+                  setActiveProfileId(profilePinTarget.id);
+                  setProfilePinTarget(null);
+                }} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: t.primary, color: '#fff', fontWeight: '600', cursor: 'pointer' }}>Entrar</button>
               </div>
-
-              <button onClick={async () => {
-                await supabase.from('profiles').update({ pin_hash: '1234' }).eq('id', profilePinTarget.id);
-                alert('PIN restablecido a 1234 con éxito.');
-                await fetchProfilesAndCleanCarlos();
-                setProfilePinTarget(null);
-              }} style={{ background: 'none', border: 'none', color: t.primary, fontSize: '11px', textDecoration: 'underline', cursor: 'pointer' }}>
-                Restablecer PIN a 1234
-              </button>
             </div>
           </div>
         )}
@@ -327,7 +323,7 @@ export default function App() {
                   <input type="text" value={newProfileData.name} onChange={e => setNewProfileData({...newProfileData, name: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text }} />
                 </label>
 
-                <label>Objetivos (marca los que quieras):</label>
+                <label>Objetivos (puedes marcar varios):</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: t.bg, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}` }}>
                   {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza'].map(goalOption => {
                     const isChecked = newProfileData.goals.includes(goalOption);
@@ -371,7 +367,7 @@ export default function App() {
                       points: 50
                     }]);
                     if (!error) {
-                      await fetchProfilesAndCleanCarlos();
+                      await fetchProfiles();
                       setIsCreatingProfile(false);
                     } else {
                       alert('Error: ' + error.message);
@@ -461,7 +457,7 @@ export default function App() {
                     <div style={{ marginTop: '8px', fontSize: '11px', backgroundColor: t.cardBg, padding: '10px', borderRadius: '6px', border: `1px solid ${t.border}`, color: t.text }}>
                       <p style={{ margin: '0 0 6px 0' }}>⚠️ <strong>Errores comunes:</strong> {ex.commonMistakes}</p>
                       <p style={{ margin: '0 0 8px 0' }}>🔄 <strong>Alternativa:</strong> {ex.alternative}</p>
-                      <button onClick={() => setActiveDemoExerciseId(null)} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', width: '100%', fontWeight: '600' }}>Entendido</button>
+                      <button onClick={() => setActiveDemoExerciseId(null)} style={{ backgroundColor: t.primary, color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', width: '100%', fontWeight: '600' }}>Cerrar</button>
                     </div>
                   )}
                 </div>
