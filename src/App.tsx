@@ -108,45 +108,6 @@ const EXERCISE_LIBRARY: Exercise[] = [
   }
 ];
 
-const MEAL_LIBRARY: Meal[] = [
-  {
-    id: 'meal-1',
-    title: 'Tostada integral con aguacate y huevo revuelto',
-    type: 'Desayuno',
-    calories: 380,
-    protein: 18,
-    ingredients: ['Pan integral', 'Aguacate', 'Huevo', 'Aceite de oliva'],
-    isAllowed: true
-  },
-  {
-    id: 'meal-2',
-    title: 'Pechuga de pollo a la plancha con arroz y brócoli',
-    type: 'Almuerzo',
-    calories: 520,
-    protein: 42,
-    ingredients: ['Pechuga de pollo', 'Arroz blanco', 'Brócoli', 'Aceite de oliva'],
-    isAllowed: true
-  },
-  {
-    id: 'meal-3',
-    title: 'Batido de proteína con leche de vaca y plátano',
-    type: 'Snack',
-    calories: 310,
-    protein: 25,
-    ingredients: ['Proteína Whey', 'Leche de vaca', 'Plátano'],
-    isAllowed: false
-  },
-  {
-    id: 'meal-4',
-    title: 'Salmón al horno con espárragos trigueros',
-    type: 'Cena',
-    calories: 450,
-    protein: 35,
-    ingredients: ['Salmón', 'Espárragos', 'Limón', 'Especias'],
-    isAllowed: true
-  }
-];
-
 async function hashPin(pin: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(pin + 'fitapp_salt_secure_2026');
@@ -191,9 +152,12 @@ export default function App() {
     gender: 'Masculino',
     height: 175,
     weight: 70,
-    goals: [] as string[],
+    goals: ['Perder grasa'] as string[],
     pin: '1234'
   });
+
+  const [isEditingGoals, setIsEditingGoals] = useState<boolean>(false);
+  const [tempGoals, setTempGoals] = useState<string[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -227,7 +191,8 @@ export default function App() {
 
       if (error) throw error;
       
-      let mappedProfiles: UserProfile[] = (data || []).map(p => ({
+      let rawProfiles = (data || []).filter(p => p.name !== 'Carlos Trainer');
+      let mappedProfiles: UserProfile[] = rawProfiles.map(p => ({
         id: p.id,
         user_id: p.user_id,
         name: p.name,
@@ -248,7 +213,6 @@ export default function App() {
         created_at: p.created_at
       }));
 
-      // Si el usuario no tiene perfiles (y limpiamos el de Carlos Trainer), autogeneramos uno limpio
       if (mappedProfiles.length === 0) {
         const defaultPin = Math.floor(1000 + Math.random() * 9000).toString();
         const pinHashed = await hashPin(defaultPin);
@@ -393,13 +357,13 @@ export default function App() {
           {profiles.map(p => {
             const goalDisplay = Array.isArray(p.goal) 
               ? p.goal.join(', ') 
-              : (typeof p.goal === 'string' && p.goal.includes(',') ? p.goal : p.goal);
+              : (typeof p.goal === 'string' ? p.goal : '');
 
             return (
               <div key={p.id} style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h3 style={{ margin: '0 0 4px 0', fontSize: '16px' }}>{p.name}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivo: {goalDisplay} | 🔒 Protegido con PIN</p>
+                  <p style={{ margin: 0, fontSize: '12px', color: t.textSecondary }}>Objetivos: {goalDisplay} | 🔒 Protegido con PIN</p>
                 </div>
                 <button 
                   onClick={() => {
@@ -418,7 +382,7 @@ export default function App() {
 
           <button 
             onClick={() => {
-              setNewProfileData({ name: '', age: 25, gender: 'Masculino', height: 175, weight: 70, goals: [], pin: '0000' });
+              setNewProfileData({ name: '', age: 25, gender: 'Masculino', height: 175, weight: 70, goals: ['Perder grasa'], pin: '0000' });
               setIsCreatingProfile(true);
             }}
             style={{ backgroundColor: 'transparent', border: `2px dashed ${t.primary}`, color: t.primary, padding: '12px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', marginTop: '10px' }}
@@ -486,7 +450,7 @@ export default function App() {
                   </label>
                 </div>
                 
-                <label style={{ fontWeight: '600', marginTop: '4px' }}>Objetivos Principales (marca uno o varios):</label>
+                <label style={{ fontWeight: '600', marginTop: '4px' }}>Objetivos Principales (selecciona uno o varios):</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: t.bg, padding: '10px', borderRadius: '6px', border: `1px solid ${t.border}` }}>
                   {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza', 'Aumentar resistencia', 'Mejorar salud y movilidad'].map((option) => {
                     const isChecked = newProfileData.goals.includes(option);
@@ -521,9 +485,9 @@ export default function App() {
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                   <button onClick={() => setIsCreatingProfile(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, cursor: 'pointer' }}>Cancelar</button>
                   <button onClick={async () => {
-                    if (!newProfileData.name || !newProfileData.pin) return;
+                    if (!newProfileData.name || !newProfileData.pin || newProfileData.goals.length === 0) return;
                     const pinHashed = await hashPin(newProfileData.pin);
-                    const finalGoalsString = newProfileData.goals.length > 0 ? newProfileData.goals.join(', ') : 'Perder grasa';
+                    const goalsString = newProfileData.goals.join(', ');
 
                     const { data, error } = await supabase.from('profiles').insert([{
                       user_id: session.user.id,
@@ -532,7 +496,7 @@ export default function App() {
                       gender: newProfileData.gender,
                       height: newProfileData.height,
                       weight: newProfileData.weight,
-                      goal: finalGoalsString,
+                      goal: goalsString,
                       pin_hash: pinHashed,
                       equipment: ['Mancuernas', 'Ninguno'],
                       streak_days: 1,
@@ -568,7 +532,7 @@ export default function App() {
 
   const displayGoals = Array.isArray(activeProfile?.goal) 
     ? activeProfile?.goal.join(', ') 
-    : activeProfile?.goal;
+    : (typeof activeProfile?.goal === 'string' ? activeProfile?.goal : '');
 
   return (
     <div style={{
@@ -727,12 +691,66 @@ export default function App() {
             
             <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px', color: t.textSecondary, marginBottom: '16px' }}>
               <p style={{ margin: 0 }}><strong>Nombre:</strong> {activeProfile?.name}</p>
-              <p style={{ margin: 0 }}><strong>Objetivo(s):</strong> {displayGoals}</p>
-              <p style={{ margin: 0 }}><strong>Alimentos Bloqueados / No Gustan:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                <p style={{ margin: 0 }}><strong>Objetivo(s):</strong> {displayGoals}</p>
+                <button 
+                  onClick={() => {
+                    const currentArray = typeof activeProfile?.goal === 'string' 
+                      ? activeProfile.goal.split(',').map(s => s.trim()) 
+                      : ['Perder grasa'];
+                    setTempGoals(currentArray);
+                    setIsEditingGoals(true);
+                  }}
+                  style={{ background: 'none', border: `1px solid ${t.primary}`, color: t.primary, padding: '2px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                >
+                  Editar Objetivos
+                </button>
+              </div>
+              <p style={{ margin: '4px 0 0 0' }}><strong>Alimentos Bloqueados:</strong> <span style={{ color: t.danger }}>{activeProfile?.dislikedIngredients.join(', ') || 'Ninguno'}</span></p>
             </div>
 
+            {isEditingGoals && (
+              <div style={{ backgroundColor: t.bg, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, marginBottom: '14px' }}>
+                <h4 style={{ fontSize: '13px', margin: '0 0 8px 0' }}>Selecciona tus objetivos:</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
+                  {['Perder grasa', 'Ganar músculo', 'Recomposición corporal', 'Mejorar fuerza', 'Aumentar resistencia', 'Mejorar salud y movilidad'].map((option) => {
+                    const isChecked = tempGoals.includes(option);
+                    return (
+                      <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            if (checked && !tempGoals.includes(option)) {
+                              setTempGoals([...tempGoals, option]);
+                            } else if (!checked && tempGoals.includes(option)) {
+                              setTempGoals(tempGoals.filter(g => g !== option));
+                            }
+                          }}
+                        />
+                        {option}
+                      </label>
+                    );
+                  })}
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => setIsEditingGoals(false)} style={{ flex: 1, padding: '6px', borderRadius: '6px', border: `1px solid ${t.border}`, background: 'transparent', color: t.text, fontSize: '12px', cursor: 'pointer' }}>Cancelar</button>
+                  <button onClick={async () => {
+                    if (tempGoals.length ===0 || !activeProfile) return;
+                    const newGoalStr = tempGoals.join(', ');
+                    const { error } = await supabase.from('profiles').update({ goal: newGoalStr }).eq('id', activeProfile.id);
+                    if (!error) {
+                      setProfiles(profiles.map(p => p.id === activeProfile.id ? { ...p, goal: newGoalStr } : p));
+                      setIsEditingGoals(false);
+                    }
+                  }} style={{ flex: 1, padding: '6px', borderRadius: '6px', border: 'none', background: t.primary, color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Guardar</button>
+                </div>
+              </div>
+            )}
+
             <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '12px', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir alimento que no te gusta (Bloquear):</h4>
+              <h4 style={{ fontSize: '13px', margin: '0 0 6px 0', color: t.text }}>Añadir alimento bloqueado:</h4>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input 
                   type="text" 
@@ -786,7 +804,7 @@ export default function App() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+2              onClick={() => setActiveTab(tab.id as any)}
               style={{
                 background: 'none',
                 border: 'none',
