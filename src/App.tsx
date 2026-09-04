@@ -18,14 +18,14 @@ import {
   Zap,
   TrendingUp,
   Clock,
-  Timer
+  Timer,
+  Play,
+  Check
 } from 'lucide-react';
 
 export default function FitAppProEnterprise() {
-  // Estado de Navegación y Vistas Principales
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Estado del Perfil de Usuario con Persistencia LocalStorage
   const [profile, setProfile] = useState(() => {
     const saved = localStorage.getItem('fitapp_profile');
     return saved ? JSON.parse(saved) : {
@@ -44,11 +44,10 @@ export default function FitAppProEnterprise() {
     localStorage.setItem('fitapp_profile', JSON.stringify(profile));
   }, [profile]);
 
-  // Estado de Hidratación Diaria
   const [waterGlasses, setWaterGlasses] = useState(5);
   const targetWater = 10;
 
-  // Estado del Cronómetro / Temporizador de Descanso
+  // Temporizador de Descanso
   const [restTime, setRestTime] = useState(90);
   const [isTimerActive, setIsTimerActive] = useState(false);
 
@@ -65,7 +64,21 @@ export default function FitAppProEnterprise() {
     return () => clearInterval(interval);
   }, [isTimerActive, restTime]);
 
-  // Estado del Plan Nutricional Activo
+  // Modo Entrenamiento Activo (PLAY)
+  const [activeWorkoutSession, setActiveWorkoutSession] = useState(null);
+  const [workoutTimer, setWorkoutTimer] = useState(0);
+  const [isWorkoutRunning, setIsWorkoutRunning] = useState(false);
+
+  useEffect(() => {
+    let wInterval = null;
+    if (isWorkoutRunning) {
+      wInterval = setInterval(() => {
+        setWorkoutTimer((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(wInterval);
+  }, [isWorkoutRunning]);
+
   const [dietPlan, setDietPlan] = useState({
     meal: 'Pechuga de pollo a la plancha (200g) con puré de boniato (250g) y espárragos trigueros salteados en aceite de oliva.',
     shake: 'Batido post-entreno: 40g de proteína Whey, 60g de avena molida, 1 plátano maduro y 2 cucharadas de mantequilla de cacahuete.',
@@ -75,7 +88,6 @@ export default function FitAppProEnterprise() {
     fats: 75
   });
 
-  // Biblioteca de Ejercicios (ampliable)
   const [exerciseLibrary, setExerciseLibrary] = useState([
     {
       id: 1,
@@ -85,13 +97,11 @@ export default function FitAppProEnterprise() {
       description: 'Variante avanzada donde los pies se elevan en un banco o soporte, desplazando mayor carga corporal hacia el cinturón escapular superior.',
       steps: [
         'El cuerpo se mueve como una sola pieza, una tabla sólida de cabeza a talones.',
-        'Aprieta glúteos, abdomen firme y costillas hacia abajo para evitar que la pelvis se hunda.',
-        'Coloca las manos estables en el suelo y genera tensión en la espalda alta, manteniendo los hombros lejos de las orejas.',
-        'Desciende en bloque llevando el esternón hacia el suelo sin romper la alineación cervical ni lumbar.',
-        'Empuja de regreso de forma explosiva manteniendo tensión constante en el pectoral y estabilidad escapular.'
+        'Aprieta glúteos, abdomen firme y costillas hacia abajo.',
+        'Desciende en bloque llevando el esternón hacia el suelo.'
       ],
-      targetMuscles: 'Pectoral mayor (fibras claviculares/superiores), tríceps braquial y serrato anterior.',
-      proTip: 'No busques velocidad desmedida; prioriza repeticiones idénticas con un control estricto de la fase excéntrica (3 segundos de bajada).'
+      targetMuscles: 'Pectoral mayor, tríceps braquial y serrato anterior.',
+      proTip: 'Prioriza repeticiones idénticas con un control estricto de la fase excéntrica.'
     },
     {
       id: 2,
@@ -100,14 +110,12 @@ export default function FitAppProEnterprise() {
       difficulty: 'Avanzado',
       description: 'Ejercicio unilateral de alta exigencia para el desarrollo de cuádriceps y estabilidad de cadera.',
       steps: [
-        'Apoya el empeine del pie trasero sobre un banco horizontal situado a la altura de la rodilla.',
-        'Da un paso amplio al frente con el pie de apoyo para asegurar una flexión vertical de la rodilla.',
-        'Mantén el torso erguido (o inclínalo ligeramente al frente si buscas mayor incidencia en glúteo).',
-        'Desciende de forma controlada hasta que la rodilla trasera roce levemente el suelo.',
-        'Ejercita la fuerza a través del talón de la pierna delantera para volver a la posición inicial.'
+        'Apoya el empeine del pie trasero sobre un banco horizontal.',
+        'Da un paso amplio al frente con el pie de apoyo.',
+        'Desciende de forma controlada hasta que la rodilla trasera roce levemente el suelo.'
       ],
-      targetMuscles: 'Cuádriceps (vasto lateral y medial), glúteo mayor y estabilizadores del core.',
-      proTip: 'Controla el equilibrio fijando la mirada en un punto fijo a 2 metros frente a ti en el suelo.'
+      targetMuscles: 'Cuádriceps, glúteo mayor y estabilizadores del core.',
+      proTip: 'Controla el equilibrio fijando la mirada en un punto fijo al frente.'
     },
     {
       id: 3,
@@ -116,30 +124,25 @@ export default function FitAppProEnterprise() {
       difficulty: 'Intermedio',
       description: 'Movimiento clave para el grosor de la espalda media y la activación del dorsal ancho.',
       steps: [
-        'Apoya la rodilla y la mano contraria sobre un banco firme, manteniendo la espalda paralela al suelo.',
-        'Sostén la mancuerna con el brazo libre completamente extendido, permitiendo un estiramiento controlado de la escápula.',
-        'Tira de la mancuerna hacia la cadera (no hacia el pecho), guiando el movimiento con el codo.',
-        'Contrae con fuerza la espalda alta durante un segundo en la parte superior.'
+        'Apoya la rodilla y la mano contraria sobre un banco firme.',
+        'Tira de la mancuerna hacia la cadera guiando el movimiento con el codo.'
       ],
-      targetMuscles: 'Dorsal ancho, redondo mayor, romboides y trapecio medio.',
-      proTip: 'Evita rotar excesivamente el tronco superior para hacer trampa con el peso; el torso debe permanecer estable.'
+      targetMuscles: 'Dorsal ancho, redondo mayor y romboides.',
+      proTip: 'Evita rotar excesivamente el tronco superior para hacer trampa.'
     }
   ]);
 
-  // Estado del Registro de Entrenamientos
   const [exerciseLogs, setExerciseLogs] = useState([
-    { id: 101, exercise: 'Flexiones Declinadas', setNum: 1, reps: 15, weight: 'Peso Corporal + 0kg', rpe: 8, timestamp: '10:15 AM' },
-    { id: 102, exercise: 'Flexiones Declinadas', setNum: 2, reps: 13, weight: 'Peso Corporal + 0kg', rpe: 9, timestamp: '10:18 AM' }
+    { id: 101, exercise: 'Flexiones Declinadas', setNum: 1, reps: 15, weight: 'Peso Corporal', timestamp: '10:15 AM' },
+    { id: 102, exercise: 'Flexiones Declinadas', setNum: 2, reps: 13, weight: 'Peso Corporal', timestamp: '10:18 AM' }
   ]);
 
   const [newLog, setNewLog] = useState({ 
     exercise: 'Flexiones Declinadas', 
     reps: '', 
-    weight: 'Peso Corporal', 
-    rpe: '8' 
+    weight: 'Peso Corporal' 
   });
 
-  // Calendario Semanal
   const [weeklySchedule] = useState({
     Lunes: { focus: 'Pecho y Tríceps (Enfoque Superior)', status: 'Completado', duration: '55 min' },
     Martes: { focus: 'Pierna Completa (Cuádriceps y Core)', status: 'Programado', duration: '65 min' },
@@ -150,7 +153,21 @@ export default function FitAppProEnterprise() {
     Domingo: { focus: 'Descanso Total y Nutrición', status: 'Descanso', duration: '0 min' }
   });
 
-  // Manejador para añadir series al registro
+  const startWorkoutSession = (dayName, focusTitle) => {
+    setActiveWorkoutSession({
+      name: `${dayName}: ${focusTitle}`,
+      exercises: exerciseLibrary.map(ex => ({ ...ex, completedSets: 0 }))
+    });
+    setWorkoutTimer(0);
+    setIsWorkoutRunning(true);
+  };
+
+  const finishWorkoutSession = () => {
+    setIsWorkoutRunning(false);
+    setActiveWorkoutSession(null);
+    alert('¡Entrenamiento finalizado y guardado con éxito!');
+  };
+
   const handleAddLog = (e) => {
     e.preventDefault();
     if (!newLog.reps) return;
@@ -161,13 +178,12 @@ export default function FitAppProEnterprise() {
       setNum: exerciseLogs.filter(l => l.exercise === newLog.exercise).length + 1,
       reps: Number(newLog.reps),
       weight: newLog.weight,
-      rpe: newLog.rpe,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setExerciseLogs([entry, ...exerciseLogs]);
     setNewLog({ ...newLog, reps: '' });
-    setIsTimerActive(true); // Activa el cronómetro de descanso automáticamente al registrar serie
+    setIsTimerActive(true);
     setRestTime(90);
   };
 
@@ -175,18 +191,15 @@ export default function FitAppProEnterprise() {
     setExerciseLogs(exerciseLogs.filter(item => item.id !== id));
   };
 
-  // Generador de Menús Inteligentes
   const generateNewMenu = () => {
     const mealOptions = [
       'Salmón salvaje al horno (220g) con quinoa salteada en verduras y brócoli al vapor con aove.',
       'Ternera magra salteada en tiras con pimientos rojos, cebolla morada y base de arroz integral basmati.',
-      'Tortilla francesa de 1 huevo entero y 4 claras con espinacas frescas, acompañada de pan de masa madre y aguacate.',
-      'Pechuga de pavo asada con patata panadera al horno y ensalada de rúcula, nueces y queso feta.'
+      'Tortilla francesa de 1 huevo entero y 4 claras con espinacas frescas y aguacate.'
     ];
     const shakeOptions = [
       'Batido recuperador: 40g proteína aislado, cacao puro 100%, avena instantánea y leche de almendras.',
-      'Batido hipercalórico limpio: Crema de cacahuete natural, plátano, leche desnatada y proteína de vainilla.',
-      'Batido verde antioxidante: Espinacas baby, piña natural, manzana verde, jengibre y proteína neutra.'
+      'Batido hipercalórico limpio: Crema de cacahuete natural, plátano, leche desnatada y proteína de vainilla.'
     ];
 
     setDietPlan({
@@ -206,6 +219,75 @@ export default function FitAppProEnterprise() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
       
+      {/* MODO ENTRENAMIENTO ACTIVO (PLAY) */}
+      {activeWorkoutSession && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/98 backdrop-blur-xl flex flex-col p-4 md:p-8 overflow-y-auto">
+          <div className="max-w-4xl w-full mx-auto space-y-6 pb-20">
+            <div className="bg-gradient-to-r from-emerald-950 to-slate-900 border border-emerald-500/30 p-6 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <span className="text-xs uppercase font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                  ⚡ Sesión en Vivo en Curso
+                </span>
+                <h2 className="text-2xl font-black text-slate-100 mt-2">{activeWorkoutSession.name}</h2>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="bg-slate-950 border border-slate-800 px-4 py-2 rounded-2xl font-mono text-emerald-400 text-sm">
+                  ⏱️ {Math.floor(workoutTimer / 60)}:{String(workoutTimer % 60).padStart(2, '0')}
+                </div>
+                <button 
+                  onClick={finishWorkoutSession}
+                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-5 py-2.5 rounded-2xl text-xs transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" /> Terminar Sesión
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-slate-200">Ejercicios de la Rutina:</h3>
+              {activeWorkoutSession.exercises.map((ex, idx) => (
+                <div key={ex.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-xs font-mono text-emerald-400">{ex.category}</span>
+                      <h4 className="text-xl font-bold text-slate-100">{ex.title}</h4>
+                    </div>
+                    <span className="text-xs font-mono bg-slate-950 px-3 py-1 rounded-xl text-slate-400 border border-slate-800">
+                      Series hechas: <strong className="text-emerald-400">{ex.completedSets}</strong>/4
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">{ex.description}</p>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-slate-400">💡 {ex.proTip}</span>
+                    <button 
+                      onClick={() => {
+                        const updated = { ...activeWorkoutSession };
+                        updated.exercises[idx].completedSets += 1;
+                        setActiveWorkoutSession(updated);
+                        setIsTimerActive(true);
+                        setRestTime(90);
+                      }}
+                      className="bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500 hover:text-slate-950 text-emerald-400 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Registrar Serie (+ Descanso 90s)
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center pt-4">
+              <button onClick={() => setActiveWorkoutSession(null)} className="text-slate-500 hover:text-slate-300 text-xs underline">
+                Minimizar / Ocultar pantalla de entrenamiento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Superior */}
       <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-xl">
         <div className="flex items-center space-x-3">
@@ -259,7 +341,7 @@ export default function FitAppProEnterprise() {
                 onClick={() => setActiveTab('workouts')}
                 className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-5 py-3 rounded-2xl text-sm transition shadow-lg shadow-emerald-500/20 flex items-center gap-2 z-10"
               >
-                <Dumbbell className="w-4 h-4" /> Ver Rutinas y Técnica
+                <Dumbbell className="w-4 h-4" /> Ver Rutinas y Entrenar
               </button>
             </div>
 
@@ -274,7 +356,7 @@ export default function FitAppProEnterprise() {
                   <span className="text-3xl font-black text-slate-100">{profile.weight}</span>
                   <span className="text-xs text-slate-400 font-bold">kg</span>
                 </div>
-                <p className="text-xs text-emerald-400 font-medium">IMC: {imc} ({imc < 25 ? 'Normal' : 'Sobrepeso'})</p>
+                <p className="text-xs text-emerald-400 font-medium">IMC: {imc}</p>
               </div>
 
               <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-2 shadow-lg">
@@ -353,13 +435,41 @@ export default function FitAppProEnterprise() {
             <div className="bg-gradient-to-r from-slate-900 to-slate-900/40 p-6 rounded-3xl border border-slate-800 flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-black text-emerald-400 flex items-center gap-2">
-                  <Dumbbell className="w-6 h-6" /> Biblioteca Biomecánica y Técnica
+                  <Dumbbell className="w-6 h-6" /> Tus Rutinas y Sesiones
                 </h2>
-                <p className="text-sm text-slate-400 mt-1">Guías detalladas basadas en evidencia para maximizar la tensión mecánica.</p>
+                <p className="text-sm text-slate-400 mt-1">Selecciona el día de la semana y presiona Empezar para abrir el modo de entrenamiento en vivo.</p>
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(weeklySchedule).map(([day, info], idx) => (
+                <div key={idx} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xl">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 font-mono">{day}</span>
+                      <span className="text-xs font-mono bg-slate-950 px-3 py-1 rounded-xl text-slate-400 border border-slate-800">
+                        {info.duration}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-100">{info.focus}</h3>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Estado: <strong className="text-slate-200">{info.status}</strong></span>
+                    <button 
+                      onClick={() => startWorkoutSession(day, info.focus)}
+                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-slate-950" /> Empezar Rutina
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Biblioteca Biomecánica */}
+            <div className="space-y-6 pt-4">
+              <h3 className="text-xl font-bold text-slate-200">Biblioteca Biomecánica y Técnica</h3>
               {exerciseLibrary.map((ex) => (
                 <div key={ex.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                   <div className="flex justify-between items-start">
@@ -407,7 +517,7 @@ export default function FitAppProEnterprise() {
               ))}
             </div>
 
-            {/* Registro de Series */}
+            {/* Registro de Series Manual */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
               <h3 className="text-xl font-bold text-emerald-400 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" /> Registro en Vivo de Series y Cargas
@@ -499,7 +609,7 @@ export default function FitAppProEnterprise() {
                 <h2 className="text-2xl font-black text-emerald-400 flex items-center gap-2">
                   <Utensils className="w-6 h-6" /> Nutrición Inteligente y Macros
                 </h2>
-                <p className="text-sm text-slate-400 mt-1">Planes dietéticos ajustados automáticamente a tus requerimientos.</p>
+                <p className="text-sm text-slate-400 mt-1">Planes dietéticos ajustados automáticamente.</p>
               </div>
               <button 
                 onClick={generateNewMenu}
@@ -529,11 +639,11 @@ export default function FitAppProEnterprise() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 relative overflow-hidden space-y-3">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
                 <span className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Comida Principal</span>
                 <p className="text-base font-bold text-slate-100 leading-relaxed pt-2">{dietPlan.meal}</p>
               </div>
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 relative overflow-hidden space-y-3">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3">
                 <span className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Batido Recuperador</span>
                 <p className="text-base font-bold text-slate-100 leading-relaxed pt-2">{dietPlan.shake}</p>
               </div>
@@ -646,7 +756,7 @@ export default function FitAppProEnterprise() {
       </main>
 
       {/* Barra de Navegación Inferior */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-3 flex justify-around items-center z-50 max-w-lg mx-auto md:rounded-t-3xl shadow-2xl">
+      <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-3 flex justify-around items-center z-40 max-w-lg mx-auto md:rounded-t-3xl shadow-2xl">
         <button 
           onClick={() => setActiveTab('dashboard')}
           className={`flex flex-col items-center py-1.5 px-4 rounded-2xl transition ${activeTab === 'dashboard' ? 'text-emerald-400 bg-emerald-500/10 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
