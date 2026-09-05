@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuración segura del cliente de Supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -14,6 +13,19 @@ export default function App() {
   const [waterCount, setWaterCount] = useState(0);
   const [workoutLogs, setWorkoutLogs] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Estados del Entrenador Activo
+  const [isTrainingActive, setIsTrainingActive] = useState(false);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [weightInput, setWeightInput] = useState('');
+  const [repsInput, setRepsInput] = useState('');
+  const [restTimer, setRestTimer] = useState<number | null>(null);
+
+  const mockWorkoutExercises = [
+    { id: '1', name: 'Sentadilla con Mancuernas', sets: 3, reps: '10-12', rest: 60 },
+    { id: '2', name: 'Press de Banca en Suelo', sets: 3, reps: '10', rest: 60 },
+    { id: '3', name: 'Remo con Banda Elástica', sets: 3, reps: '12', rest: 45 },
+  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -33,6 +45,15 @@ export default function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Temporizador de descanso
+  useEffect(() => {
+    if (restTimer === null || restTimer <= 0) return;
+    const interval = setInterval(() => {
+      setRestTimer(prev => (prev !== null && prev > 0 ? prev - 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [restTimer]);
 
   const fetchUserData = async (userId: string) => {
     try {
@@ -62,6 +83,34 @@ export default function App() {
     }
   };
 
+  const handleSaveSet = async (exerciseName: string) => {
+    if (!weightInput || !repsInput) {
+      alert('Introduce el peso y las repeticiones para registrar la serie.');
+      return;
+    }
+
+    const { error } = await supabase.from('workout_logs').insert([
+      {
+        user_id: session.user.id,
+        exercise_name: exerciseName,
+        weight_used: `${weightInput} kg`,
+        reps_completed: parseInt(repsInput),
+        sets_completed: 1,
+        perceived_difficulty: 7
+      }
+    ]);
+
+    if (error) {
+      setErrorMsg('Error al guardar la serie en la base de datos.');
+    } else {
+      setWeightInput('');
+      setRepsInput('');
+      setRestTimer(60); // Activar temporizador de descanso de 60 segundos
+      fetchUserData(session.user.id);
+      alert('¡Serie registrada con éxito! Descanso iniciado.');
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#090d16', color: '#fff', fontFamily: 'sans-serif' }}>
@@ -83,6 +132,15 @@ export default function App() {
         </div>
       )}
 
+      {/* Temporizador flotante de descanso activo */}
+      {restTimer !== null && (
+        <div style={{ backgroundColor: '#1d4ed8', color: '#fff', padding: '12px', borderRadius: '12px', textAlign: 'center', marginBottom: '14px', fontWeight: 'bold', fontSize: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>⏱️ Descanso entre series</span>
+          <span style={{ fontSize: '16px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '8px' }}>{restTimer}s</span>
+          <button onClick={() => setRestTimer(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline' }}>Saltar</button>
+        </div>
+      )}
+
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #1f2937' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -101,8 +159,8 @@ export default function App() {
           <div style={{ backgroundColor: '#111827', borderRadius: '16px', padding: '16px', border: '1px solid #1f2937' }}>
             <span style={{ fontSize: '10px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', padding: '3px 8px', borderRadius: '6px', fontWeight: '700' }}>OBJETIVO ACTIVO</span>
             <h2 style={{ fontSize: '15px', fontWeight: '800', margin: '8px 0 4px 0' }}>{profile?.goal?.[0] || 'Mejora de condición física general'}</h2>
-            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>Entrenamiento configurado en: <strong>{profile?.workout_location || 'Casa / Gimnasio'}</strong></p>
-            <button onClick={() => setActiveTab('entrenar')} style={{ width: '100%', marginTop: '14px', background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
+            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>Ubicación: <strong>{profile?.workout_location || 'Casa / Gimnasio'}</strong></p>
+            <button onClick={() => { setActiveTab('entrenar'); setIsTrainingActive(true); }} style={{ width: '100%', marginTop: '14px', background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: '#fff', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
               🚀 Empezar Entrenamiento de Hoy
             </button>
           </div>
@@ -126,7 +184,41 @@ export default function App() {
       {activeTab === 'entrenar' && (
         <div style={{ backgroundColor: '#111827', borderRadius: '16px', padding: '16px', border: '1px solid #1f2937' }}>
           <h2 style={{ fontSize: '14px', fontWeight: '800', margin: '0 0 10px 0' }}>🏋️ Sesión de Entrenamiento</h2>
-          <p style={{ fontSize: '12px', color: '#9ca3af' }}>Generador automático de rutinas adaptadas a tu material disponible listo para conectar.</p>
+          
+          {!isTrainingActive ? (
+            <div>
+              <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '14px' }}>Rutina generada automáticamente según tu material y nivel.</p>
+              <button onClick={() => setIsTrainingActive(true)} style={{ width: '100%', background: '#3b82f6', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>
+                ▶️ Iniciar Sesión Guiada
+              </button>
+            </div>
+          ) : (
+            <div>
+              {/* Bloque de ejercicio actual */}
+              {(() => {
+                const ex = mockWorkoutExercises[currentExerciseIndex];
+                return (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Ejercicio {currentExerciseIndex + 1} de {mockWorkoutExercises.length}</span>
+                      <button onClick={() => { if(currentExerciseIndex < mockWorkoutExercises.length - 1) setCurrentExerciseIndex(currentExerciseIndex + 1); else { alert('¡Entrenamiento completado con éxito!'); setIsTrainingActive(false); setCurrentExerciseIndex(0); } }} style={{ background: '#1f2937', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer' }}>Siguiente ➡️</button>
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 6px 0' }}>{ex.name}</h3>
+                    <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0 0 14px 0' }}>Objetivo: {ex.sets} series de {ex.reps} reps</p>
+
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      <input type="number" placeholder="Peso (kg)" value={weightInput} onChange={e => setWeightInput(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #1f2937', backgroundColor: '#090d16', color: '#fff', fontSize: '12px', outline: 'none' }} />
+                      <input type="number" placeholder="Reps" value={repsInput} onChange={e => setRepsInput(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #1f2937', backgroundColor: '#090d16', color: '#fff', fontSize: '12px', outline: 'none' }} />
+                    </div>
+
+                    <button onClick={() => handleSaveSet(ex.name)} style={{ width: '100%', backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>
+                      ✓ Registrar Serie y Descansar
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
       )}
 
@@ -144,8 +236,9 @@ export default function App() {
             <p style={{ fontSize: '12px', color: '#9ca3af' }}>No hay registros de entrenamiento todavía en la base de datos.</p>
           ) : (
             workoutLogs.map(l => (
-              <div key={l.id} style={{ fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #1f2937' }}>
-                <strong>{l.exercise_name}</strong>: {l.weight_used}
+              <div key={l.id} style={{ fontSize: '12px', padding: '6px 0', borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between' }}>
+                <span><strong>{l.exercise_name}</strong></span>
+                <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>{l.weight_used} ({l.reps_completed} reps)</span>
               </div>
             ))
           )}
