@@ -94,7 +94,7 @@ const MASTER_MEALS: MealItem[] = [
 ];
 
 // ==========================================
-// 3. CONTEXTO GLOBAL Y PERSISTENCIA
+// 3. CONTEXTO GLOBAL Y PERSISTENCIA (BLINDADO)
 // ==========================================
 interface FitAppContextData {
   profile: UserProfile;
@@ -127,23 +127,43 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('fitapp_profile_v3');
-    return saved ? JSON.parse(saved) : defaultProfile;
+    try {
+      const saved = localStorage.getItem('fitapp_profile_v3');
+      return saved ? JSON.parse(saved) : defaultProfile;
+    } catch (e) {
+      localStorage.removeItem('fitapp_profile_v3');
+      return defaultProfile;
+    }
   });
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
-    const saved = localStorage.getItem('fitapp_logs_v3');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('fitapp_logs_v3');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      localStorage.removeItem('fitapp_logs_v3');
+      return [];
+    }
   });
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
-    const saved = localStorage.getItem('fitapp_measurements_v3');
-    return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
+    try {
+      const saved = localStorage.getItem('fitapp_measurements_v3');
+      return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
+    } catch (e) {
+      localStorage.removeItem('fitapp_measurements_v3');
+      return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
+    }
   });
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
-    const saved = localStorage.getItem('fitapp_excluded_v3');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('fitapp_excluded_v3');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      localStorage.removeItem('fitapp_excluded_v3');
+      return [];
+    }
   });
 
   useEffect(() => { localStorage.setItem('fitapp_profile_v3', JSON.stringify(profile)); }, [profile]);
