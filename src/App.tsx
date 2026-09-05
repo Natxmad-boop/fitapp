@@ -1,360 +1,559 @@
-import React, { useState, useEffect } from 'react';
-import { useFitAppSupabase } from './hooks/useFitAppSupabase';
-import { useWorkoutLogs } from './hooks/useWorkoutLogs';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Definición de ejercicios agrupados por grupo muscular
-const EXERCISES_BY_MUSCLE: Record<string, { name: string; defaultSets: number; defaultReps: number; defaultWeight: string }[]> = {
-  pecho: [
-    { name: 'Press de Banca Plano', defaultSets: 4, defaultReps: 8, defaultWeight: '65' },
-    { name: 'Press Inclinado con Mancuernas', defaultSets: 3, defaultReps: 10, defaultWeight: '24' },
-    { name: 'Aperturas en Polea', defaultSets: 3, defaultReps: 12, defaultWeight: '15' }
-  ],
-  espalda: [
-    { name: 'Dominadas Lastradas o Asistidas', defaultSets: 4, defaultReps: 8, defaultWeight: '0' },
-    { name: 'Remo con Barra Libre', defaultSets: 4, defaultReps: 10, defaultWeight: '60' },
-    { name: 'Jalón al Pecho en Polea', defaultSets: 3, defaultReps: 12, defaultWeight: '50' }
-  ],
-  hombros: [
-    { name: 'Press Militar de Pie', defaultSets: 4, defaultReps: 8, defaultWeight: '40' },
-    { name: 'Elevaciones Laterales con Mancuernas', defaultSets: 4, defaultReps: 15, defaultWeight: '10' },
-    { name: 'Pájaros para Deltoides Posterior', defaultSets: 3, defaultReps: 12, defaultWeight: '12' }
-  ],
-  piernas: [
-    { name: 'Sentadilla Libre (Squat)', defaultSets: 4, defaultReps: 8, defaultWeight: '80' },
-    { name: 'Prensa Inclinada 45º', defaultSets: 4, defaultReps: 10, defaultWeight: '140' },
-    { name: 'Curl de Isquiotibiales Sentado', defaultSets: 3, defaultReps: 12, defaultWeight: '45' }
-  ],
-  abdomen: [
-    { name: 'Crunch Abdominal en Polea', defaultSets: 3, defaultReps: 15, defaultWeight: '30' },
-    { name: 'Elevación de Piernas colgado', defaultSets: 3, defaultReps: 12, defaultWeight: '0' },
-    { name: 'Plancha Abdominal Isométrica', defaultSets: 3, defaultReps: 60, defaultWeight: '0' }
-  ],
-  cardio: [
-    { name: 'HIIT en Cinta de Correr', defaultSets: 1, defaultReps: 20, defaultWeight: '0' },
-    { name: 'Entrenamiento en AirBike', defaultSets: 5, defaultReps: 1, defaultWeight: '0' },
-    { name: 'Saltos a la Comba (Jump Rope)', defaultSets: 4, defaultReps: 3, defaultWeight: '0' }
-  ]
+// ==========================================
+// 1. TIPOS E INTERFACES
+// ==========================================
+export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mejorar_resistencia' | 'mantener';
+export type ExperienceLevel = 'principiante' | 'intermedio' | 'avanzado';
+export type ContextType = 'casa' | 'gimnasio' | 'mixto';
+
+export interface UserProfile {
+  name: string;
+  age: number;
+  gender: string;
+  height: number;
+  weight: number;
+  experience: ExperienceLevel;
+  goal: Goal;
+  daysAvailable: number;
+  context: ContextType;
+  equipment: string[];
+  allergies: string[];
+  dislikedFoods: string[];
+}
+
+export interface Exercise {
+  id: string;
+  name: string;
+  muscle: 'pecho' | 'espalda' | 'hombros' | 'piernas' | 'abdomen' | 'cardio';
+  defaultSets: number;
+  defaultReps: number;
+  defaultWeight: string;
+  context: ('casa' | 'gimnasio')[];
+  equipmentNeeded: string;
+}
+
+export interface WorkoutSetLog {
+  setNumber: number;
+  weight: number;
+  reps: number;
+  completed: boolean;
+}
+
+export interface WorkoutLogRecord {
+  id: string;
+  date: string;
+  exerciseName: string;
+  sets: WorkoutSetLog[];
+}
+
+export interface MealItem {
+  id: string;
+  name: string;
+  category: 'desayuno' | 'comida' | 'merienda' | 'cena' | 'snack';
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export interface BodyMeasurement {
+  date: string;
+  weight: number;
+  bodyFat?: number;
+}
+
+// ==========================================
+// 2. CONSTANTES (BASE DE DATOS LOCAL)
+// ==========================================
+const MASTER_EXERCISES: Exercise[] = [
+  { id: '1', name: 'Press de Banca Plano', muscle: 'pecho', defaultSets: 4, defaultReps: 10, defaultWeight: '60', context: ['gimnasio'], equipmentNeeded: 'barra' },
+  { id: '2', name: 'Flexiones de Pecho', muscle: 'pecho', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
+  { id: '3', name: 'Press Inclinado con Mancuernas', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '20', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
+  { id: '4', name: 'Dominadas Libres', muscle: 'espalda', defaultSets: 4, defaultReps: 8, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'barra de dominadas' },
+  { id: '5', name: 'Remo con Barra', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], equipmentNeeded: 'barra' },
+  { id: '6', name: 'Remo con Mancuerna a 1 Mano', muscle: 'espalda', defaultSets: 3, defaultReps: 12, defaultWeight: '18', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
+  { id: '7', name: 'Press Militar de Pie', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '35', context: ['gimnasio'], equipmentNeeded: 'barra' },
+  { id: '8', name: 'Elevaciones Laterales', muscle: 'hombros', defaultSets: 4, defaultReps: 15, defaultWeight: '10', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
+  { id: '9', name: 'Sentadilla Libre', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '70', context: ['gimnasio'], equipmentNeeded: 'barra' },
+  { id: '10', name: 'Sentadillas Búlgaras', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '14', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
+  { id: '11', name: 'Zancadas (Lunges)', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '12', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
+  { id: '12', name: 'Crunch Abdominal', muscle: 'abdomen', defaultSets: 3, defaultReps: 20, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
+  { id: '13', name: 'Plancha Isométrica', muscle: 'abdomen', defaultSets: 3, defaultReps: 60, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
+  { id: '14', name: 'HIIT / Carrera continua', muscle: 'cardio', defaultSets: 1, defaultReps: 20, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'cinta' }
+];
+
+const MASTER_MEALS: MealItem[] = [
+  { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6 },
+  { id: 'm2', name: 'Tostadas de aguacate con huevos revueltos', category: 'desayuno', calories: 420, protein: 22, carbs: 30, fats: 24 },
+  { id: 'm3', name: 'Pechuga de pollo a la plancha con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8 },
+  { id: 'm4', name: 'Salmón al horno con patata asada y espárragos', category: 'comida', calories: 620, protein: 42, carbs: 45, fats: 26 },
+  { id: 'm5', name: 'Yogur griego con frutos rojos y nueces', category: 'merienda', calories: 250, protein: 18, carbs: 20, fats: 12 },
+  { id: 'm6', name: 'Tortilla francesa de claras con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10 },
+  { id: 'm7', name: 'Merluza a la plancha con puré de patata casero', category: 'cena', calories: 380, protein: 38, carbs: 35, fats: 7 }
+];
+
+// ==========================================
+// 3. CONTEXTO GLOBAL Y PERSISTENCIA
+// ==========================================
+interface FitAppContextData {
+  profile: UserProfile;
+  updateProfile: (newProfile: Partial<UserProfile>) => void;
+  workoutLogs: WorkoutLogRecord[];
+  saveWorkoutLog: (log: WorkoutLogRecord) => void;
+  measurements: BodyMeasurement[];
+  addMeasurement: (weight: number) => void;
+  streak: number;
+  excludedExercises: string[];
+  excludeExercise: (name: string) => void;
+}
+
+const defaultProfile: UserProfile = {
+  name: 'Atleta FitApp',
+  age: 28,
+  gender: 'Hombre',
+  height: 178,
+  weight: 75,
+  experience: 'intermedio',
+  goal: 'ganar_musculo',
+  daysAvailable: 4,
+  context: 'gimnasio',
+  equipment: ['mancuernas', 'barra', 'banco', 'maquinas'],
+  allergies: [],
+  dislikedFoods: []
 };
 
-export default function App() {
-  const { profile, loading: profileLoading, error: profileError, updateProfile } = useFitAppSupabase();
-  const { saveWorkoutLog, loading: logLoading } = useWorkoutLogs();
+const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'selector' | 'activeWorkout' | 'profile'>('dashboard');
+export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [profile, setProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('fitapp_profile');
+    return saved ? JSON.parse(saved) : defaultProfile;
+  });
 
-  // Estado de selección muscular y rutina activa
-  const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
-  const [activeRoutine, setActiveRoutine] = useState<{ name: string; defaultSets: number; defaultReps: number; defaultWeight: string }[]>([]);
-  
-  // Estado del Reproductor en vivo (Play)
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [currentSet, setCurrentSet] = useState(1);
-  const [weightInput, setWeightInput] = useState('0');
-  const [repsInput, setRepsInput] = useState('10');
-  const [rpeInput, setRpeInput] = useState('8');
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
+    const saved = localStorage.getItem('fitapp_logs');
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // Temporizador de descanso
-  const [restTimeLeft, setRestTimeLeft] = useState(0);
-  const [isResting, setIsResting] = useState(false);
+  const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
+    const saved = localStorage.getItem('fitapp_measurements');
+    return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
+  });
 
-  // Iniciar sesión eligiendo el grupo muscular
-  const handleSelectMuscle = (muscleKey: string) => {
-    setSelectedMuscle(muscleKey);
-    const routine = EXERCISES_BY_MUSCLE[muscleKey];
-    setActiveRoutine(routine);
-    setCurrentExerciseIndex(0);
-    setCurrentSet(1);
-    setWeightInput(routine[0].defaultWeight);
-    setRepsInput(String(routine[0].defaultReps));
-    setActiveTab('activeWorkout');
+  const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
+    const saved = localStorage.getItem('fitapp_excluded');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => { localStorage.setItem('fitapp_profile', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+
+  const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
+  const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
+  const addMeasurement = (weight: number) => {
+    const today = new Date().toISOString().split('T')[0];
+    setMeasurements(prev => [...prev.filter(m => m.date !== today), { date: today, weight }]);
+    updateProfile({ weight });
+  };
+  const excludeExercise = (name: string) => {
+    if (!excludedExercises.includes(name)) setExcludedExercises(prev => [...prev, name]);
   };
 
-  const currentExercise = activeRoutine[currentExerciseIndex];
+  const uniqueDays = new Set(workoutLogs.map(l => l.date)).size;
+  const streak = uniqueDays > 0 ? uniqueDays : 0;
 
-  // Control del temporizador de descanso
+  return (
+    <FitAppContext.Provider value={{
+      profile, updateProfile, workoutLogs, saveWorkoutLog, measurements,
+      addMeasurement, streak, excludedExercises, excludeExercise
+    }}>
+      {children}
+    </FitAppContext.Provider>
+  );
+};
+
+export const useFitApp = () => {
+  const context = useContext(FitAppContext);
+  if (!context) throw new Error('useFitApp debe usarse dentro de un FitAppProvider');
+  return context;
+};
+
+// ==========================================
+// 4. COMPONENTES DE UI
+// ==========================================
+
+const Navigation: React.FC<{ activeTab: string; setActiveTab: (tab: string) => void }> = ({ activeTab, setActiveTab }) => {
+  const tabs = [
+    { id: 'dashboard', label: 'Inicio', icon: '🏠' },
+    { id: 'train', label: 'Entrenar', icon: '⚡' },
+    { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
+    { id: 'progress', label: 'Progreso', icon: '📈' },
+    { id: 'profile', label: 'Perfil', icon: '⚙️' },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 flex justify-around items-center py-3 z-50 max-w-md mx-auto">
+      {tabs.map(tab => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex flex-col items-center gap-1 text-xs font-medium transition-colors ${
+              isActive ? 'text-cyan-400' : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <span className="text-lg">{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+};
+
+const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => void }> = ({ onStartWorkout, onGoToNutrition }) => {
+  const { profile, streak, workoutLogs } = useFitApp();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayWorkouts = workoutLogs.filter(l => l.date === todayStr);
+
+  return (
+    <div className="space-y-6 pb-24">
+      <div className="flex justify-between items-center bg-zinc-900 p-5 rounded-2xl border border-zinc-800">
+        <div>
+          <span className="text-xs uppercase tracking-wider text-cyan-400 font-bold">Panel Principal</span>
+          <h1 className="text-xl font-bold text-white">Hola, {profile.name} 👋</h1>
+        </div>
+        <div className="bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 flex items-center gap-1.5 text-xs text-orange-400 font-bold">
+          <span>🔥</span> {streak} días racha
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-br from-cyan-950/40 to-zinc-900 p-5 rounded-2xl border border-cyan-800/40 space-y-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="text-xs text-cyan-400 font-semibold uppercase">Sesión de Hoy</span>
+            <h2 className="text-lg font-bold text-white mt-0.5">Enfoque: {profile.goal.replace('_', ' ').toUpperCase()}</h2>
+          </div>
+          <span className="text-xs bg-cyan-950 text-cyan-300 border border-cyan-700 px-2.5 py-1 rounded-full uppercase">
+            {profile.context}
+          </span>
+        </div>
+
+        <p className="text-xs text-zinc-300">
+          {todayWorkouts.length > 0 
+            ? `✅ ¡Ya has completado ${todayWorkouts.length} ejercicio(s) hoy!` 
+            : 'Tienes tu rutina lista para arrancar con selector muscular o modo exprés.'}
+        </p>
+
+        <button
+          onClick={onStartWorkout}
+          className="w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+        >
+          <span>⚡ Empezar Entrenamiento</span>
+        </button>
+      </div>
+
+      <div className="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 space-y-3">
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">🥗 Nutrición Diaria</h3>
+          <button onClick={onGoToNutrition} className="text-xs text-cyan-400 hover:underline">Ver menú ➔</button>
+        </div>
+        <p className="text-xs text-zinc-400">Plan adaptado a tus restricciones ({profile.allergies.length > 0 ? profile.allergies.join(', ') : 'Sin restricciones'}).</p>
+      </div>
+    </div>
+  );
+};
+
+const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) => void }> = ({ onSelectExerciseToPlay }) => {
+  const { excludedExercises, excludeExercise } = useFitApp();
+
+  const muscles = [
+    { key: 'pecho', label: '🦾 Pecho', desc: 'Press y aperturas' },
+    { key: 'espalda', label: '🦇 Espalda', desc: 'Dominadas y remos' },
+    { key: 'hombros', label: '🛡️ Hombros', desc: 'Press y laterales' },
+    { key: 'piernas', label: '🦵 Piernas', desc: 'Sentadillas y prensa' },
+    { key: 'abdomen', label: '⚡ Abdomen', desc: 'Core y planchas' },
+    { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'Resistencia e HIIT' }
+  ];
+
+  const handleStartMuscleRoutine = (muscleKey: string) => {
+    const filtered = MASTER_EXERCISES.filter(ex => ex.muscle === muscleKey && !excludedExercises.includes(ex.name));
+    if (filtered.length === 0) {
+      alert('No hay ejercicios disponibles para este grupo muscular con tus filtros actuales.');
+      return;
+    }
+    onSelectExerciseToPlay(filtered);
+  };
+
+  const handleStartFullRoutine = () => {
+    const filtered = MASTER_EXERCISES.filter(ex => !excludedExercises.includes(ex.name));
+    onSelectExerciseToPlay(filtered.slice(0, 4));
+  };
+
+  return (
+    <div className="space-y-6 pb-24">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold text-white">Centro de Entrenamiento</h1>
+          <p className="text-xs text-zinc-400">Elige un grupo muscular o arranca rutina.</p>
+        </div>
+        <button
+          onClick={handleStartFullRoutine}
+          className="px-3 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold rounded-xl"
+        >
+          ⚡ Rutina Exprés
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {muscles.map(m => (
+          <button
+            key={m.key}
+            onClick={() => handleStartMuscleRoutine(m.key)}
+            className="bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 p-4 rounded-xl text-left transition-all flex flex-col gap-1 group"
+          >
+            <span className="text-base font-bold text-white group-hover:text-cyan-400">{m.label}</span>
+            <span className="text-xs text-zinc-400">{m.desc}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
+  const { saveWorkoutLog, excludeExercise } = useFitApp();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentSet, setCurrentSet] = useState(1);
+  const [weight, setWeight] = useState(exercises[0]?.defaultWeight || '0');
+  const [reps, setReps] = useState(String(exercises[0]?.defaultReps || 10));
+  const [isResting, setIsResting] = useState(false);
+  const [restTime, setRestTime] = useState(60);
+
+  const currentEx = exercises[currentIndex];
+
   useEffect(() => {
     let timer: any;
-    if (isResting && restTimeLeft > 0) {
-      timer = setInterval(() => {
-        setRestTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (restTimeLeft === 0) {
+    if (isResting && restTime > 0) {
+      timer = setInterval(() => setRestTime(prev => prev - 1), 1000);
+    } else if (restTime === 0) {
       setIsResting(false);
     }
     return () => clearInterval(timer);
-  }, [isResting, restTimeLeft]);
+  }, [isResting, restTime]);
 
-  // Completar serie y pasar al siguiente paso o ejercicio
-  const handleCompleteSet = async () => {
-    if (!currentExercise) return;
-
-    await saveWorkoutLog({
-      exercise_name: currentExercise.name,
-      weight_used: weightInput,
-      reps_completed: Number(repsInput),
-      sets_completed: currentSet,
-      perceived_exertion: Number(rpeInput)
+  const handleCompleteSet = () => {
+    saveWorkoutLog({
+      id: Math.random().toString(36).substr(2, 9),
+      date: new Date().toISOString().split('T')[0],
+      exerciseName: currentEx.name,
+      sets: [{ setNumber: currentSet, weight: Number(weight), reps: Number(reps), completed: true }]
     });
 
-    // Activar descanso de 60 segundos
-    setRestTimeLeft(60);
     setIsResting(true);
+    setRestTime(60);
 
-    if (currentSet < currentExercise.defaultSets) {
-      setCurrentSet((prev) => prev + 1);
+    if (currentSet < currentEx.defaultSets) {
+      setCurrentSet(prev => prev + 1);
     } else {
-      if (currentExerciseIndex < activeRoutine.length - 1) {
-        const nextIndex = currentExerciseIndex + 1;
-        setCurrentExerciseIndex(nextIndex);
+      if (currentIndex < exercises.length - 1) {
+        const nextIdx = currentIndex + 1;
+        setCurrentIndex(nextIdx);
         setCurrentSet(1);
-        setWeightInput(activeRoutine[nextIndex].defaultWeight);
-        setRepsInput(String(activeRoutine[nextIndex].defaultReps));
+        setWeight(exercises[nextIdx].defaultWeight);
+        setReps(String(exercises[nextIdx].defaultReps));
       } else {
-        alert('¡Entrenamiento completado y guardado en Supabase! 🏆 Has finalizado tu sesión.');
-        setActiveTab('dashboard');
+        alert('🏆 ¡Entrenamiento completado!');
+        onFinish();
       }
     }
   };
 
-  if (profileLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#09090b', color: '#f4f4f5', fontFamily: 'system-ui, sans-serif' }}>
-        <p>Cargando entorno FitApp...</p>
-      </div>
-    );
-  }
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl space-y-5 pb-24 max-w-md mx-auto">
+      {isResting && (
+        <div className="bg-cyan-950/60 border border-cyan-500/50 p-4 rounded-xl text-center space-y-2">
+          <span className="text-xs uppercase tracking-widest text-cyan-400 font-bold">Descanso</span>
+          <div className="text-4xl font-extrabold text-white">0:{restTime < 10 ? `0${restTime}` : restTime}</div>
+          <button onClick={() => { setIsResting(false); setRestTime(0); }} className="text-xs bg-zinc-800 text-zinc-300 px-3 py-1 rounded-lg">Saltar</button>
+        </div>
+      )}
 
-  if (profileError) {
-    return (
-      <div style={{ padding: '30px', color: '#ef4444', background: '#09090b', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
-        <h2>Error de conexión con Supabase</h2>
-        <p>{profileError}</p>
+      <div className="flex justify-between items-center text-xs text-zinc-400 font-semibold">
+        <span>Ejercicio {currentIndex + 1} de {exercises.length}</span>
+        <span className="text-cyan-400">Serie {currentSet} / {currentEx.defaultSets}</span>
       </div>
-    );
-  }
+
+      <div>
+        <h2 className="text-xl font-bold text-white">{currentEx.name}</h2>
+        <span className="text-xs text-zinc-500 uppercase">Músculo: {currentEx.muscle}</span>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs text-zinc-400 block mb-1">Peso (kg)</label>
+          <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white outline-none" />
+        </div>
+        <div>
+          <label className="text-xs text-zinc-400 block mb-1">Repeticiones</label>
+          <input type="number" value={reps} onChange={e => setReps(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white outline-none" />
+        </div>
+      </div>
+
+      <button onClick={handleCompleteSet} disabled={isResting} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all">
+        ✓ Registrar Serie y Descansar
+      </button>
+
+      <button onClick={onFinish} className="w-full py-2 bg-zinc-800 text-zinc-300 text-xs rounded-xl">Finalizar Sesión</button>
+    </div>
+  );
+};
+
+const NutritionView: React.FC = () => {
+  const { profile, updateProfile } = useFitApp();
+  const [newAllergy, setNewAllergy] = useState('');
+
+  const handleAddAllergy = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAllergy.trim()) return;
+    updateProfile({ allergies: [...profile.allergies, newAllergy.trim()] });
+    setNewAllergy('');
+  };
+
+  const safeMeals = MASTER_MEALS.filter(meal => {
+    const nameLower = meal.name.toLowerCase();
+    return !profile.allergies.some(allergy => nameLower.includes(allergy.toLowerCase()));
+  });
 
   return (
-    <div style={{ maxWidth: '480px', margin: '0 auto', background: '#09090b', color: '#f4f4f5', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
-      
-      {/* Cabecera */}
-      <header style={{ padding: '20px', borderBottom: '1px solid #27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#09090b', position: 'sticky', top: 0, zIndex: 10 }}>
+    <div className="space-y-6 pb-24">
+      <div>
+        <h1 className="text-xl font-bold text-white">Nutrición y Menús</h1>
+        <p className="text-xs text-zinc-400">Alimentación adaptada a tus restricciones.</p>
+      </div>
+
+      <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-3">
+        <h3 className="text-sm font-bold text-white">⚠️ Alergias y Restricciones</h3>
+        <form onSubmit={handleAddAllergy} className="flex gap-2">
+          <input type="text" placeholder="Ej: lactosa..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <button type="submit" className="px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-xl">Añadir</button>
+        </form>
+        <div className="flex flex-wrap gap-2">
+          {profile.allergies.map(a => (
+            <span key={a} className="bg-amber-950/40 text-amber-300 text-xs px-2.5 py-1 rounded-lg">
+              {a} <button onClick={() => updateProfile({ allergies: profile.allergies.filter(item => item !== a) })}>×</button>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {safeMeals.map(meal => (
+          <div key={meal.id} className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+            <span className="text-[10px] text-cyan-400 uppercase font-bold">{meal.category}</span>
+            <h4 className="text-sm font-bold text-white mt-1">{meal.name}</h4>
+            <p className="text-xs text-zinc-400">{meal.calories} kcal • {meal.protein}g proteína</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ProgressView: React.FC = () => {
+  const { measurements, addMeasurement, streak, workoutLogs } = useFitApp();
+  const [weightInput, setWeightInput] = useState('');
+
+  return (
+    <div className="space-y-6 pb-24">
+      <div>
+        <h1 className="text-xl font-bold text-white">Progreso</h1>
+        <p className="text-xs text-zinc-400">Evolución de peso y constancia.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+          <span className="text-xs text-zinc-400">Racha</span>
+          <div className="text-2xl font-black text-orange-400 mt-1">🔥 {streak} días</div>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+          <span className="text-xs text-zinc-400">Sesiones</span>
+          <div className="text-2xl font-black text-cyan-400 mt-1">⚡ {workoutLogs.length}</div>
+        </div>
+      </div>
+
+      <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-3">
+        <h3 className="text-sm font-bold text-white">Registrar Peso</h3>
+        <form onSubmit={e => { e.preventDefault(); const w = Number(weightInput); if(w) { addMeasurement(w); setWeightInput(''); }}} className="flex gap-2">
+          <input type="number" step="0.1" placeholder="Ej: 75 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <button type="submit" className="px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-xl">Guardar</button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const ProfileView: React.FC = () => {
+  const { profile, updateProfile } = useFitApp();
+  const [name, setName] = useState(profile.name);
+
+  return (
+    <div className="space-y-6 pb-24">
+      <div>
+        <h1 className="text-xl font-bold text-white">Perfil</h1>
+      </div>
+      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl space-y-4">
         <div>
-          <h1 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700, color: '#38bdf8' }}>FitApp Pro PWA</h1>
-          <span style={{ fontSize: '0.75rem', color: '#71717a' }}>Atleta: {profile?.name || 'Usuario'}</span>
+          <label className="text-xs text-zinc-400 block mb-1">Nombre</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-white outline-none" />
         </div>
-        <div style={{ background: '#18181b', border: '1px solid #27272a', padding: '4px 10px', borderRadius: '15px', fontSize: '0.75rem', color: '#4ade80' }}>
-          ● PostgreSQL Online
-        </div>
+        <button onClick={() => { updateProfile({ name }); alert('Actualizado'); }} className="w-full py-3 bg-cyan-600 text-white font-bold rounded-xl text-xs">Guardar</button>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 5. COMPONENTE PRINCIPAL APP
+// ==========================================
+function AppContent() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeWorkoutExercises, setActiveWorkoutExercises] = useState<Exercise[] | null>(null);
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-4 max-w-md mx-auto relative flex flex-col">
+      <header className="py-4 border-b border-zinc-900 mb-4 flex justify-between items-center">
+        <span className="text-base font-black text-cyan-400 tracking-wider">FITAPP PRO</span>
+        <span className="text-[10px] bg-zinc-900 text-emerald-400 border border-zinc-800 px-2.5 py-1 rounded-full font-bold">● Local Standalone</span>
       </header>
 
-      <main style={{ padding: '20px', flex: 1 }}>
-        
-        {/* VISTA 1: DASHBOARD */}
-        {activeTab === 'dashboard' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '16px', padding: '20px' }}>
-              <h2 style={{ fontSize: '1.1rem', margin: '0 0 10px 0', color: '#38bdf8' }}>¿Qué entrenamos hoy?</h2>
-              <p style={{ fontSize: '0.85rem', color: '#a1a1aa', margin: '0 0 20px 0' }}>Elige tu enfoque muscular diario para cargar la rutina específica y activar el reproductor de series.</p>
-              
-              <button
-                onClick={() => setActiveTab('selector')}
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  background: 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)'
-                }}
-              >
-                🎯 Seleccionar Grupo Muscular (Play)
-              </button>
-            </div>
-          </div>
+      <main className="flex-1">
+        {activeWorkoutExercises ? (
+          <ActiveWorkoutPlayer exercises={activeWorkoutExercises} onFinish={() => setActiveWorkoutExercises(null)} />
+        ) : (
+          <>
+            {activeTab === 'dashboard' && <Dashboard onStartWorkout={() => setActiveTab('train')} onGoToNutrition={() => setActiveTab('nutrition')} />}
+            {activeTab === 'train' && <WorkoutView onSelectExerciseToPlay={(exs) => setActiveWorkoutExercises(exs)} />}
+            {activeTab === 'nutrition' && <NutritionView />}
+            {activeTab === 'progress' && <ProgressView />}
+            {activeTab === 'profile' && <ProfileView />}
+          </>
         )}
-
-        {/* VISTA 2: SELECTOR DE GRUPO MUSCULAR */}
-        {activeTab === 'selector' && (
-          <div>
-            <h2 style={{ fontSize: '1.1rem', margin: '0 0 8px 0', color: '#818cf8' }}>Elige Grupo Muscular</h2>
-            <p style={{ fontSize: '0.85rem', color: '#a1a1aa', marginBottom: '20px' }}>Selecciona qué zona del cuerpo quieres machacar en la sesión de hoy:</p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[
-                { key: 'pecho', label: '🦾 Pecho', desc: 'Press y aperturas' },
-                { key: 'espalda', label: '🦇 Espalda', desc: 'Dominadas y remos' },
-                { key: 'hombros', label: '🛡️ Hombros', desc: 'Press militar y laterales' },
-                { key: 'piernas', label: '🦵 Piernas', desc: 'Sentadillas y prensa' },
-                { key: 'abdomen', label: '⚡ Abdomen', desc: 'Core y planchas' },
-                { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'HIIT y resistencia' }
-              ].map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => handleSelectMuscle(item.key)}
-                  style={{
-                    background: '#18181b',
-                    border: '1px solid #3f3f46',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    color: '#fff',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}
-                >
-                  <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#38bdf8' }}>{item.label}</span>
-                  <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>{item.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* VISTA 3: REPRODUCTOR ACTIVO DE SESIÓN (PLAY) */}
-        {activeTab === 'activeWorkout' && (
-          <div>
-            {!selectedMuscle || activeRoutine.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', background: '#18181b', borderRadius: '16px', border: '1px solid #27272a' }}>
-                <p style={{ fontSize: '0.9rem', color: '#a1a1aa', marginBottom: '15px' }}>No hay ningún grupo muscular seleccionado.</p>
-                <button
-                  onClick={() => setActiveTab('selector')}
-                  style={{ padding: '12px 20px', background: '#38bdf8', color: '#09090b', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-                >
-                  Elegir Músculo ➔
-                </button>
-              </div>
-            ) : (
-              <div style={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '16px', padding: '20px' }}>
-                
-                {/* Panel de Descanso Activo */}
-                {isResting ? (
-                  <div style={{ textAlign: 'center', padding: '30px 0', background: '#09090b', borderRadius: '12px', border: '1px solid #ef4444', marginBottom: '15px' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 'bold', textTransform: 'uppercase' }}>Descanso entre Series</span>
-                    <div style={{ fontSize: '3rem', fontWeight: 800, color: '#f4f4f5', margin: '10px 0' }}>0:{restTimeLeft < 10 ? `0${restTimeLeft}` : restTimeLeft}</div>
-                    <button 
-                      onClick={() => { setIsResting(false); setRestTimeLeft(0); }}
-                      style={{ padding: '6px 14px', background: '#27272a', color: '#fff', border: '1px solid #3f3f46', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer' }}
-                    >
-                      Saltar Descanso ⏭
-                    </button>
-                  </div>
-                ) : null}
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                    Enfoque: {selectedMuscle.toUpperCase()} ({currentExerciseIndex + 1}/{activeRoutine.length})
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: '#38bdf8', background: '#09090b', padding: '4px 8px', borderRadius: '6px', border: '1px solid #27272a' }}>
-                    Serie {currentSet} / {currentExercise.defaultSets}
-                  </span>
-                </div>
-
-                <h2 style={{ fontSize: '1.25rem', margin: '0 0 20px 0', color: '#f4f4f5' }}>{currentExercise.name}</h2>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Peso (kg)</label>
-                    <input
-                      type="text"
-                      value={weightInput}
-                      onChange={(e) => setWeightInput(e.target.value)}
-                      style={{ width: '100%', padding: '12px', background: '#09090b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff', fontSize: '1rem', boxSizing: 'border-box' }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Reps</label>
-                      <input
-                        type="number"
-                        value={repsInput}
-                        onChange={(e) => setRepsInput(e.target.value)}
-                        style={{ width: '100%', padding: '12px', background: '#09090b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff', fontSize: '1rem', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>RPE (1-10)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={rpeInput}
-                        onChange={(e) => setRpeInput(e.target.value)}
-                        style={{ width: '100%', padding: '12px', background: '#09090b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#fff', fontSize: '1rem', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleCompleteSet}
-                  disabled={logLoading || isResting}
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    background: '#4ade80',
-                    color: '#09090b',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontWeight: 'bold',
-                    fontSize: '1rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {logLoading ? 'Guardando en Supabase...' : '✓ Registrar Serie y Descansar'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* VISTA 4: PERFIL */}
-        {activeTab === 'profile' && (
-          <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '16px', padding: '20px' }}>
-            <h2 style={{ fontSize: '1.1rem', margin: '0 0 15px 0', color: '#38bdf8' }}>Perfil del Atleta</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Nombre:</strong> {profile?.name}</p>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Nivel:</strong> {profile?.experience_level}</p>
-              <button
-                onClick={() => updateProfile({ name: profile?.name + ' ⚡' })}
-                style={{ marginTop: '10px', padding: '10px', background: '#27272a', color: '#fff', border: '1px solid #3f3f46', borderRadius: '8px', cursor: 'pointer' }}
-              >
-                Actualizar Sello de Atleta
-              </button>
-            </div>
-          </div>
-        )}
-
       </main>
 
-      {/* Navegación Inferior */}
-      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '480px', background: '#121214', borderTop: '1px solid #27272a', display: 'flex', justifyContent: 'space-around', padding: '12px 0', zIndex: 100 }}>
-        <button
-          onClick={() => setActiveTab('dashboard')}
-          style={{ background: 'none', border: 'none', color: activeTab === 'dashboard' ? '#38bdf8' : '#71717a', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}
-        >
-          📊 Inicio
-        </button>
-        <button
-          onClick={() => setActiveTab('selector')}
-          style={{ background: 'none', border: 'none', color: activeTab === 'selector' || activeTab === 'activeWorkout' ? '#818cf8' : '#71717a', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}
-        >
-          🎯 Músculos
-        </button>
-        <button
-          onClick={() => setActiveTab('profile')}
-          style={{ background: 'none', border: 'none', color: activeTab === 'profile' ? '#38bdf8' : '#71717a', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}
-        >
-          ⚙️ Ajustes
-        </button>
-      </nav>
-
+      {!activeWorkoutExercises && <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <FitAppProvider>
+      <AppContent />
+    </FitAppProvider>
   );
 }
