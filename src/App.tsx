@@ -1,9 +1,56 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+
+// ==========================================
+// 0. CAPTURADOR VISUAL DE ERRORES (BLINDADO)
+// ==========================================
+interface Props {
+  children: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', backgroundColor: '#7f1d1d', color: '#fff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+          <h2>¡Vaya, algo ha fallado!</h2>
+          <p style={{ fontSize: '12px', background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '8px', wordBreak: 'break-all' }}>
+            {this.state.error && this.state.error.toString()}
+          </p>
+          <button 
+            onClick={() => { localStorage.clear(); window.location.reload(); }}
+            style={{ marginTop: '20px', padding: '12px', background: '#fff', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}
+          >
+            Limpiar datos y reiniciar
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ==========================================
 // 1. TIPOS E INTERFACES
 // ==========================================
-export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mejorar_resistencia' | 'mantener';
+export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mantener';
 export type ExperienceLevel = 'principiante' | 'intermedio' | 'avanzado';
 export type ContextType = 'casa' | 'gimnasio' | 'mixto';
 
@@ -94,7 +141,7 @@ const MASTER_MEALS: MealItem[] = [
 ];
 
 // ==========================================
-// 3. CONTEXTO GLOBAL Y PERSISTENCIA (BLINDADO)
+// 3. CONTEXTO GLOBAL Y PERSISTENCIA
 // ==========================================
 interface FitAppContextData {
   profile: UserProfile;
@@ -109,11 +156,11 @@ interface FitAppContextData {
 }
 
 const defaultProfile: UserProfile = {
-  name: 'Alex Hunter',
-  age: 26,
+  name: 'Atleta',
+  age: 28,
   gender: 'Hombre',
-  height: 180,
-  weight: 78,
+  height: 178,
+  weight: 75,
   experience: 'intermedio',
   goal: 'ganar_musculo',
   daysAvailable: 4,
@@ -128,48 +175,48 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v3');
+      const saved = localStorage.getItem('fitapp_profile_v4');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
-      localStorage.removeItem('fitapp_profile_v3');
+      localStorage.removeItem('fitapp_profile_v4');
       return defaultProfile;
     }
   });
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v3');
+      const saved = localStorage.getItem('fitapp_logs_v4');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      localStorage.removeItem('fitapp_logs_v3');
+      localStorage.removeItem('fitapp_logs_v4');
       return [];
     }
   });
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v3');
+      const saved = localStorage.getItem('fitapp_measurements_v4');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
-      localStorage.removeItem('fitapp_measurements_v3');
+      localStorage.removeItem('fitapp_measurements_v4');
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     }
   });
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v3');
+      const saved = localStorage.getItem('fitapp_excluded_v4');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      localStorage.removeItem('fitapp_excluded_v3');
+      localStorage.removeItem('fitapp_excluded_v4');
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v3', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v3', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v3', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v3', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v4', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v4', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v4', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v4', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -183,7 +230,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const uniqueDays = new Set(workoutLogs.map(l => l.date)).size;
-  const streak = uniqueDays > 0 ? uniqueDays : 5;
+  const streak = uniqueDays > 0 ? uniqueDays : 1;
 
   return (
     <FitAppContext.Provider value={{
@@ -202,7 +249,7 @@ export const useFitApp = () => {
 };
 
 // ==========================================
-// 4. ESTILOS CSS INLINE (GARANTÍA MÓVIL)
+// 4. ESTILOS CSS INLINE
 // ==========================================
 const s = {
   container: {
@@ -330,9 +377,8 @@ const s = {
 };
 
 // ==========================================
-// 5. VISTAS DE LA APLICACIÓN
+// 5. VISTAS FUNCIONALES
 // ==========================================
-
 const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => void }> = ({ onStartWorkout, onGoToNutrition }) => {
   const { profile, streak, workoutLogs } = useFitApp();
   const todayStr = new Date().toISOString().split('T')[0];
@@ -340,7 +386,6 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Saludo y Racha */}
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
@@ -353,7 +398,6 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
         </div>
       </div>
 
-      {/* Banner Principal */}
       <div style={s.heroCard}>
         <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
           Objetivo: {profile.goal.replace('_', ' ')}
@@ -361,7 +405,7 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
         <h2 style={{ fontSize: '24px', fontWeight: 900, margin: '12px 0 8px 0' }}>Sesión del Día</h2>
         <p style={{ fontSize: '12px', color: '#e0f2fe', margin: 0, lineHeight: 1.5 }}>
           {todayWorkouts.length > 0 
-            ? `⚡ ¡Gran trabajo! Has completado ${todayWorkouts.length} bloque(s) hoy.` 
+            ? `⚡ ¡Gran trabajo! Has registrado ${todayWorkouts.length} ejercicio(s) hoy.` 
             : 'Tu motor adaptativo ha preparado una sesión óptima para tu evolución.'}
         </p>
         <button onClick={onStartWorkout} style={s.buttonPrimary}>
@@ -369,11 +413,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
         </button>
       </div>
 
-      {/* Tarjeta Nutrición */}
       <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🥗</span> Nutrición Inteligente
+            <span>🥗</span> Nutrición Inteligente y Macros
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
             Alergias: {profile.allergies.length > 0 ? profile.allergies.join(', ') : 'Ninguna'}
@@ -400,7 +443,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
   const handleStartMuscle = (muscleKey: string) => {
     const filtered = MASTER_EXERCISES.filter(ex => ex.muscle === muscleKey && !excludedExercises.includes(ex.name));
     if (filtered.length === 0) {
-      alert('No hay ejercicios para este grupo.');
+      alert('No hay ejercicios disponibles para este grupo.');
       return;
     }
     onSelectExerciseToPlay(filtered);
@@ -418,8 +461,8 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
           <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Motor de Fuerza</span>
           <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Entrenamiento</h1>
         </div>
-        <button onClick={handleExpr} style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '8px 14px', borderRadius: '14px', fontSize: '11px', fontWeight: 900 }}>
-          ⚡ Exprés
+        <button onClick={handleExpr} style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '8px 14px', borderRadius: '14px', fontSize: '11px', fontWeight: 900, cursor: 'pointer' }}>
+          ⚡ Rutina Exprés
         </button>
       </div>
 
@@ -445,7 +488,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
             <span style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>{m.label}</span>
             <div>
               <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block' }}>{m.desc}</span>
-              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Iniciar ➔</span>
+              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Iniciar Play ➔</span>
             </div>
           </button>
         ))}
@@ -496,7 +539,7 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
         setWeight(exercises[nextIdx].defaultWeight);
         setReps(String(exercises[nextIdx].defaultReps));
       } else {
-        alert('🏆 ¡Entrenamiento completado!');
+        alert('🏆 ¡Entrenamiento completado con éxito!');
         onFinish();
       }
     }
@@ -506,38 +549,38 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
     <div style={{ ...s.card, display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {isResting && (
         <div style={{ background: '#082f49', border: '1px solid #0284c7', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>
-          <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase' }}>⏸ Descanso Activo</span>
+          <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase' }}>⏸ Descanso Automático</span>
           <div style={{ fontSize: '36px', fontWeight: 900, color: '#ffffff', margin: '4px 0' }}>0:{restTime < 10 ? `0${restTime}` : restTime}</div>
-          <button onClick={() => { setIsResting(false); setRestTime(0); }} style={{ background: '#0369a1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>Saltar</button>
+          <button onClick={() => { setIsResting(false); setRestTime(0); }} style={{ background: '#0369a1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>Saltar Descanso</button>
         </div>
       )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>
-        <span>Ejercicio {currentIndex + 1} / {exercises.length}</span>
-        <span style={{ color: '#22d3ee' }}>Serie {currentSet} de {currentEx.defaultSets}</span>
+        <span>Ejercicio {currentIndex + 1} de {exercises.length}</span>
+        <span style={{ color: '#22d3ee' }}>Serie {currentSet} / {currentEx.defaultSets}</span>
       </div>
 
       <div>
         <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', margin: 0 }}>{currentEx.name}</h2>
-        <span style={{ fontSize: '11px', color: '#22d3ee', textTransform: 'uppercase', fontWeight: 700 }}>Músculo: {currentEx.muscle}</span>
+        <span style={{ fontSize: '11px', color: '#22d3ee', textTransform: 'uppercase', fontWeight: 700 }}>Grupo: {currentEx.muscle}</span>
       </div>
 
       <div>
-        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso aplicado (kg)</label>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso Aplicado (kg)</label>
         <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={s.input} />
       </div>
 
       <div>
-        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Repeticiones</label>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Repeticiones Realizadas</label>
         <input type="number" value={reps} onChange={e => setReps(e.target.value)} style={s.input} />
       </div>
 
-      <button onClick={handleCompleteSet} disabled={isResting} style={{ ...s.buttonCyan, opacity: isResting ? 0.5 : 1 }}>
-        ✓ REGISTRAR SERIE Y DESCANSAR
+      <button onClick={handleCompleteSet} disabled={isResting} style={{ ...s.buttonCyan, opacity: isResting ? 0.5 : 1, cursor: 'pointer' }}>
+        ✓ COMPLETAR SERIE Y DESCANSAR
       </button>
 
       <button onClick={onFinish} style={{ background: 'transparent', border: 'none', color: '#71717a', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: '8px' }}>
-        Finalizar sesión
+        Terminar sesión actual
       </button>
     </div>
   );
@@ -546,6 +589,17 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 const NutritionView: React.FC = () => {
   const { profile, updateProfile } = useFitApp();
   const [newAllergy, setNewAllergy] = useState('');
+
+  // Cálculo automático de calorías base según perfil
+  const bmr = profile.gender === 'Hombre' 
+    ? (10 * profile.weight) + (6.25 * profile.height) - (5 * profile.age) + 5
+    : (10 * profile.weight) + (6.25 * profile.height) - (5 * profile.age) - 161;
+  
+  const targetCalories = Math.round(
+    profile.goal === 'ganar_musculo' ? bmr + 350 :
+    profile.goal === 'perder_grasa' ? bmr - 400 : bmr
+  );
+  const targetProtein = Math.round(profile.weight * 2.0);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -562,15 +616,28 @@ const NutritionView: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Planificación</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Nutrición</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Plan de Macros</h1>
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>⚠️ Alergias y Restricciones</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div>
+            <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Calorías Objetivo</span>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: '#22d3ee' }}>{targetCalories} kcal</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Proteína Recomendada</span>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: '#fb923c' }}>{targetProtein}g</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={s.card}>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>⚠️ Alergias o Alimentos a Excluir</h3>
         <form onSubmit={handleAdd} style={{ display: 'flex', gap: '8px' }}>
-          <input type="text" placeholder="Ej: lactosa..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
-          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px' }}>Añadir</button>
+          <input type="text" placeholder="Ej: lactosa, frutos secos..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
+          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>Añadir</button>
         </form>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
           {profile.allergies.map(a => (
@@ -582,7 +649,7 @@ const NutritionView: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#a1a1aa', margin: 0 }}>Menús Optimizados</h3>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#a1a1aa', margin: 0 }}>Menús Adaptados</h3>
         {safeMeals.map(meal => (
           <div key={meal.id} style={s.card}>
             <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{meal.category}</span>
@@ -603,30 +670,30 @@ const ProgressView: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Analytics</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Progreso</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Progreso y Peso</h1>
       </div>
 
       <div style={s.grid}>
         <div style={s.card}>
-          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Racha</span>
+          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Racha Activa</span>
           <div style={{ fontSize: '24px', fontWeight: 900, color: '#fb923c', margin: '6px 0 0 0' }}>🔥 {streak} días</div>
         </div>
         <div style={s.card}>
-          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Sesiones</span>
+          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Series Totales</span>
           <div style={{ fontSize: '24px', fontWeight: 900, color: '#22d3ee', margin: '6px 0 0 0' }}>⚡ {workoutLogs.length}</div>
         </div>
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 8px 0' }}>Registrar Peso Actual</h3>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 8px 0' }}>Registrar Peso de Hoy</h3>
         <form onSubmit={e => { e.preventDefault(); const w = Number(weightInput); if(w) { addMeasurement(w); setWeightInput(''); }}} style={{ display: 'flex', gap: '8px' }}>
-          <input type="number" step="0.1" placeholder="Ej: 78 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
-          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px' }}>Guardar</button>
+          <input type="number" step="0.1" placeholder="Ej: 76.5 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
+          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>Guardar</button>
         </form>
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>Historial</h3>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>Historial de Evolución</h3>
         {measurements.slice().reverse().map((m, idx) => (
           <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid #27272a', paddingBottom: '8px', marginBottom: '8px' }}>
             <span style={{ color: '#a1a1aa' }}>{m.date}</span>
@@ -641,17 +708,22 @@ const ProgressView: React.FC = () => {
 const ProfileView: React.FC = () => {
   const { profile, updateProfile } = useFitApp();
   const [name, setName] = useState(profile.name);
+  const [weight, setWeight] = useState(String(profile.weight));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Configuración</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Perfil</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Perfil Personal</h1>
       </div>
       <div style={s.card}>
-        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Nombre Comercial</label>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Nombre del Atleta</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} style={s.input} />
-        <button onClick={() => { updateProfile({ name }); alert('¡Actualizado con éxito!'); }} style={s.buttonCyan}>
+
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso Base (kg)</label>
+        <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={s.input} />
+
+        <button onClick={() => { updateProfile({ name, weight: Number(weight) }); alert('¡Perfil actualizado con éxito!'); }} style={s.buttonCyan}>
           GUARDAR CAMBIOS
         </button>
       </div>
@@ -678,7 +750,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v2.0 ELITE</span>
+        <span style={s.badge}>v3.0 FUNCIONAL</span>
       </header>
 
       <main style={{ flex: 1 }}>
@@ -714,8 +786,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <FitAppProvider>
-      <AppContent />
-    </FitAppProvider>
+    <ErrorBoundary>
+      <FitAppProvider>
+        <AppContent />
+      </FitAppProvider>
+    </ErrorBoundary>
   );
 }
