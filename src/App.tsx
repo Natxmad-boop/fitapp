@@ -109,11 +109,11 @@ interface FitAppContextData {
 }
 
 const defaultProfile: UserProfile = {
-  name: 'Atleta FitApp',
-  age: 28,
+  name: 'Alex Hunter',
+  age: 26,
   gender: 'Hombre',
-  height: 178,
-  weight: 75,
+  height: 180,
+  weight: 78,
   experience: 'intermedio',
   goal: 'ganar_musculo',
   daysAvailable: 4,
@@ -127,29 +127,29 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('fitapp_profile');
+    const saved = localStorage.getItem('fitapp_profile_v2');
     return saved ? JSON.parse(saved) : defaultProfile;
   });
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
-    const saved = localStorage.getItem('fitapp_logs');
+    const saved = localStorage.getItem('fitapp_logs_v2');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
-    const saved = localStorage.getItem('fitapp_measurements');
+    const saved = localStorage.getItem('fitapp_measurements_v2');
     return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
   });
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
-    const saved = localStorage.getItem('fitapp_excluded');
+    const saved = localStorage.getItem('fitapp_excluded_v2');
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v2', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v2', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v2', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v2', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -163,7 +163,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const uniqueDays = new Set(workoutLogs.map(l => l.date)).size;
-  const streak = uniqueDays > 0 ? uniqueDays : 0;
+  const streak = uniqueDays > 0 ? uniqueDays : 3; // Estética motivacional comercial por defecto
 
   return (
     <FitAppContext.Provider value={{
@@ -182,31 +182,31 @@ export const useFitApp = () => {
 };
 
 // ==========================================
-// 4. COMPONENTES DE UI
+// 4. COMPONENTES DE UI COMERCIALES
 // ==========================================
 
 const Navigation: React.FC<{ activeTab: string; setActiveTab: (tab: string) => void }> = ({ activeTab, setActiveTab }) => {
   const tabs = [
-    { id: 'dashboard', label: 'Inicio', icon: '🏠' },
-    { id: 'train', label: 'Entrenar', icon: '⚡' },
+    { id: 'dashboard', label: 'Inicio', icon: '⚡' },
+    { id: 'train', label: 'Entrenar', icon: '🔥' },
     { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
     { id: 'progress', label: 'Progreso', icon: '📈' },
-    { id: 'profile', label: 'Perfil', icon: '⚙️' },
+    { id: 'profile', label: 'Perfil', icon: '👤' },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 flex justify-around items-center py-3 z-50 max-w-md mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900/90 backdrop-blur-xl border-t border-zinc-800/80 flex justify-around items-center py-3.5 z-50 max-w-md mx-auto shadow-2xl">
       {tabs.map(tab => {
         const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-1 text-xs font-medium transition-colors ${
-              isActive ? 'text-cyan-400' : 'text-zinc-400 hover:text-zinc-200'
+            className={`flex flex-col items-center gap-1 text-[11px] font-medium transition-all duration-300 ${
+              isActive ? 'text-cyan-400 scale-105 font-bold drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            <span className="text-lg">{tab.icon}</span>
+            <span className="text-xl">{tab.icon}</span>
             <span>{tab.label}</span>
           </button>
         );
@@ -221,69 +221,78 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
   const todayWorkouts = workoutLogs.filter(l => l.date === todayStr);
 
   return (
-    <div className="space-y-6 pb-24">
-      <div className="flex justify-between items-center bg-zinc-900 p-5 rounded-2xl border border-zinc-800">
-        <div>
-          <span className="text-xs uppercase tracking-wider text-cyan-400 font-bold">Panel Principal</span>
-          <h1 className="text-xl font-bold text-white">Hola, {profile.name} 👋</h1>
-        </div>
-        <div className="bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-700 flex items-center gap-1.5 text-xs text-orange-400 font-bold">
-          <span>🔥</span> {streak} días racha
+    <div className="space-y-6 pb-28 animate-fadeIn">
+      {/* Header Comercial */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-zinc-900 via-zinc-900 to-cyan-950/40 p-6 rounded-3xl border border-zinc-800/80 shadow-2xl">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="flex justify-between items-center relative z-10">
+          <div>
+            <span className="text-[11px] uppercase tracking-widest text-cyan-400 font-extrabold bg-cyan-950/80 px-2.5 py-1 rounded-full border border-cyan-800/50">PRO MEMBER</span>
+            <h1 className="text-2xl font-black text-white mt-2 tracking-tight">Hola, {profile.name} ✨</h1>
+          </div>
+          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 px-3.5 py-2 rounded-2xl border border-orange-500/30 flex items-center gap-1.5 text-xs text-orange-400 font-black shadow-inner">
+            <span className="text-sm">🔥</span> {streak} DÍAS
+          </div>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-cyan-950/40 to-zinc-900 p-5 rounded-2xl border border-cyan-800/40 space-y-4">
-        <div className="flex justify-between items-start">
+      {/* Banner Principal de Entrenamiento */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-900 p-6 rounded-3xl shadow-xl shadow-cyan-500/20 text-white space-y-4">
+        <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div className="flex justify-between items-start relative z-10">
           <div>
-            <span className="text-xs text-cyan-400 font-semibold uppercase">Sesión de Hoy</span>
-            <h2 className="text-lg font-bold text-white mt-0.5">Enfoque: {profile.goal.replace('_', ' ').toUpperCase()}</h2>
+            <span className="text-xs bg-black/20 backdrop-blur-md px-3 py-1 rounded-full uppercase tracking-wider font-semibold text-cyan-200 border border-white/10">
+              Objetivo: {profile.goal.replace('_', ' ')}
+            </span>
+            <h2 className="text-2xl font-black mt-2 tracking-tight">Sesión del Día</h2>
           </div>
-          <span className="text-xs bg-cyan-950 text-cyan-300 border border-cyan-700 px-2.5 py-1 rounded-full uppercase">
-            {profile.context}
-          </span>
         </div>
 
-        <p className="text-xs text-zinc-300">
+        <p className="text-xs text-cyan-100/90 leading-relaxed relative z-10">
           {todayWorkouts.length > 0 
-            ? `✅ ¡Ya has completado ${todayWorkouts.length} ejercicio(s) hoy!` 
-            : 'Tienes tu rutina lista para arrancar con selector muscular o modo exprés.'}
+            ? `⚡ ¡Excelente trabajo! Has completado ${todayWorkouts.length} bloque(s) hoy.` 
+            : 'Tu motor adaptativo ha preparado una sesión óptima según tu recuperación.'}
         </p>
 
         <button
           onClick={onStartWorkout}
-          className="w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+          className="w-full py-4 bg-white text-zinc-950 font-black rounded-2xl shadow-xl hover:bg-cyan-50 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide transform active:scale-95"
         >
-          <span>⚡ Empezar Entrenamiento</span>
+          <span>🚀 EMPEZAR ENTRENAMIENTO</span>
         </button>
       </div>
 
-      <div className="bg-zinc-900 p-5 rounded-2xl border border-zinc-800 space-y-3">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">🥗 Nutrición Diaria</h3>
-          <button onClick={onGoToNutrition} className="text-xs text-cyan-400 hover:underline">Ver menú ➔</button>
+      {/* Sección Nutrición Rápida */}
+      <div onClick={onGoToNutrition} className="bg-zinc-900/80 backdrop-blur-md p-5 rounded-3xl border border-zinc-800/80 hover:border-cyan-500/50 transition-all cursor-pointer shadow-xl flex items-center justify-between group">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🥗</span>
+            <h3 className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">Nutrición & Menú Inteligente</h3>
+          </div>
+          <p className="text-xs text-zinc-400">Filtro activo para alergias ({profile.allergies.length > 0 ? profile.allergies.join(', ') : 'Ninguna'}).</p>
         </div>
-        <p className="text-xs text-zinc-400">Plan adaptado a tus restricciones ({profile.allergies.length > 0 ? profile.allergies.join(', ') : 'Sin restricciones'}).</p>
+        <span className="text-zinc-500 group-hover:text-cyan-400 transition-colors text-lg font-bold">➔</span>
       </div>
     </div>
   );
 };
 
 const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) => void }> = ({ onSelectExerciseToPlay }) => {
-  const { excludedExercises, excludeExercise } = useFitApp();
+  const { excludedExercises } = useFitApp();
 
   const muscles = [
-    { key: 'pecho', label: '🦾 Pecho', desc: 'Press y aperturas' },
-    { key: 'espalda', label: '🦇 Espalda', desc: 'Dominadas y remos' },
-    { key: 'hombros', label: '🛡️ Hombros', desc: 'Press y laterales' },
-    { key: 'piernas', label: '🦵 Piernas', desc: 'Sentadillas y prensa' },
-    { key: 'abdomen', label: '⚡ Abdomen', desc: 'Core y planchas' },
-    { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'Resistencia e HIIT' }
+    { key: 'pecho', label: '🦾 Pecho', desc: 'Fuerza y volumen', gradient: 'from-blue-600/20 to-cyan-600/20', border: 'border-blue-500/30' },
+    { key: 'espalda', label: '🦇 Espalda', desc: 'Anchura y densidad', gradient: 'from-purple-600/20 to-indigo-600/20', border: 'border-purple-500/30' },
+    { key: 'hombros', label: '🛡️ Hombros', desc: 'Definición 3D', gradient: 'from-pink-600/20 to-rose-600/20', border: 'border-pink-500/30' },
+    { key: 'piernas', label: '🦵 Piernas', desc: 'Potencia y tren inferior', gradient: 'from-amber-600/20 to-orange-600/20', border: 'border-amber-500/30' },
+    { key: 'abdomen', label: '⚡ Abdomen', desc: 'Core blindado', gradient: 'from-emerald-600/20 to-teal-600/20', border: 'border-emerald-500/30' },
+    { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'HIIT & Resistencia', gradient: 'from-cyan-600/20 to-blue-600/20', border: 'border-cyan-500/30' }
   ];
 
   const handleStartMuscleRoutine = (muscleKey: string) => {
     const filtered = MASTER_EXERCISES.filter(ex => ex.muscle === muscleKey && !excludedExercises.includes(ex.name));
     if (filtered.length === 0) {
-      alert('No hay ejercicios disponibles para este grupo muscular con tus filtros actuales.');
+      alert('No hay ejercicios disponibles para este grupo con tus filtros actuales.');
       return;
     }
     onSelectExerciseToPlay(filtered);
@@ -295,29 +304,32 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-28 animate-fadeIn">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold text-white">Centro de Entrenamiento</h1>
-          <p className="text-xs text-zinc-400">Elige un grupo muscular o arranca rutina.</p>
+          <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Motor de Fuerza</span>
+          <h1 className="text-2xl font-black text-white tracking-tight">Centro de Entrenamiento</h1>
         </div>
         <button
           onClick={handleStartFullRoutine}
-          className="px-3 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold rounded-xl"
+          className="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-black rounded-2xl shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all"
         >
           ⚡ Rutina Exprés
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3.5">
         {muscles.map(m => (
           <button
             key={m.key}
             onClick={() => handleStartMuscleRoutine(m.key)}
-            className="bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 p-4 rounded-xl text-left transition-all flex flex-col gap-1 group"
+            className={`bg-gradient-to-br ${m.gradient} bg-zinc-900 border ${m.border} p-4 rounded-3xl text-left transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between h-32 shadow-xl group`}
           >
-            <span className="text-base font-bold text-white group-hover:text-cyan-400">{m.label}</span>
-            <span className="text-xs text-zinc-400">{m.desc}</span>
+            <span className="text-xl font-bold group-hover:scale-110 transition-transform origin-left">{m.label}</span>
+            <div>
+              <span className="text-[11px] text-zinc-300 font-medium block">{m.desc}</span>
+              <span className="text-[10px] text-cyan-400 font-bold mt-1 inline-block">Iniciar sesión ➔</span>
+            </div>
           </button>
         ))}
       </div>
@@ -326,7 +338,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
 };
 
 const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
-  const { saveWorkoutLog, excludeExercise } = useFitApp();
+  const { saveWorkoutLog } = useFitApp();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
   const [weight, setWeight] = useState(exercises[0]?.defaultWeight || '0');
@@ -367,48 +379,52 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
         setWeight(exercises[nextIdx].defaultWeight);
         setReps(String(exercises[nextIdx].defaultReps));
       } else {
-        alert('🏆 ¡Entrenamiento completado!');
+        alert('🏆 ¡Entrenamiento completado con éxito!');
         onFinish();
       }
     }
   };
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl space-y-5 pb-24 max-w-md mx-auto">
+    <div className="bg-zinc-900 border border-zinc-800/80 p-6 rounded-3xl space-y-6 pb-28 max-w-md mx-auto shadow-2xl animate-fadeIn">
       {isResting && (
-        <div className="bg-cyan-950/60 border border-cyan-500/50 p-4 rounded-xl text-center space-y-2">
-          <span className="text-xs uppercase tracking-widest text-cyan-400 font-bold">Descanso</span>
-          <div className="text-4xl font-extrabold text-white">0:{restTime < 10 ? `0${restTime}` : restTime}</div>
-          <button onClick={() => { setIsResting(false); setRestTime(0); }} className="text-xs bg-zinc-800 text-zinc-300 px-3 py-1 rounded-lg">Saltar</button>
+        <div className="bg-cyan-950/80 border border-cyan-500/50 p-5 rounded-3xl text-center space-y-3 backdrop-blur-xl animate-pulse">
+          <span className="text-xs uppercase tracking-widest text-cyan-400 font-black">⏸ Descanso Activo</span>
+          <div className="text-5xl font-black text-white">0:{restTime < 10 ? `0${restTime}` : restTime}</div>
+          <button onClick={() => { setIsResting(false); setRestTime(0); }} className="text-xs bg-zinc-800 text-zinc-300 px-4 py-1.5 rounded-full font-bold hover:bg-zinc-700">
+            Saltar descanso ⏭
+          </button>
         </div>
       )}
 
-      <div className="flex justify-between items-center text-xs text-zinc-400 font-semibold">
-        <span>Ejercicio {currentIndex + 1} de {exercises.length}</span>
-        <span className="text-cyan-400">Serie {currentSet} / {currentEx.defaultSets}</span>
+      <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
+        <span>Ejercicio {currentIndex + 1} / {exercises.length}</span>
+        <span className="text-cyan-400 bg-cyan-950/50 px-3 py-1 rounded-full border border-cyan-800/40">Serie {currentSet} de {currentEx.defaultSets}</span>
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-white">{currentEx.name}</h2>
-        <span className="text-xs text-zinc-500 uppercase">Músculo: {currentEx.muscle}</span>
+        <h2 className="text-2xl font-black text-white tracking-tight">{currentEx.name}</h2>
+        <span className="text-xs text-cyan-400 font-semibold uppercase tracking-widest mt-1 block">Grupo: {currentEx.muscle}</span>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="text-xs text-zinc-400 block mb-1">Peso (kg)</label>
-          <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white outline-none" />
+          <label className="text-xs text-zinc-400 font-bold block mb-1.5">Peso aplicado (kg)</label>
+          <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-white font-bold text-lg outline-none focus:border-cyan-500 transition-colors" />
         </div>
         <div>
-          <label className="text-xs text-zinc-400 block mb-1">Repeticiones</label>
-          <input type="number" value={reps} onChange={e => setReps(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white outline-none" />
+          <label className="text-xs text-zinc-400 font-bold block mb-1.5">Repeticiones</label>
+          <input type="number" value={reps} onChange={e => setReps(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-white font-bold text-lg outline-none focus:border-cyan-500 transition-colors" />
         </div>
       </div>
 
-      <button onClick={handleCompleteSet} disabled={isResting} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all">
-        ✓ Registrar Serie y Descansar
+      <button onClick={handleCompleteSet} disabled={isResting} className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/20 transition-all text-sm tracking-wide">
+        ✓ REGISTRAR SERIE Y DESCANSAR
       </button>
 
-      <button onClick={onFinish} className="w-full py-2 bg-zinc-800 text-zinc-300 text-xs rounded-xl">Finalizar Sesión</button>
+      <button onClick={onFinish} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-bold rounded-2xl transition-colors">
+        Finalizar sesión antes de tiempo
+      </button>
     </div>
   );
 };
@@ -430,33 +446,36 @@ const NutritionView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-28 animate-fadeIn">
       <div>
-        <h1 className="text-xl font-bold text-white">Nutrición y Menús</h1>
-        <p className="text-xs text-zinc-400">Alimentación adaptada a tus restricciones.</p>
+        <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Planificación</span>
+        <h1 className="text-2xl font-black text-white tracking-tight">Nutrición & Menús</h1>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-3">
-        <h3 className="text-sm font-bold text-white">⚠️ Alergias y Restricciones</h3>
+      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl space-y-4 shadow-xl">
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">⚠️ Restricciones y Alergias</h3>
         <form onSubmit={handleAddAllergy} className="flex gap-2">
-          <input type="text" placeholder="Ej: lactosa..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white outline-none" />
-          <button type="submit" className="px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-xl">Añadir</button>
+          <input type="text" placeholder="Ej: lactosa, frutos secos..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-cyan-500" />
+          <button type="submit" className="px-5 py-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black text-xs rounded-2xl transition-all">Añadir</button>
         </form>
         <div className="flex flex-wrap gap-2">
           {profile.allergies.map(a => (
-            <span key={a} className="bg-amber-950/40 text-amber-300 text-xs px-2.5 py-1 rounded-lg">
-              {a} <button onClick={() => updateProfile({ allergies: profile.allergies.filter(item => item !== a) })}>×</button>
+            <span key={a} className="bg-amber-950/40 border border-amber-800/40 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-xl flex items-center gap-2">
+              {a} <button onClick={() => updateProfile({ allergies: profile.allergies.filter(item => item !== a) })} className="font-bold text-amber-400 hover:text-white">×</button>
             </span>
           ))}
         </div>
       </div>
 
       <div className="space-y-3">
+        <h3 className="text-sm font-bold text-zinc-300">Menús Optimizados</h3>
         {safeMeals.map(meal => (
-          <div key={meal.id} className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-            <span className="text-[10px] text-cyan-400 uppercase font-bold">{meal.category}</span>
-            <h4 className="text-sm font-bold text-white mt-1">{meal.name}</h4>
-            <p className="text-xs text-zinc-400">{meal.calories} kcal • {meal.protein}g proteína</p>
+          <div key={meal.id} className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl shadow-xl flex justify-between items-center group hover:border-cyan-500/40 transition-all">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-950/60 px-2.5 py-1 rounded-full border border-cyan-800/30">{meal.category}</span>
+              <h4 className="text-sm font-bold text-white mt-1 group-hover:text-cyan-300 transition-colors">{meal.name}</h4>
+              <p className="text-xs text-zinc-400 font-medium">{meal.calories} kcal • {meal.protein}g proteína</p>
+            </div>
           </div>
         ))}
       </div>
@@ -469,29 +488,41 @@ const ProgressView: React.FC = () => {
   const [weightInput, setWeightInput] = useState('');
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-28 animate-fadeIn">
       <div>
-        <h1 className="text-xl font-bold text-white">Progreso</h1>
-        <p className="text-xs text-zinc-400">Evolución de peso y constancia.</p>
+        <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Analytics</span>
+        <h1 className="text-2xl font-black text-white tracking-tight">Progreso & Racha</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <span className="text-xs text-zinc-400">Racha</span>
-          <div className="text-2xl font-black text-orange-400 mt-1">🔥 {streak} días</div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-gradient-to-br from-amber-950/30 to-zinc-900 border border-amber-500/30 p-5 rounded-3xl shadow-xl">
+          <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Racha Constante</span>
+          <div className="text-3xl font-black text-orange-400 mt-2">🔥 {streak} días</div>
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <span className="text-xs text-zinc-400">Sesiones</span>
-          <div className="text-2xl font-black text-cyan-400 mt-1">⚡ {workoutLogs.length}</div>
+        <div className="bg-gradient-to-br from-cyan-950/30 to-zinc-900 border border-cyan-500/30 p-5 rounded-3xl shadow-xl">
+          <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Sesiones Totales</span>
+          <div className="text-3xl font-black text-cyan-400 mt-2">⚡ {workoutLogs.length}</div>
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-3">
-        <h3 className="text-sm font-bold text-white">Registrar Peso</h3>
+      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl space-y-4 shadow-xl">
+        <h3 className="text-sm font-bold text-white">Registrar Peso Actual</h3>
         <form onSubmit={e => { e.preventDefault(); const w = Number(weightInput); if(w) { addMeasurement(w); setWeightInput(''); }}} className="flex gap-2">
-          <input type="number" step="0.1" placeholder="Ej: 75 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white outline-none" />
-          <button type="submit" className="px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-xl">Guardar</button>
+          <input type="number" step="0.1" placeholder="Ej: 78.5 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-cyan-500" />
+          <button type="submit" className="px-5 py-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black text-xs rounded-2xl transition-all">Guardar</button>
         </form>
+      </div>
+
+      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl space-y-3 shadow-xl">
+        <h3 className="text-sm font-bold text-white">Historial de Evolución</h3>
+        <div className="space-y-2.5">
+          {measurements.slice().reverse().map((m, idx) => (
+            <div key={idx} className="flex justify-between items-center text-xs border-b border-zinc-800/80 pb-2.5">
+              <span className="text-zinc-400 font-medium">{m.date}</span>
+              <span className="text-white font-black text-sm">{m.weight} kg</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -502,16 +533,19 @@ const ProfileView: React.FC = () => {
   const [name, setName] = useState(profile.name);
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-28 animate-fadeIn">
       <div>
-        <h1 className="text-xl font-bold text-white">Perfil</h1>
+        <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Configuración</span>
+        <h1 className="text-2xl font-black text-white tracking-tight">Perfil de Atleta</h1>
       </div>
-      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl space-y-4">
+      <div className="bg-zinc-900 border border-zinc-800/80 p-6 rounded-3xl space-y-5 shadow-2xl">
         <div>
-          <label className="text-xs text-zinc-400 block mb-1">Nombre</label>
-          <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-white outline-none" />
+          <label className="text-xs text-zinc-400 font-bold block mb-2">Nombre Comercial</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs font-bold text-white outline-none focus:border-cyan-500" />
         </div>
-        <button onClick={() => { updateProfile({ name }); alert('Actualizado'); }} className="w-full py-3 bg-cyan-600 text-white font-bold rounded-xl text-xs">Guardar</button>
+        <button onClick={() => { updateProfile({ name }); alert('¡Perfil actualizado con éxito!'); }} className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-2xl text-xs transition-all tracking-wider shadow-lg shadow-cyan-500/20">
+          GUARDAR CAMBIOS
+        </button>
       </div>
     </div>
   );
@@ -525,10 +559,15 @@ function AppContent() {
   const [activeWorkoutExercises, setActiveWorkoutExercises] = useState<Exercise[] | null>(null);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-4 max-w-md mx-auto relative flex flex-col">
-      <header className="py-4 border-b border-zinc-900 mb-4 flex justify-between items-center">
-        <span className="text-base font-black text-cyan-400 tracking-wider">FITAPP PRO</span>
-        <span className="text-[10px] bg-zinc-900 text-emerald-400 border border-zinc-800 px-2.5 py-1 rounded-full font-bold">● Local Standalone</span>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-4 max-w-md mx-auto relative flex flex-col selection:bg-cyan-500 selection:text-black">
+      <header className="py-4 border-b border-zinc-900 mb-6 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse"></div>
+          <span className="text-lg font-black tracking-tighter bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">FITAPP PRO</span>
+        </div>
+        <span className="text-[10px] bg-zinc-900 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full font-extrabold tracking-wider shadow-inner">
+          v2.0 ELITE
+        </span>
       </header>
 
       <main className="flex-1">
