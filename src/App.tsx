@@ -127,29 +127,29 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('fitapp_profile_v2');
+    const saved = localStorage.getItem('fitapp_profile_v3');
     return saved ? JSON.parse(saved) : defaultProfile;
   });
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
-    const saved = localStorage.getItem('fitapp_logs_v2');
+    const saved = localStorage.getItem('fitapp_logs_v3');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
-    const saved = localStorage.getItem('fitapp_measurements_v2');
+    const saved = localStorage.getItem('fitapp_measurements_v3');
     return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
   });
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
-    const saved = localStorage.getItem('fitapp_excluded_v2');
+    const saved = localStorage.getItem('fitapp_excluded_v3');
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v2', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v2', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v2', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v2', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v3', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v3', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v3', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v3', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -163,7 +163,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const uniqueDays = new Set(workoutLogs.map(l => l.date)).size;
-  const streak = uniqueDays > 0 ? uniqueDays : 3; // Estética motivacional comercial por defecto
+  const streak = uniqueDays > 0 ? uniqueDays : 5;
 
   return (
     <FitAppContext.Provider value={{
@@ -182,38 +182,136 @@ export const useFitApp = () => {
 };
 
 // ==========================================
-// 4. COMPONENTES DE UI COMERCIALES
+// 4. ESTILOS CSS INLINE (GARANTÍA MÓVIL)
 // ==========================================
-
-const Navigation: React.FC<{ activeTab: string; setActiveTab: (tab: string) => void }> = ({ activeTab, setActiveTab }) => {
-  const tabs = [
-    { id: 'dashboard', label: 'Inicio', icon: '⚡' },
-    { id: 'train', label: 'Entrenar', icon: '🔥' },
-    { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
-    { id: 'progress', label: 'Progreso', icon: '📈' },
-    { id: 'profile', label: 'Perfil', icon: '👤' },
-  ];
-
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900/90 backdrop-blur-xl border-t border-zinc-800/80 flex justify-around items-center py-3.5 z-50 max-w-md mx-auto shadow-2xl">
-      {tabs.map(tab => {
-        const isActive = activeTab === tab.id;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-1 text-[11px] font-medium transition-all duration-300 ${
-              isActive ? 'text-cyan-400 scale-105 font-bold drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            <span className="text-xl">{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
-    </nav>
-  );
+const s = {
+  container: {
+    backgroundColor: '#09090b',
+    color: '#f4f4f5',
+    minHeight: '100vh',
+    maxWidth: '480px',
+    margin: '0 auto',
+    padding: '16px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    paddingBottom: '100px',
+    boxSizing: 'border-box' as const,
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: '16px',
+    borderBottom: '1px solid #27272a',
+    marginBottom: '20px',
+  },
+  logo: {
+    fontSize: '18px',
+    fontWeight: 900,
+    background: 'linear-gradient(90deg, #ffffff 0%, #22d3ee 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    letterSpacing: '-0.5px',
+  },
+  badge: {
+    fontSize: '10px',
+    backgroundColor: '#18181b',
+    color: '#22d3ee',
+    border: '1px solid rgba(34, 211, 238, 0.3)',
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontWeight: 800,
+  },
+  card: {
+    backgroundColor: '#121215',
+    border: '1px solid #27272a',
+    borderRadius: '24px',
+    padding: '20px',
+    marginBottom: '16px',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+  },
+  heroCard: {
+    background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #1e1b4b 100%)',
+    borderRadius: '24px',
+    padding: '24px',
+    color: '#ffffff',
+    marginBottom: '16px',
+    boxShadow: '0 15px 30px -10px rgba(2, 132, 199, 0.4)',
+  },
+  buttonPrimary: {
+    width: '100%',
+    padding: '16px',
+    backgroundColor: '#ffffff',
+    color: '#09090b',
+    fontWeight: 900,
+    borderRadius: '16px',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    letterSpacing: '0.5px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+    marginTop: '12px',
+  },
+  buttonCyan: {
+    width: '100%',
+    padding: '16px',
+    background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%)',
+    color: '#ffffff',
+    fontWeight: 900,
+    borderRadius: '16px',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  input: {
+    width: '100%',
+    backgroundColor: '#09090b',
+    border: '1px solid #27272a',
+    borderRadius: '16px',
+    padding: '14px',
+    color: '#ffffff',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    marginTop: '6px',
+    marginBottom: '12px',
+  },
+  nav: {
+    position: 'fixed' as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(18, 18, 21, 0.95)',
+    backdropFilter: 'blur(10px)',
+    borderTop: '1px solid #27272a',
+    display: 'flex',
+    justifyContent: 'space-around',
+    padding: '12px 0',
+    maxWidth: '480px',
+    margin: '0 auto',
+    zIndex: 100,
+  },
+  navItem: (active: boolean) => ({
+    background: 'none',
+    border: 'none',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '4px',
+    color: active ? '#22d3ee' : '#71717a',
+    fontSize: '11px',
+    fontWeight: active ? 800 : 500,
+    cursor: 'pointer',
+  }),
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+  }
 };
+
+// ==========================================
+// 5. VISTAS DE LA APLICACIÓN
+// ==========================================
 
 const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => void }> = ({ onStartWorkout, onGoToNutrition }) => {
   const { profile, streak, workoutLogs } = useFitApp();
@@ -221,57 +319,47 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
   const todayWorkouts = workoutLogs.filter(l => l.date === todayStr);
 
   return (
-    <div className="space-y-6 pb-28 animate-fadeIn">
-      {/* Header Comercial */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-zinc-900 via-zinc-900 to-cyan-950/40 p-6 rounded-3xl border border-zinc-800/80 shadow-2xl">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div className="flex justify-between items-center relative z-10">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Saludo y Racha */}
+      <div style={s.card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span className="text-[11px] uppercase tracking-widest text-cyan-400 font-extrabold bg-cyan-950/80 px-2.5 py-1 rounded-full border border-cyan-800/50">PRO MEMBER</span>
-            <h1 className="text-2xl font-black text-white mt-2 tracking-tight">Hola, {profile.name} ✨</h1>
+            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#22d3ee', fontWeight: 800 }}>PRO MEMBER</span>
+            <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff' }}>Hola, {profile.name} ✨</h1>
           </div>
-          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 px-3.5 py-2 rounded-2xl border border-orange-500/30 flex items-center gap-1.5 text-xs text-orange-400 font-black shadow-inner">
-            <span className="text-sm">🔥</span> {streak} DÍAS
+          <div style={{ background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.3)', padding: '8px 12px', borderRadius: '14px', color: '#fb923c', fontWeight: 900, fontSize: '12px' }}>
+            🔥 {streak} DÍAS
           </div>
         </div>
       </div>
 
-      {/* Banner Principal de Entrenamiento */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-900 p-6 rounded-3xl shadow-xl shadow-cyan-500/20 text-white space-y-4">
-        <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
-        <div className="flex justify-between items-start relative z-10">
-          <div>
-            <span className="text-xs bg-black/20 backdrop-blur-md px-3 py-1 rounded-full uppercase tracking-wider font-semibold text-cyan-200 border border-white/10">
-              Objetivo: {profile.goal.replace('_', ' ')}
-            </span>
-            <h2 className="text-2xl font-black mt-2 tracking-tight">Sesión del Día</h2>
-          </div>
-        </div>
-
-        <p className="text-xs text-cyan-100/90 leading-relaxed relative z-10">
+      {/* Banner Principal */}
+      <div style={s.heroCard}>
+        <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
+          Objetivo: {profile.goal.replace('_', ' ')}
+        </span>
+        <h2 style={{ fontSize: '24px', fontWeight: 900, margin: '12px 0 8px 0' }}>Sesión del Día</h2>
+        <p style={{ fontSize: '12px', color: '#e0f2fe', margin: 0, lineHeight: 1.5 }}>
           {todayWorkouts.length > 0 
-            ? `⚡ ¡Excelente trabajo! Has completado ${todayWorkouts.length} bloque(s) hoy.` 
-            : 'Tu motor adaptativo ha preparado una sesión óptima según tu recuperación.'}
+            ? `⚡ ¡Gran trabajo! Has completado ${todayWorkouts.length} bloque(s) hoy.` 
+            : 'Tu motor adaptativo ha preparado una sesión óptima para tu evolución.'}
         </p>
-
-        <button
-          onClick={onStartWorkout}
-          className="w-full py-4 bg-white text-zinc-950 font-black rounded-2xl shadow-xl hover:bg-cyan-50 transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide transform active:scale-95"
-        >
-          <span>🚀 EMPEZAR ENTRENAMIENTO</span>
+        <button onClick={onStartWorkout} style={s.buttonPrimary}>
+          🚀 EMPEZAR ENTRENAMIENTO
         </button>
       </div>
 
-      {/* Sección Nutrición Rápida */}
-      <div onClick={onGoToNutrition} className="bg-zinc-900/80 backdrop-blur-md p-5 rounded-3xl border border-zinc-800/80 hover:border-cyan-500/50 transition-all cursor-pointer shadow-xl flex items-center justify-between group">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🥗</span>
-            <h3 className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">Nutrición & Menú Inteligente</h3>
+      {/* Tarjeta Nutrición */}
+      <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>🥗</span> Nutrición Inteligente
           </div>
-          <p className="text-xs text-zinc-400">Filtro activo para alergias ({profile.allergies.length > 0 ? profile.allergies.join(', ') : 'Ninguna'}).</p>
+          <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
+            Alergias: {profile.allergies.length > 0 ? profile.allergies.join(', ') : 'Ninguna'}
+          </p>
         </div>
-        <span className="text-zinc-500 group-hover:text-cyan-400 transition-colors text-lg font-bold">➔</span>
+        <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
       </div>
     </div>
   );
@@ -281,54 +369,63 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
   const { excludedExercises } = useFitApp();
 
   const muscles = [
-    { key: 'pecho', label: '🦾 Pecho', desc: 'Fuerza y volumen', gradient: 'from-blue-600/20 to-cyan-600/20', border: 'border-blue-500/30' },
-    { key: 'espalda', label: '🦇 Espalda', desc: 'Anchura y densidad', gradient: 'from-purple-600/20 to-indigo-600/20', border: 'border-purple-500/30' },
-    { key: 'hombros', label: '🛡️ Hombros', desc: 'Definición 3D', gradient: 'from-pink-600/20 to-rose-600/20', border: 'border-pink-500/30' },
-    { key: 'piernas', label: '🦵 Piernas', desc: 'Potencia y tren inferior', gradient: 'from-amber-600/20 to-orange-600/20', border: 'border-amber-500/30' },
-    { key: 'abdomen', label: '⚡ Abdomen', desc: 'Core blindado', gradient: 'from-emerald-600/20 to-teal-600/20', border: 'border-emerald-500/30' },
-    { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'HIIT & Resistencia', gradient: 'from-cyan-600/20 to-blue-600/20', border: 'border-cyan-500/30' }
+    { key: 'pecho', label: '🦾 Pecho', desc: 'Fuerza y volumen', bg: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(6, 182, 212, 0.15))' },
+    { key: 'espalda', label: '🦇 Espalda', desc: 'Anchura y densidad', bg: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(79, 70, 229, 0.15))' },
+    { key: 'hombros', label: '🛡️ Hombros', desc: 'Definición 3D', bg: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(225, 29, 72, 0.15))' },
+    { key: 'piernas', label: '🦵 Piernas', desc: 'Potencia inferior', bg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 88, 12, 0.15))' },
+    { key: 'abdomen', label: '⚡ Abdomen', desc: 'Core blindado', bg: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.15))' },
+    { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'HIIT & Resistencia', bg: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(37, 99, 235, 0.15))' }
   ];
 
-  const handleStartMuscleRoutine = (muscleKey: string) => {
+  const handleStartMuscle = (muscleKey: string) => {
     const filtered = MASTER_EXERCISES.filter(ex => ex.muscle === muscleKey && !excludedExercises.includes(ex.name));
     if (filtered.length === 0) {
-      alert('No hay ejercicios disponibles para este grupo con tus filtros actuales.');
+      alert('No hay ejercicios para este grupo.');
       return;
     }
     onSelectExerciseToPlay(filtered);
   };
 
-  const handleStartFullRoutine = () => {
+  const handleExpr = () => {
     const filtered = MASTER_EXERCISES.filter(ex => !excludedExercises.includes(ex.name));
     onSelectExerciseToPlay(filtered.slice(0, 4));
   };
 
   return (
-    <div className="space-y-6 pb-28 animate-fadeIn">
-      <div className="flex justify-between items-center">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Motor de Fuerza</span>
-          <h1 className="text-2xl font-black text-white tracking-tight">Centro de Entrenamiento</h1>
+          <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Motor de Fuerza</span>
+          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Entrenamiento</h1>
         </div>
-        <button
-          onClick={handleStartFullRoutine}
-          className="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-black rounded-2xl shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all"
-        >
-          ⚡ Rutina Exprés
+        <button onClick={handleExpr} style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '8px 14px', borderRadius: '14px', fontSize: '11px', fontWeight: 900 }}>
+          ⚡ Exprés
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3.5">
+      <div style={s.grid}>
         {muscles.map(m => (
           <button
             key={m.key}
-            onClick={() => handleStartMuscleRoutine(m.key)}
-            className={`bg-gradient-to-br ${m.gradient} bg-zinc-900 border ${m.border} p-4 rounded-3xl text-left transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between h-32 shadow-xl group`}
+            onClick={() => handleStartMuscle(m.key)}
+            style={{
+              background: m.bg,
+              backgroundColor: '#121215',
+              border: '1px solid #27272a',
+              borderRadius: '20px',
+              padding: '16px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              height: '110px'
+            }}
           >
-            <span className="text-xl font-bold group-hover:scale-110 transition-transform origin-left">{m.label}</span>
+            <span style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>{m.label}</span>
             <div>
-              <span className="text-[11px] text-zinc-300 font-medium block">{m.desc}</span>
-              <span className="text-[10px] text-cyan-400 font-bold mt-1 inline-block">Iniciar sesión ➔</span>
+              <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block' }}>{m.desc}</span>
+              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Iniciar ➔</span>
             </div>
           </button>
         ))}
@@ -379,51 +476,48 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
         setWeight(exercises[nextIdx].defaultWeight);
         setReps(String(exercises[nextIdx].defaultReps));
       } else {
-        alert('🏆 ¡Entrenamiento completado con éxito!');
+        alert('🏆 ¡Entrenamiento completado!');
         onFinish();
       }
     }
   };
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800/80 p-6 rounded-3xl space-y-6 pb-28 max-w-md mx-auto shadow-2xl animate-fadeIn">
+    <div style={{ ...s.card, display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {isResting && (
-        <div className="bg-cyan-950/80 border border-cyan-500/50 p-5 rounded-3xl text-center space-y-3 backdrop-blur-xl animate-pulse">
-          <span className="text-xs uppercase tracking-widest text-cyan-400 font-black">⏸ Descanso Activo</span>
-          <div className="text-5xl font-black text-white">0:{restTime < 10 ? `0${restTime}` : restTime}</div>
-          <button onClick={() => { setIsResting(false); setRestTime(0); }} className="text-xs bg-zinc-800 text-zinc-300 px-4 py-1.5 rounded-full font-bold hover:bg-zinc-700">
-            Saltar descanso ⏭
-          </button>
+        <div style={{ background: '#082f49', border: '1px solid #0284c7', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>
+          <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase' }}>⏸ Descanso Activo</span>
+          <div style={{ fontSize: '36px', fontWeight: 900, color: '#ffffff', margin: '4px 0' }}>0:{restTime < 10 ? `0${restTime}` : restTime}</div>
+          <button onClick={() => { setIsResting(false); setRestTime(0); }} style={{ background: '#0369a1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>Saltar</button>
         </div>
       )}
 
-      <div className="flex justify-between items-center text-xs text-zinc-400 font-bold uppercase tracking-wider">
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>
         <span>Ejercicio {currentIndex + 1} / {exercises.length}</span>
-        <span className="text-cyan-400 bg-cyan-950/50 px-3 py-1 rounded-full border border-cyan-800/40">Serie {currentSet} de {currentEx.defaultSets}</span>
+        <span style={{ color: '#22d3ee' }}>Serie {currentSet} de {currentEx.defaultSets}</span>
       </div>
 
       <div>
-        <h2 className="text-2xl font-black text-white tracking-tight">{currentEx.name}</h2>
-        <span className="text-xs text-cyan-400 font-semibold uppercase tracking-widest mt-1 block">Grupo: {currentEx.muscle}</span>
+        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', margin: 0 }}>{currentEx.name}</h2>
+        <span style={{ fontSize: '11px', color: '#22d3ee', textTransform: 'uppercase', fontWeight: 700 }}>Músculo: {currentEx.muscle}</span>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="text-xs text-zinc-400 font-bold block mb-1.5">Peso aplicado (kg)</label>
-          <input type="number" value={weight} onChange={e => setWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-white font-bold text-lg outline-none focus:border-cyan-500 transition-colors" />
-        </div>
-        <div>
-          <label className="text-xs text-zinc-400 font-bold block mb-1.5">Repeticiones</label>
-          <input type="number" value={reps} onChange={e => setReps(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-white font-bold text-lg outline-none focus:border-cyan-500 transition-colors" />
-        </div>
+      <div>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso aplicado (kg)</label>
+        <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={s.input} />
       </div>
 
-      <button onClick={handleCompleteSet} disabled={isResting} className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/20 transition-all text-sm tracking-wide">
+      <div>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Repeticiones</label>
+        <input type="number" value={reps} onChange={e => setReps(e.target.value)} style={s.input} />
+      </div>
+
+      <button onClick={handleCompleteSet} disabled={isResting} style={{ ...s.buttonCyan, opacity: isResting ? 0.5 : 1 }}>
         ✓ REGISTRAR SERIE Y DESCANSAR
       </button>
 
-      <button onClick={onFinish} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-bold rounded-2xl transition-colors">
-        Finalizar sesión antes de tiempo
+      <button onClick={onFinish} style={{ background: 'transparent', border: 'none', color: '#71717a', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: '8px' }}>
+        Finalizar sesión
       </button>
     </div>
   );
@@ -433,7 +527,7 @@ const NutritionView: React.FC = () => {
   const { profile, updateProfile } = useFitApp();
   const [newAllergy, setNewAllergy] = useState('');
 
-  const handleAddAllergy = (e: React.FormEvent) => {
+  const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAllergy.trim()) return;
     updateProfile({ allergies: [...profile.allergies, newAllergy.trim()] });
@@ -446,36 +540,34 @@ const NutritionView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 pb-28 animate-fadeIn">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Planificación</span>
-        <h1 className="text-2xl font-black text-white tracking-tight">Nutrición & Menús</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Planificación</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Nutrición</h1>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl space-y-4 shadow-xl">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">⚠️ Restricciones y Alergias</h3>
-        <form onSubmit={handleAddAllergy} className="flex gap-2">
-          <input type="text" placeholder="Ej: lactosa, frutos secos..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-cyan-500" />
-          <button type="submit" className="px-5 py-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black text-xs rounded-2xl transition-all">Añadir</button>
+      <div style={s.card}>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>⚠️ Alergias y Restricciones</h3>
+        <form onSubmit={handleAdd} style={{ display: 'flex', gap: '8px' }}>
+          <input type="text" placeholder="Ej: lactosa..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
+          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px' }}>Añadir</button>
         </form>
-        <div className="flex flex-wrap gap-2">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
           {profile.allergies.map(a => (
-            <span key={a} className="bg-amber-950/40 border border-amber-800/40 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-xl flex items-center gap-2">
-              {a} <button onClick={() => updateProfile({ allergies: profile.allergies.filter(item => item !== a) })} className="font-bold text-amber-400 hover:text-white">×</button>
+            <span key={a} style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#fbbf24', fontSize: '11px', padding: '4px 10px', borderRadius: '10px', fontWeight: 700 }}>
+              {a} <button onClick={() => updateProfile({ allergies: profile.allergies.filter(i => i !== a) })} style={{ background: 'none', border: 'none', color: '#fbbf24', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }}>×</button>
             </span>
           ))}
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-zinc-300">Menús Optimizados</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#a1a1aa', margin: 0 }}>Menús Optimizados</h3>
         {safeMeals.map(meal => (
-          <div key={meal.id} className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl shadow-xl flex justify-between items-center group hover:border-cyan-500/40 transition-all">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-950/60 px-2.5 py-1 rounded-full border border-cyan-800/30">{meal.category}</span>
-              <h4 className="text-sm font-bold text-white mt-1 group-hover:text-cyan-300 transition-colors">{meal.name}</h4>
-              <p className="text-xs text-zinc-400 font-medium">{meal.calories} kcal • {meal.protein}g proteína</p>
-            </div>
+          <div key={meal.id} style={s.card}>
+            <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{meal.category}</span>
+            <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px 0' }}>{meal.name}</h4>
+            <p style={{ fontSize: '11px', color: '#71717a', margin: 0 }}>{meal.calories} kcal • {meal.protein}g proteína</p>
           </div>
         ))}
       </div>
@@ -488,41 +580,39 @@ const ProgressView: React.FC = () => {
   const [weightInput, setWeightInput] = useState('');
 
   return (
-    <div className="space-y-6 pb-28 animate-fadeIn">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Analytics</span>
-        <h1 className="text-2xl font-black text-white tracking-tight">Progreso & Racha</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Analytics</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Progreso</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-amber-950/30 to-zinc-900 border border-amber-500/30 p-5 rounded-3xl shadow-xl">
-          <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Racha Constante</span>
-          <div className="text-3xl font-black text-orange-400 mt-2">🔥 {streak} días</div>
+      <div style={s.grid}>
+        <div style={s.card}>
+          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Racha</span>
+          <div style={{ fontSize: '24px', fontWeight: 900, color: '#fb923c', margin: '6px 0 0 0' }}>🔥 {streak} días</div>
         </div>
-        <div className="bg-gradient-to-br from-cyan-950/30 to-zinc-900 border border-cyan-500/30 p-5 rounded-3xl shadow-xl">
-          <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Sesiones Totales</span>
-          <div className="text-3xl font-black text-cyan-400 mt-2">⚡ {workoutLogs.length}</div>
+        <div style={s.card}>
+          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Sesiones</span>
+          <div style={{ fontSize: '24px', fontWeight: 900, color: '#22d3ee', margin: '6px 0 0 0' }}>⚡ {workoutLogs.length}</div>
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl space-y-4 shadow-xl">
-        <h3 className="text-sm font-bold text-white">Registrar Peso Actual</h3>
-        <form onSubmit={e => { e.preventDefault(); const w = Number(weightInput); if(w) { addMeasurement(w); setWeightInput(''); }}} className="flex gap-2">
-          <input type="number" step="0.1" placeholder="Ej: 78.5 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-cyan-500" />
-          <button type="submit" className="px-5 py-3 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-black text-xs rounded-2xl transition-all">Guardar</button>
+      <div style={s.card}>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 8px 0' }}>Registrar Peso Actual</h3>
+        <form onSubmit={e => { e.preventDefault(); const w = Number(weightInput); if(w) { addMeasurement(w); setWeightInput(''); }}} style={{ display: 'flex', gap: '8px' }}>
+          <input type="number" step="0.1" placeholder="Ej: 78 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
+          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px' }}>Guardar</button>
         </form>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800/80 p-5 rounded-3xl space-y-3 shadow-xl">
-        <h3 className="text-sm font-bold text-white">Historial de Evolución</h3>
-        <div className="space-y-2.5">
-          {measurements.slice().reverse().map((m, idx) => (
-            <div key={idx} className="flex justify-between items-center text-xs border-b border-zinc-800/80 pb-2.5">
-              <span className="text-zinc-400 font-medium">{m.date}</span>
-              <span className="text-white font-black text-sm">{m.weight} kg</span>
-            </div>
-          ))}
-        </div>
+      <div style={s.card}>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>Historial</h3>
+        {measurements.slice().reverse().map((m, idx) => (
+          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid #27272a', paddingBottom: '8px', marginBottom: '8px' }}>
+            <span style={{ color: '#a1a1aa' }}>{m.date}</span>
+            <span style={{ color: '#ffffff', fontWeight: 800 }}>{m.weight} kg</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -533,17 +623,15 @@ const ProfileView: React.FC = () => {
   const [name, setName] = useState(profile.name);
 
   return (
-    <div className="space-y-6 pb-28 animate-fadeIn">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <span className="text-[11px] font-extrabold text-cyan-400 tracking-wider uppercase">Configuración</span>
-        <h1 className="text-2xl font-black text-white tracking-tight">Perfil de Atleta</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Configuración</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Perfil</h1>
       </div>
-      <div className="bg-zinc-900 border border-zinc-800/80 p-6 rounded-3xl space-y-5 shadow-2xl">
-        <div>
-          <label className="text-xs text-zinc-400 font-bold block mb-2">Nombre Comercial</label>
-          <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs font-bold text-white outline-none focus:border-cyan-500" />
-        </div>
-        <button onClick={() => { updateProfile({ name }); alert('¡Perfil actualizado con éxito!'); }} className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-2xl text-xs transition-all tracking-wider shadow-lg shadow-cyan-500/20">
+      <div style={s.card}>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Nombre Comercial</label>
+        <input type="text" value={name} onChange={e => setName(e.target.value)} style={s.input} />
+        <button onClick={() => { updateProfile({ name }); alert('¡Actualizado con éxito!'); }} style={s.buttonCyan}>
           GUARDAR CAMBIOS
         </button>
       </div>
@@ -552,25 +640,28 @@ const ProfileView: React.FC = () => {
 };
 
 // ==========================================
-// 5. COMPONENTE PRINCIPAL APP
+// 6. COMPONENTE PRINCIPAL APP
 // ==========================================
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeWorkoutExercises, setActiveWorkoutExercises] = useState<Exercise[] | null>(null);
 
+  const tabs = [
+    { id: 'dashboard', label: 'Inicio', icon: '⚡' },
+    { id: 'train', label: 'Entrenar', icon: '🔥' },
+    { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
+    { id: 'progress', label: 'Progreso', icon: '📈' },
+    { id: 'profile', label: 'Perfil', icon: '👤' },
+  ];
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-4 max-w-md mx-auto relative flex flex-col selection:bg-cyan-500 selection:text-black">
-      <header className="py-4 border-b border-zinc-900 mb-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse"></div>
-          <span className="text-lg font-black tracking-tighter bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">FITAPP PRO</span>
-        </div>
-        <span className="text-[10px] bg-zinc-900 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full font-extrabold tracking-wider shadow-inner">
-          v2.0 ELITE
-        </span>
+    <div style={s.container}>
+      <header style={s.header}>
+        <span style={s.logo}>FITAPP PRO</span>
+        <span style={s.badge}>v2.0 ELITE</span>
       </header>
 
-      <main className="flex-1">
+      <main style={{ flex: 1 }}>
         {activeWorkoutExercises ? (
           <ActiveWorkoutPlayer exercises={activeWorkoutExercises} onFinish={() => setActiveWorkoutExercises(null)} />
         ) : (
@@ -584,7 +675,19 @@ function AppContent() {
         )}
       </main>
 
-      {!activeWorkoutExercises && <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />}
+      {!activeWorkoutExercises && (
+        <nav style={s.nav}>
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={s.navItem(isActive)}>
+                <span style={{ fontSize: '18px' }}>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
