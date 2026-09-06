@@ -189,7 +189,7 @@ const MASTER_MEALS: MealItem[] = [
 ];
 
 // ==========================================
-// 3. CONTEXTO GLOBAL Y PERSISTENCIA
+// 3. CONTEXTO GLOBAL Y PERSISTENCIA (VERSIÓN v17 CON RESET FORZADO DE RUTINA)
 // ==========================================
 interface FitAppContextData {
   profile: UserProfile;
@@ -233,8 +233,16 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v16');
-      return saved ? JSON.parse(saved) : defaultProfile;
+      const saved = localStorage.getItem('fitapp_profile_v17');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Aseguramos que si existía perfil previo pero no tenía la rutina actualizada, se le inyecte la por defecto
+        if (!parsed.weeklyRoutine || parsed.weeklyRoutine.length === 0) {
+          parsed.weeklyRoutine = DEFAULT_WEEKLY_ROUTINE;
+        }
+        return parsed;
+      }
+      return defaultProfile;
     } catch (e) {
       return defaultProfile;
     }
@@ -242,7 +250,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v16');
+      const saved = localStorage.getItem('fitapp_logs_v17');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -251,7 +259,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v16');
+      const saved = localStorage.getItem('fitapp_measurements_v17');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -260,20 +268,28 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v16');
+      const saved = localStorage.getItem('fitapp_excluded_v17');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v16', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v16', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v16', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v16', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v17', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v17', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v17', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v17', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
-  const updateWeeklyRoutine = (newRoutine: WeeklyRoutineDay[]) => setProfile(prev => ({ ...prev, weeklyRoutine: newRoutine }));
+  
+  const updateWeeklyRoutine = (newRoutine: WeeklyRoutineDay[]) => {
+    setProfile(prev => {
+      const updated = { ...prev, weeklyRoutine: newRoutine };
+      localStorage.setItem('fitapp_profile_v17', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
   
   const addMeasurement = (weight: number) => {
@@ -577,7 +593,8 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
 // ==========================================
 const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForDay: (muscles: string[]) => void }> = ({ onBackToHome, onStartWorkoutForDay }) => {
   const { profile, updateWeeklyRoutine } = useFitApp();
-  const [routine, setRoutine] = useState<WeeklyRoutineDay[]>(profile.weeklyRoutine || DEFAULT_WEEKLY_ROUTINE);
+  // Sincronización directa con profile.weeklyRoutine para reflejar cambios instantáneos
+  const routine = profile.weeklyRoutine || DEFAULT_WEEKLY_ROUTINE;
 
   const availableMuscles = [
     { key: 'pecho', label: '🦾 Pecho' },
@@ -591,28 +608,32 @@ const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForD
   ];
 
   const handleToggleMuscle = (dayIndex: number, muscleKey: string) => {
-    const updated = [...routine];
-    const day = updated[dayIndex];
+    const updated = routine.map((day, idx) => {
+      if (idx !== dayIndex) return day;
+      if (day.isRestDay) return day;
 
-    if (day.isRestDay) return;
+      const hasMuscle = day.muscles.includes(muscleKey);
+      const newMuscles = hasMuscle
+        ? day.muscles.filter(m => m !== muscleKey)
+        : [...day.muscles, muscleKey];
 
-    if (day.muscles.includes(muscleKey)) {
-      day.muscles = day.muscles.filter(m => m !== muscleKey);
-    } else {
-      day.muscles = [...day.muscles, muscleKey];
-    }
+      return { ...day, muscles: newMuscles };
+    });
 
-    setRoutine(updated);
     updateWeeklyRoutine(updated);
   };
 
   const handleToggleRestDay = (dayIndex: number) => {
-    const updated = [...routine];
-    updated[dayIndex].isRestDay = !updated[dayIndex].isRestDay;
-    if (updated[dayIndex].isRestDay) {
-      updated[dayIndex].muscles = [];
-    }
-    setRoutine(updated);
+    const updated = routine.map((day, idx) => {
+      if (idx !== dayIndex) return day;
+      const nextRestState = !day.isRestDay;
+      return {
+        ...day,
+        isRestDay: nextRestState,
+        muscles: nextRestState ? [] : day.muscles
+      };
+    });
+
     updateWeeklyRoutine(updated);
   };
 
@@ -1139,7 +1160,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v6.3 CALENDARIO</span>
+        <span style={s.badge}>v6.4 CALENDARIO SYNC</span>
       </header>
 
       <main style={{ flex: 1 }}>
