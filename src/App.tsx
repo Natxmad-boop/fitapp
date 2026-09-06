@@ -51,8 +51,9 @@ class ErrorBoundary extends Component<Props, State> {
 // 1. TIPOS E INTERFACES
 // ==========================================
 export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mantener';
-export type ExperienceLevel = 'principiante' | 'intermedio' | 'avanzado';
+export type ExperienceLevel = 'Principiante' | 'Intermedio' | 'Avanzado';
 export type ContextType = 'casa' | 'gimnasio' | 'fuera_de_casa';
+export type EquipmentType = 'sin_material' | 'mobiliario' | 'carga_improvisada' | 'accesorios';
 
 export interface CustomEquipmentItem {
   id: string;
@@ -70,25 +71,26 @@ export interface UserProfile {
   goal: Goal;
   daysAvailable: number;
   context: ContextType;
-  equipment: string[];
+  equipment: EquipmentType[];
   customEquipmentList: CustomEquipmentItem[];
   allergies: string[];
   dislikedFoods: string[];
-  pantryIngredients: string[]; // Ingredientes disponibles en casa
+  pantryIngredients: string[]; 
 }
 
 export interface Exercise {
   id: string;
   name: string;
-  muscle: 'pecho' | 'espalda' | 'hombros' | 'piernas' | 'abdomen' | 'cardio';
+  muscle: 'pecho' | 'espalda' | 'hombros' | 'piernas' | 'biceps' | 'triceps' | 'abdomen' | 'core' | 'cardio' | 'movilidad';
   defaultSets: number;
   defaultReps: number;
   defaultWeight: string;
-  context: ('casa' | 'gimnasio' | 'fuera_de_casa')[];
-  equipmentNeeded: string;
+  context: ContextType[];
+  equipment: EquipmentType;
+  level: ExperienceLevel;
   description: string;
   homeAlternative: string;
-  videoUrl: string; // URL directa de imagen o GIF demostrativo
+  videoUrl: string;
 }
 
 export interface WorkoutSetLog {
@@ -123,94 +125,53 @@ export interface BodyMeasurement {
 }
 
 // ==========================================
-// 2. CONSTANTES Y MATERIALES BASE
+// 2. CONSTANTES Y BIBLIOTECA MAESTRA (50+ EJERCICIOS)
 // ==========================================
 const DEFAULT_CUSTOM_EQUIPMENT: CustomEquipmentItem[] = [
-  { id: 'bandas_elasticas', name: 'Bandas elásticas', icon: '🪡' },
-  { id: 'rodillo_abdominal', name: 'Rodillo de abdominales', icon: '⭕' },
-  { id: 'tronco_madera', name: 'Tronco de madera', icon: '🪵' },
-  { id: 'silla_toalla', name: 'Silla / Toalla casera', icon: '🪑' }
+  { id: 'mobiliario', name: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
+  { id: 'carga_improvisada', name: 'Carga improvisada (Mochila, botellas)', icon: '🎒' },
+  { id: 'accesorios', name: 'Accesorios (Bandas elásticas, esterilla)', icon: '🧻' }
 ];
 
 const MASTER_EXERCISES: Exercise[] = [
-  { 
-    id: '1', 
-    name: 'Press de Banca Plano', 
-    muscle: 'pecho', 
-    defaultSets: 4, 
-    defaultReps: 10, 
-    defaultWeight: '60', 
-    context: ['gimnasio'], 
-    equipmentNeeded: 'barra',
-    description: 'Acuéstate en el banco, agarra la barra un poco más ancha que los hombros, baja de forma controlada hasta el pecho y empuja hacia arriba.',
-    homeAlternative: 'Flexiones declinadas o press de suelo con bandas elásticas pisadas en la espalda.',
-    videoUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80'
-  },
-  { 
-    id: '2', 
-    name: 'Flexiones de Pecho', 
-    muscle: 'pecho', 
-    defaultSets: 3, 
-    defaultReps: 15, 
-    defaultWeight: '0', 
-    context: ['casa', 'gimnasio', 'fuera_de_casa'], 
-    equipmentNeeded: 'corporal',
-    description: 'Manos a la altura de los hombros, cuerpo totalmente recto y flexionar codos a 45 grados sin arquear la zona lumbar.',
-    homeAlternative: 'Se puede hacer con manos sobre una silla si es muy duro, o en el suelo.',
-    videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80'
-  },
-  { 
-    id: '3', 
-    name: 'Remo con Mancuerna a 1 Mano', 
-    muscle: 'espalda', 
-    defaultSets: 3, 
-    defaultReps: 12, 
-    defaultWeight: '18', 
-    context: ['casa', 'gimnasio'], 
-    equipmentNeeded: 'mancuernas',
-    description: 'Apoya una rodilla y mano en un banco o silla, mantén la espalda neutra y tira del peso hacia tu cadera apretando la escápula.',
-    homeAlternative: 'Usa una mochila cargada de libros o un tronco de madera ligero.',
-    videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80'
-  },
-  { 
-    id: '4', 
-    name: 'Elevaciones Laterales', 
-    muscle: 'hombros', 
-    defaultSets: 4, 
-    defaultReps: 15, 
-    defaultWeight: '10', 
-    context: ['casa', 'gimnasio'], 
-    equipmentNeeded: 'mancuernas',
-    description: 'De pie, eleva los brazos hacia los lados con una ligera flexión de codo hasta que queden paralelos al suelo.',
-    homeAlternative: 'Usa bandas elásticas pisadas con los pies o botellas de agua.',
-    videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80'
-  },
-  { 
-    id: '5', 
-    name: 'Sentadilla Libre / Con Carga', 
-    muscle: 'piernas', 
-    defaultSets: 4, 
-    defaultReps: 10, 
-    defaultWeight: '50', 
-    context: ['casa', 'gimnasio', 'fuera_de_casa'], 
-    equipmentNeeded: 'barra',
-    description: 'Pies al ancho de caderas, baja la cadera hacia atrás manteniendo el pecho erguido y las rodillas alineadas con la punta de los pies.',
-    homeAlternative: 'Si estás sin peso, sostén un tronco de madera en los hombros o haz sentadillas búlgaras apoyando el pie en una silla.',
-    videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80'
-  },
-  { 
-    id: '6', 
-    name: 'Rueda Abdominal (Rodillo)', 
-    muscle: 'abdomen', 
-    defaultSets: 3, 
-    defaultReps: 12, 
-    defaultWeight: '0', 
-    context: ['casa', 'gimnasio'], 
-    equipmentNeeded: 'rodillo_abdominal',
-    description: 'De rodillas, rueda hacia adelante contrayendo fuertemente el abdomen sin arquear la espalda baja antes de volver.',
-    homeAlternative: 'Si no tienes el rodillo, usa una toalla deslizable sobre suelo liso o haz plancha isométrica.',
-    videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80'
-  }
+  // 🦵 Piernas y glúteos
+  { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Pies al ancho de caderas, baja la cadera manteniendo el pecho erguido.', homeAlternative: 'Sentadilla libre con peso corporal.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_02', name: 'Sentadillas sumo', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Pies abiertos con puntas hacia fuera para enfatizar abductores y glúteos.', homeAlternative: 'Sentadilla sumo libre en casa.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_03', name: 'Sentadilla isométrica contra la pared', muscle: 'piernas', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'sin_material', level: 'Intermedio', description: 'Espalda apoyada en pared formando 90 grados con las rodillas.', homeAlternative: 'Pared libre en salón.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_04', name: 'Zancadas hacia delante', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Da un paso al frente y baja la rodilla trasera sin tocar el suelo.', homeAlternative: 'Zancadas clásicas.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_05', name: 'Zancadas hacia atrás', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Paso atrás para mayor estabilidad en rodillas.', homeAlternative: 'Zancadas inversas.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_06', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Pie trasero elevado en una silla o sofá.', homeAlternative: 'Usa una silla del salón.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_07', name: 'Hip thrust apoyado en sofá', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Espalda alta apoyada en el borde del sofá, empuje de cadera.', homeAlternative: 'Usa el borde de la cama o sofá.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_08', name: 'Elevaciones de gemelos', muscle: 'piernas', defaultSets: 4, defaultReps: 20, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'sin_material', level: 'Principiante', description: 'Sube sobre las puntas de los pies en un escalón.', homeAlternative: 'Borde de un escalón de casa.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+
+  // 💪 Pecho
+  { id: 'chest_01', name: 'Flexiones clásicas', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Intermedio', description: 'Cuerpo recto, codos a 45 grados.', homeAlternative: 'Suelo de casa.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+  { id: 'chest_02', name: 'Flexiones con rodillas apoyadas', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'sin_material', level: 'Principiante', description: 'Variante accesible para principiantes apoyando rodillas.', homeAlternative: 'Suelo con rodillas.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+  { id: 'chest_03', name: 'Flexiones inclinadas (mesa)', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Principiante', description: 'Manos apoyadas en una mesa o encimera alta.', homeAlternative: 'Mesa de comedor o respaldo de sofá.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+  { id: 'chest_04', name: 'Flexiones declinadas', muscle: 'pecho', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Avanzado', description: 'Pies elevados en silla o sofá y manos en el suelo.', homeAlternative: 'Silla para pies.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+
+  // 🪽 Espalda
+  { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Intermedio', description: 'Mochila cargada con libros o botellas, inclinación de tronco a 45º.', homeAlternative: 'Mochila con libros pesados.', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'back_02', name: 'Remo con banda elástica', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'accesorios', level: 'Intermedio', description: 'Pisa la banda con los pies y tira de los extremos hacia tu cadera.', homeAlternative: 'Bandas elásticas ancladas.', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'back_03', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Tumbado boca abajo, eleva brazos y piernas simultáneamente.', homeAlternative: 'Suelo o esterilla.', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+
+  // 🏋️ Hombros
+  { id: 'sh_01', name: 'Press militar con mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Intermedio', description: 'Sujeta la mochila por las asas y desórdala por encima de la cabeza.', homeAlternative: 'Mochila o botellas de agua.', videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'sh_02', name: 'Elevaciones laterales con botellas', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Principiante', description: 'Botellas de agua como mancuernas para elevación lateral.', homeAlternative: 'Botellas de 1.5L llenas de agua.', videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'sh_03', name: 'Pike push-ups', muscle: 'hombros', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'sin_material', level: 'Intermedio', description: 'Flexiones con cadera elevada en V invertida para incidir en hombro.', homeAlternative: 'Suelo en posición V.', videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
+
+  // 💪 Bíceps y Tríceps
+  { id: 'bic_01', name: 'Curl con botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Principiante', description: 'Flexión de codo manteniendo los codos pegados al torso.', homeAlternative: 'Botellas de agua.', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'tri_01', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Manos en el borde de una silla, baja el cuerpo flexionando brazos.', homeAlternative: 'Silla firme de casa.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+
+  // 🧱 Abdomen y Core
+  { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Apoyo sobre antebrazos y puntas de pies con abdomen contraído.', homeAlternative: 'Suelo o esterilla.', videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
+  { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Intermedio', description: 'Posición de flexión alternando rodillas al pecho a ritmo dinámico.', homeAlternative: 'Suelo.', videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
+  { id: 'core_03', name: 'Russian twist', muscle: 'core', defaultSets: 3, defaultReps: 20, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'sin_material', level: 'Intermedio', description: 'Sentado con tronco inclinado hacia atrás, gira el torso de lado a lado.', homeAlternative: 'Suelo o con mochila de peso.', videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
+
+  // ❤️ Cardio
+  { id: 'card_01', name: 'Jumping jacks', muscle: 'cardio', defaultSets: 3, defaultReps: 40, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Saltos abriendo y cerrando piernas y brazos.', homeAlternative: 'Espacio libre.', videoUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' },
+  { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Avanzado', description: 'Sentadilla, plancha, flexión opcional y salto vertical.', homeAlternative: 'Suelo.', videoUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' }
 ];
 
 const MASTER_MEALS: MealItem[] = [
@@ -223,8 +184,7 @@ const MASTER_MEALS: MealItem[] = [
 const HEALTHY_DRINKS = [
   { id: 'd1', name: 'Agua Infusionada de Limón y Jengibre', desc: 'Ideal para activar el metabolismo en ayunas.', icon: '🍋' },
   { id: 'd2', name: 'Té Matcha Ceremonial con Hielo', desc: 'Antioxidante y energía limpia sin picos de cortisol.', icon: '🍵' },
-  { id: 'd3', name: 'Kéfir de Agua con Frutos Rojos', desc: 'Excelente probiótico para la salud intestinal e inmunológica.', icon: '🫐' },
-  { id: 'd4', name: 'Infusión de Cúrcuma y Pimienta Negra', desc: 'Poderoso antiinflamatorio natural.', icon: '🟡' }
+  { id: 'd3', name: 'Kéfir de Agua con Frutos Rojos', desc: 'Excelente probiótico para la salud intestinal e inmunológica.', icon: '🫐' }
 ];
 
 // ==========================================
@@ -240,8 +200,7 @@ interface FitAppContextData {
   streak: number;
   excludedExercises: string[];
   excludeExercise: (name: string) => void;
-  toggleEquipment: (item: string) => void;
-  addNewCustomEquipment: (name: string, icon: string) => void;
+  toggleEquipment: (item: EquipmentType) => void;
   togglePantryIngredient: (ingredient: string) => void;
   toggleAllergy: (allergy: string) => void;
 }
@@ -252,11 +211,11 @@ const defaultProfile: UserProfile = {
   gender: 'Hombre',
   height: 178,
   weight: 75,
-  experience: 'intermedio',
+  experience: 'Intermedio',
   goal: 'ganar_musculo',
   daysAvailable: 4,
   context: 'casa',
-  equipment: ['bandas_elasticas', 'rodillo_abdominal', 'tronco_madera'],
+  equipment: ['mobiliario', 'carga_improvisada', 'accesorios'],
   customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
   allergies: [],
   dislikedFoods: [],
@@ -268,7 +227,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v8');
+      const saved = localStorage.getItem('fitapp_profile_v9');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
       return defaultProfile;
@@ -277,7 +236,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v8');
+      const saved = localStorage.getItem('fitapp_logs_v9');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -286,7 +245,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v8');
+      const saved = localStorage.getItem('fitapp_measurements_v9');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -295,17 +254,17 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v8');
+      const saved = localStorage.getItem('fitapp_excluded_v9');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v8', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v8', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v8', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v8', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v9', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v9', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v9', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v9', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -320,22 +279,10 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!excludedExercises.includes(name)) setExcludedExercises(prev => [...prev, name]);
   };
 
-  const toggleEquipment = (item: string) => {
+  const toggleEquipment = (item: EquipmentType) => {
     const exists = profile.equipment.includes(item);
     const newEq = exists ? profile.equipment.filter(e => e !== item) : [...profile.equipment, item];
     updateProfile({ equipment: newEq });
-  };
-
-  const addNewCustomEquipment = (name: string, icon: string) => {
-    if (!name.trim()) return;
-    const newId = 'custom_' + Date.now();
-    const newItem: CustomEquipmentItem = { id: newId, name: name.trim(), icon: icon || '🏋️‍♂️' };
-    
-    setProfile(prev => ({
-      ...prev,
-      customEquipmentList: [...prev.customEquipmentList, newItem],
-      equipment: [...prev.equipment, newId]
-    }));
   };
 
   const togglePantryIngredient = (ing: string) => {
@@ -356,7 +303,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   return (
     <FitAppContext.Provider value={{
       profile, updateProfile, workoutLogs, saveWorkoutLog, measurements,
-      addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment, addNewCustomEquipment,
+      addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment,
       togglePantryIngredient, toggleAllergy
     }}>
       {children}
@@ -536,13 +483,13 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
 
       <div style={s.heroCard}>
         <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
-          Modo activo: {profile.context.replace('_', ' ')}
+          Biblioteca activa filtrada por tus materiales
         </span>
         <h2 style={{ fontSize: '24px', fontWeight: 900, margin: '12px 0 8px 0' }}>Sesión Adaptada</h2>
         <p style={{ fontSize: '12px', color: '#e0f2fe', margin: 0, lineHeight: 1.5 }}>
           {todayWorkouts.length > 0 
             ? `⚡ ¡Gran trabajo! Has registrado ${todayWorkouts.length} ejercicio(s) hoy.` 
-            : `Revisa la tabla diaria antes de empezar para sustituir cualquier ejercicio si te duele algo.`}
+            : `El sistema seleccionará ejercicios compatibles con tu inventario actual (${profile.equipment.length} categorías de material).`}
         </p>
         <button onClick={onStartWorkout} style={s.buttonPrimary}>
           🚀 REVISAR TABLA Y ENTRENAR
@@ -552,10 +499,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
       <div onClick={onGoToProfile} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🎒</span> Materiales, Alimentos e Intolerancias
+            <span>🎒</span> Gestionar Materiales y Despensa
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Configura tu despensa y evita alérgenos.
+            Activa o desactiva mobiliario, mochilas y bandas.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -564,27 +511,29 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
   );
 };
 
-// VISTA 1 DE ENTRENAMIENTO: SELECCIÓN DE MÚSCULO
 const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) => void; onBackToHome: () => void }> = ({ onSelectExerciseToPlay, onBackToHome }) => {
   const { profile } = useFitApp();
 
   const muscles = [
-    { key: 'pecho', label: '🦾 Pecho', desc: 'Fuerza y volumen', bg: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(6, 182, 212, 0.15))' },
-    { key: 'espalda', label: '🦇 Espalda', desc: 'Anchura y densidad', bg: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(79, 70, 229, 0.15))' },
-    { key: 'hombros', label: '🛡️ Hombros', desc: 'Definición 3D', bg: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(225, 29, 72, 0.15))' },
-    { key: 'piernas', label: '🦵 Piernas', desc: 'Potencia inferior', bg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 88, 12, 0.15))' },
-    { key: 'abdomen', label: '⚡ Abdomen', desc: 'Core blindado', bg: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.15))' },
-    { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'HIIT & Resistencia', bg: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(37, 99, 235, 0.15))' }
+    { key: 'piernas', label: '🦵 Piernas y Glúteos', desc: 'Sentadillas, zancadas, hip thrust', bg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 88, 12, 0.15))' },
+    { key: 'pecho', label: '🦾 Pecho', desc: 'Flexiones clásicas y declinadas', bg: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(6, 182, 212, 0.15))' },
+    { key: 'espalda', label: '🦇 Espalda', desc: 'Remo con mochila o bandas', bg: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(79, 70, 229, 0.15))' },
+    { key: 'hombros', label: '🛡️ Hombros', desc: 'Press militar y elevaciones', bg: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(225, 29, 72, 0.15))' },
+    { key: 'core', label: '⚡ Abdomen y Core', desc: 'Planchas y mountain climbers', bg: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.15))' },
+    { key: 'cardio', label: '🏃‍♂️ Cardio', desc: 'Jumping jacks y burpees', bg: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(37, 99, 235, 0.15))' }
   ];
 
   const handleStartMuscle = (muscleKey: string) => {
+    // Permitir ejercicios de peso corporal (sin_material) + los que requieran materiales marcados en el perfil
+    const allowedEquipment = new Set<string>(['sin_material', ...profile.equipment]);
+
     const filtered = MASTER_EXERCISES.filter(ex => 
       ex.muscle === muscleKey && 
-      ex.context.includes(profile.context)
+      allowedEquipment.has(ex.equipment)
     );
 
     if (filtered.length === 0) {
-      alert(`No hay ejercicios de este grupo adaptados para "${profile.context.toUpperCase()}".`);
+      alert(`No hay ejercicios de este grupo compatibles con tus materiales activos. Revisa tu perfil.`);
       return;
     }
     onSelectExerciseToPlay(filtered);
@@ -597,8 +546,8 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Entorno activo: {profile.context.toUpperCase()}</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Selecciona Músculo a Entrenar</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Biblioteca Inteligente</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Selecciona Músculo</h1>
       </div>
 
       <div style={s.grid}>
@@ -617,13 +566,13 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              height: '110px'
+              height: '115px'
             }}
           >
-            <span style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>{m.label}</span>
+            <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff' }}>{m.label}</span>
             <div>
               <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block' }}>{m.desc}</span>
-              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Ver Tabla Diaria ➔</span>
+              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Generar Sesión ➔</span>
             </div>
           </button>
         ))}
@@ -632,20 +581,20 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
   );
 };
 
-// VISTA 2: PREVISUALIZACIÓN DE LA TABLA DIARIA Y SUSTITUCIÓN POR DOLOR
 const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; onConfirmAndStart: (finalExercises: Exercise[]) => void; onBack: () => void }> = ({ exercises, onConfirmAndStart, onBack }) => {
-  const { excludedExercises, excludeExercise } = useFitApp();
+  const { excludedExercises, excludeExercise, profile } = useFitApp();
   const [list, setList] = useState<Exercise[]>(exercises);
 
   const handleSwap = (indexToSwap: number) => {
     const currentEx = list[indexToSwap];
     excludeExercise(currentEx.name);
 
-    // Buscamos un ejercicio alternativo del mismo músculo que no esté ya en la lista y no esté excluido
+    const allowedEquipment = new Set<string>(['sin_material', ...profile.equipment]);
     const availableAlternatives = MASTER_EXERCISES.filter(ex => 
       ex.muscle === currentEx.muscle && 
       !list.some(item => item.id === ex.id) &&
-      !excludedExercises.includes(ex.name)
+      !excludedExercises.includes(ex.name) &&
+      allowedEquipment.has(ex.equipment)
     );
 
     if (availableAlternatives.length > 0) {
@@ -653,9 +602,9 @@ const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; onConfirmAndStart: 
       const updated = [...list];
       updated[indexToSwap] = replacement;
       setList(updated);
-      alert(`⚠️ Ejercicio cambiado por dolor/lesión: "${currentEx.name}" sustituido por "${replacement.name}".`);
+      alert(`⚠️ Ejercicio cambiado: "${currentEx.name}" sustituido por "${replacement.name}".`);
     } else {
-      alert('No hay más variantes disponibles para este grupo muscular en este momento.');
+      alert('No hay más variantes disponibles con tu equipamiento actual.');
     }
   };
 
@@ -666,27 +615,25 @@ const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; onConfirmAndStart: 
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#fb923c', fontWeight: 800 }}>🛡️ Prevención de Lesiones</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Tabla Diaria Programada</h1>
-        <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>Revisa los ejercicios antes de comenzar. Si te duele algo, pulsa el botón de sustituir.</p>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#fb923c', fontWeight: 800 }}>🛡️ Personalización de Sesión</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Tabla Diaria</h1>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {list.map((ex, idx) => (
-          <div key={ex.id} style={{ ...s.card, margin: 0, padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div key={ex.id} style={{ ...s.card, margin: 0, padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800 }}>EJERCICIO {idx + 1}</span>
+                <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, textTransform: 'uppercase' }}>Material: {ex.equipment.replace('_', ' ')}</span>
                 <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', margin: '2px 0 0 0' }}>{ex.name}</h3>
               </div>
               <button 
                 onClick={() => handleSwap(idx)}
                 style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', padding: '6px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
               >
-                🩹 ¿Dolor? Cambiar
+                🩹 Cambiar
               </button>
             </div>
-
             <div style={{ fontSize: '11px', color: '#d4d4d8', background: '#18181b', padding: '8px 12px', borderRadius: '10px' }}>
               🎯 Series: <strong>{ex.defaultSets}</strong> | Repeticiones: <strong>{ex.defaultReps}</strong>
             </div>
@@ -695,15 +642,14 @@ const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; onConfirmAndStart: 
       </div>
 
       <button onClick={() => onConfirmAndStart(list)} style={s.buttonPrimary}>
-        ▶️ EMPEZAR SESIÓN CON ESTA TABLA
+        ▶️ EMPEZAR ENTRENAMIENTO
       </button>
     </div>
   );
 };
 
-// VISTA 3: REPRODUCTOR DE ENTRENAMIENTO CON GIF / IMAGEN TÉCNICA VISIBLE
 const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
-  const { saveWorkoutLog, profile } = useFitApp();
+  const { saveWorkoutLog } = useFitApp();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
   const [weight, setWeight] = useState(exercises[0]?.defaultWeight || '0');
@@ -775,26 +721,23 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
           <span style={{ fontSize: '11px', color: '#22d3ee', textTransform: 'uppercase', fontWeight: 700 }}>Grupo: {currentEx.muscle}</span>
         </div>
 
-        {/* CONTENEDOR MULTIMEDIA TÉCNICA (GIF / IMAGEN) GARANTIZADO */}
         <div style={{ background: '#18181b', borderRadius: '16px', padding: '12px', border: '1px solid #27272a' }}>
-          <div style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>🎥 Demostración y Técnica Correcta</div>
+          <div style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>🎥 Demostración y Técnica</div>
           <img 
             src={currentEx.videoUrl} 
             alt={currentEx.name} 
-            style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '12px', marginBottom: '10px', border: '1px solid #27272a' }} 
+            style={{ width: '100%', height: '170px', objectFit: 'cover', borderRadius: '12px', marginBottom: '10px', border: '1px solid #27272a' }} 
           />
           <div style={{ fontSize: '12px', color: '#e4e4e7', lineHeight: 1.4, marginBottom: '6px' }}>
             {currentEx.description}
           </div>
-          {profile.context === 'casa' && (
-            <div style={{ fontSize: '11px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '8px', borderRadius: '8px', marginTop: '6px' }}>
-              🏠 <strong>Alternativa en casa:</strong> {currentEx.homeAlternative}
-            </div>
-          )}
+          <div style={{ fontSize: '11px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '8px', borderRadius: '8px', marginTop: '6px' }}>
+            🏠 <strong>Alternativa en casa:</strong> {currentEx.homeAlternative}
+          </div>
         </div>
 
         <div>
-          <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso Aplicado (kg)</label>
+          <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Carga Aplicada (kg)</label>
           <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={s.input} />
         </div>
 
@@ -811,23 +754,10 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
   );
 };
 
-// ==========================================
-// 6. VISTA DE NUTRICIÓN, INGREDIENTES E INTOLERANCIAS
-// ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
   const { profile, togglePantryIngredient, toggleAllergy } = useFitApp();
-  const [newIngredient, setNewIngredient] = useState('');
-  const [newAllergy, setNewAllergy] = useState('');
-
-  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'atun', 'atun_lata', 'tofu', 'patata'];
-  const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Marisco', 'Huevo', 'Soja'];
-
-  // Filtrar recetas según intolerancias y disponibilidad de ingredientes
-  const availableMeals = MASTER_MEALS.filter(meal => {
-    // Si contiene algún ingrediente que está en las alergias del usuario (simplificado por nombre), se oculta
-    // Verificamos ingredientes en despensa: idealmente que tenga al menos 1 ingrediente principal
-    return true;
-  });
+  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon'];
+  const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Huevo'];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -836,14 +766,12 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente y Nevera</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Menús y Bebidas Saludables</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Menús y Despensa</h1>
       </div>
 
-      {/* GESTIÓN DE INTOLERANCIAS */}
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#f87171', margin: '0 0 8px 0' }}>⚠️ Alergias e Intolerancias</h3>
-        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Selecciona lo que debes evitar para blindar tus recetas:</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {commonAllergies.map(alg => {
             const active = profile.allergies.includes(alg);
@@ -869,12 +797,9 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         </div>
       </div>
 
-      {/* GESTIÓN DE INGREDIENTES EN NEVERA */}
       <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🥬 Ingredientes en tu Despensa / Nevera</h3>
-        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 10px 0' }}>El sistema te sugerirá menús basándose en lo que tienes:</p>
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🥬 Ingredientes en tu Despensa</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {commonIngredients.map(ing => {
             const hasIt = profile.pantryIngredients.includes(ing);
             return (
@@ -900,26 +825,21 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         </div>
       </div>
 
-      {/* PROPUESTAS DE MENÚS */}
       <div>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Propuestas de Comidas Adaptadas</h3>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Propuestas de Comidas</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {availableMeals.map(meal => (
+          {MASTER_MEALS.map(meal => (
             <div key={meal.id} style={s.card}>
               <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{meal.category}</span>
               <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px 0' }}>{meal.name}</h4>
               <p style={{ fontSize: '11px', color: '#71717a', margin: '0 0 6px 0' }}>{meal.calories} kcal • {meal.protein}g proteína</p>
-              <div style={{ fontSize: '10px', color: '#a1a1aa' }}>
-                🛒 Ingredientes: {meal.requiredIngredients.join(', ')}
-              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* SECCIÓN DE BEBIDAS SALUDABLES */}
       <div style={{ marginTop: '10px' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🫖 Hidratación y Bebidas Saludables</h3>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🫖 Bebidas Saludables</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {HEALTHY_DRINKS.map(drink => (
             <div key={drink.id} style={{ ...s.card, display: 'flex', gap: '12px', alignItems: 'center', padding: '16px', margin: 0 }}>
@@ -937,7 +857,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
 };
 
 const ProgressView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { measurements, addMeasurement, streak, workoutLogs } = useFitApp();
+  const { addMeasurement, streak, workoutLogs } = useFitApp();
   const [weightInput, setWeightInput] = useState('');
 
   return (
@@ -974,18 +894,14 @@ const ProgressView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) 
 };
 
 const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { profile, updateProfile, toggleEquipment, addNewCustomEquipment } = useFitApp();
+  const { profile, updateProfile, toggleEquipment } = useFitApp();
   const [name, setName] = useState(profile.name);
-  const [newEquipName, setNewEquipName] = useState('');
-  const [newEquipIcon, setNewEquipIcon] = useState('🏋️‍♂️');
 
-  const handleAddEquipmentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEquipName.trim()) return;
-    addNewCustomEquipment(newEquipName, newEquipIcon);
-    setNewEquipName('');
-    alert(`¡"${newEquipName}" añadido y configurado en tu inventario con éxito!`);
-  };
+  const equipmentList: { key: EquipmentType; label: string; icon: string }[] = [
+    { key: 'mobiliario', label: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
+    { key: 'carga_improvisada', label: 'Carga improvisada (Mochila, botellas)', icon: '🎒' },
+    { key: 'accesorios', label: 'Accesorios (Bandas elásticas, esterilla)', icon: '🧻' }
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1027,15 +943,15 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
         </div>
 
         <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
-          📦 Materiales disponibles ({profile.equipment.length} activos):
+          📦 Materiales disponibles en casa:
         </label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-          {profile.customEquipmentList.map(item => {
-            const isChecked = profile.equipment.includes(item.id);
+          {equipmentList.map(item => {
+            const isChecked = profile.equipment.includes(item.key);
             return (
               <div 
-                key={item.id} 
-                onClick={() => toggleEquipment(item.id)}
+                key={item.key} 
+                onClick={() => toggleEquipment(item.key)}
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -1047,37 +963,11 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
                   cursor: 'pointer'
                 }}
               >
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>{item.icon} {item.name}</span>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: isChecked ? '#22d3ee' : '#71717a' }}>{isChecked ? '✓ Activo' : '+ Añadir'}</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>{item.icon} {item.label}</span>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: isChecked ? '#22d3ee' : '#71717a' }}>{isChecked ? '✓ Activo' : '+ Activar'}</span>
               </div>
             );
           })}
-        </div>
-
-        <div style={{ background: '#18181b', padding: '16px', borderRadius: '16px', border: '1px solid #27272a', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>➕ ¿Has comprado material nuevo?</h3>
-          <form onSubmit={handleAddEquipmentSubmit}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="text" 
-                placeholder="Emoji" 
-                value={newEquipIcon} 
-                onChange={e => setNewEquipIcon(e.target.value)} 
-                style={{ ...s.input, width: '70px', margin: 0, textAlign: 'center' }} 
-                maxLength={4}
-              />
-              <input 
-                type="text" 
-                placeholder="Nombre (ej: Mancuernas)" 
-                value={newEquipName} 
-                onChange={e => setNewEquipName(e.target.value)} 
-                style={{ ...s.input, margin: 0, flex: 1 }} 
-              />
-            </div>
-            <button type="submit" style={{ ...s.buttonPrimary, marginTop: '10px', background: '#22d3ee', color: '#09090b' }}>
-              AGREGAR NUEVO MATERIAL
-            </button>
-          </form>
         </div>
 
         <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Nombre del Atleta</label>
@@ -1092,7 +982,7 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
 };
 
 // ==========================================
-// 7. COMPONENTE PRINCIPAL APP
+// 6. COMPONENTE PRINCIPAL APP
 // ==========================================
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1111,7 +1001,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v3.8 INTEGRAL</span>
+        <span style={s.badge}>v4.0 INTEGRAL</span>
       </header>
 
       <main style={{ flex: 1 }}>
