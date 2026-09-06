@@ -180,7 +180,6 @@ const MASTER_EXERCISES: Exercise[] = [
 
 const MASTER_MEALS: MealItem[] = [
   { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'] },
-  { id: 'm1_alt', name: 'Tostada integral con aguacate y huevo revuelto', category: 'desayuno', calories: 340, protein: 18, carbs: 28, fats: 16, requiredIngredients: ['pan', 'aguacate', 'huevo'] },
   { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
   { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
   { id: 'm4', name: 'Tortitas de arroz con crema de cacahuete', category: 'snack', calories: 200, protein: 7, carbs: 22, fats: 9, requiredIngredients: ['arroz', 'cacahuete'] },
@@ -189,7 +188,7 @@ const MASTER_MEALS: MealItem[] = [
 ];
 
 // ==========================================
-// 3. CONTEXTO GLOBAL Y PERSISTENCIA (VERSIÓN v18)
+// 3. CONTEXTO GLOBAL Y PERSISTENCIA (VERSIÓN v19)
 // ==========================================
 interface FitAppContextData {
   profile: UserProfile;
@@ -205,9 +204,6 @@ interface FitAppContextData {
   toggleEquipment: (item: EquipmentType) => void;
   togglePantryIngredient: (ingredient: string) => void;
   addPantryIngredient: (ingredient: string) => void;
-  toggleAllergy: (allergy: string) => void;
-  addAllergy: (allergy: string) => void;
-  toggleDislikedFood: (food: string) => void;
 }
 
 const defaultProfile: UserProfile = {
@@ -233,7 +229,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v18');
+      const saved = localStorage.getItem('fitapp_profile_v19');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (!parsed.weeklyRoutine || parsed.weeklyRoutine.length === 0) {
@@ -249,7 +245,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v18');
+      const saved = localStorage.getItem('fitapp_logs_v19');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -258,7 +254,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v18');
+      const saved = localStorage.getItem('fitapp_measurements_v19');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -267,24 +263,24 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v18');
+      const saved = localStorage.getItem('fitapp_excluded_v19');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v18', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v18', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v18', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v18', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v19', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v19', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v19', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v19', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   
   const updateWeeklyRoutine = (newRoutine: WeeklyRoutineDay[]) => {
     setProfile(prev => {
       const updated = { ...prev, weeklyRoutine: newRoutine };
-      localStorage.setItem('fitapp_profile_v18', JSON.stringify(updated));
+      localStorage.setItem('fitapp_profile_v19', JSON.stringify(updated));
       return updated;
     });
   };
@@ -320,25 +316,6 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const toggleAllergy = (allergy: string) => {
-    const exists = profile.allergies.includes(allergy);
-    const updated = exists ? profile.allergies.filter(a => a !== allergy) : [...profile.allergies, allergy];
-    updateProfile({ allergies: updated });
-  };
-
-  const addAllergy = (allergy: string) => {
-    const clean = allergy.trim();
-    if (clean && !profile.allergies.includes(clean)) {
-      updateProfile({ allergies: [...profile.allergies, clean] });
-    }
-  };
-
-  const toggleDislikedFood = (food: string) => {
-    const exists = profile.dislikedFoods.includes(food);
-    const updated = exists ? profile.dislikedFoods.filter(f => f !== food) : [...profile.dislikedFoods, food];
-    updateProfile({ dislikedFoods: updated });
-  };
-
   const uniqueDays = new Set(workoutLogs.map(l => l.date)).size;
   const streak = uniqueDays > 0 ? uniqueDays : 1;
 
@@ -346,8 +323,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <FitAppContext.Provider value={{
       profile, updateProfile, updateWeeklyRoutine, workoutLogs, saveWorkoutLog, measurements,
       addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment,
-      togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy,
-      toggleDislikedFood
+      togglePantryIngredient, addPantryIngredient
     }}>
       {children}
     </FitAppContext.Provider>
@@ -495,11 +471,6 @@ const s = {
     fontWeight: active ? 800 : 500,
     cursor: 'pointer',
   }),
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '12px',
-  }
 };
 
 // ==========================================
@@ -563,22 +534,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
       <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🥗</span> Mis Alimentos y Recetas Apilables
+            <span>🥗</span> Mis Alimentos y Recetas
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
             Añade tus alimentos rápidos y desbloquea recetas al instante.
-          </p>
-        </div>
-        <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
-      </div>
-
-      <div onClick={onGoToProfile} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>⚙️</span> Configurar Objetivo y Materiales
-          </div>
-          <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Cambia tu meta de entrenamiento y equipamiento.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -588,7 +547,7 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
 };
 
 // ==========================================
-// COMPONENTE: PLANIFICADOR SEMANAL (LOS 7 DÍAS LIBRES)
+// COMPONENTE: PLANIFICADOR SEMANAL (7 DÍAS LIBRES)
 // ==========================================
 const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForDay: (muscles: string[]) => void }> = ({ onBackToHome, onStartWorkoutForDay }) => {
   const { profile, updateWeeklyRoutine } = useFitApp();
@@ -1023,36 +982,6 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
   const { addPantryIngredient } = useFitApp();
   const [quickFoodName, setQuickFoodName] = useState('');
-  const [selectedIndices] = useState<Record<string, number>>({ desayuno: 0, comida: 0, cena: 0, snack: 0, batido: 0, bebida: 0 });
-
-  const getUnlockedOptions = (category: string) => {
-    return MASTER_MEALS.filter(meal => meal.category === category);
-  };
-
-  const renderMealCard = (category: string, title: string) => {
-    const options = getUnlockedOptions(category);
-    const currentIndex = selectedIndices[category] || 0;
-    const currentMeal = options[currentIndex % options.length];
-
-    if (!currentMeal) return null;
-
-    return (
-      <div style={{ ...s.card, padding: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-            {title}
-          </span>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          {currentMeal.icon && <span style={{ fontSize: '24px' }}>{currentMeal.icon}</span>}
-          <div>
-            <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 2px 0' }}>{currentMeal.name}</h4>
-            <p style={{ fontSize: '10px', color: '#71717a', margin: 0 }}>{currentMeal.calories} kcal • {currentMeal.protein}g proteína</p>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1071,13 +1000,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
           <input type="text" placeholder="Ej: Atún, merluza..." value={quickFoodName} onChange={e => setQuickFoodName(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
           <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>Añadir</button>
         </form>
-      </div>
-
-      <div>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Menús Recomendados</h3>
-        {renderMealCard('desayuno', 'Desayuno')}
-        {renderMealCard('comida', 'Comida Principal')}
-        {renderMealCard('cena', 'Cena Ligera')}
       </div>
     </div>
   );
@@ -1126,7 +1048,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v6.5 7 DÍAS LIBRES</span>
+        <span style={s.badge}>v6.6 7 DÍAS LIBRES</span>
       </header>
 
       <main style={{ flex: 1 }}>
@@ -1177,7 +1099,7 @@ function AppContent() {
             const isActive = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={s.navItem(isActive)}>
-                <span style={{ fontSize: '18px'}>{tab.icon}</span>
+                <span style={{ fontSize: '18px' }}>{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             );
