@@ -544,8 +544,6 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[], ti
       return;
     }
 
-    // Limitar cantidad de ejercicios según el tiempo seleccionado
-    // 15 min -> máx 2 ejercicios | 30 min -> máx 3 | 45 min -> máx 4 | 60 min -> todos (hasta 6)
     const limitMap: Record<number, number> = { 15: 2, 30: 3, 45: 4, 60: 6 };
     const maxExercises = limitMap[selectedTime] || 4;
     filtered = filtered.slice(0, maxExercises);
@@ -564,7 +562,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[], ti
         <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Configurar Sesión</h1>
       </div>
 
-      {/* SELECTOR DE TIEMPO AÑADIDO */}
+      {/* SELECTOR DE TIEMPO */}
       <div style={s.card}>
         <label style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
           ⏱️ ¿Cuánto tiempo tienes hoy?
