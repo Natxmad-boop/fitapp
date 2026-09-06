@@ -1,4 +1,4 @@
-Import React, { createContext, useContext, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 
 // ==========================================
 // 0. CAPTURADOR VISUAL DE ERRORES (BLINDADO)
@@ -173,7 +173,7 @@ const MASTER_MEALS: MealItem[] = [
   // Desayunos
   { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'] },
   { id: 'm1_alt', name: 'Tostada integral con aguacate y huevo revuelto', category: 'desayuno', calories: 340, protein: 18, carbs: 28, fats: 16, requiredIngredients: ['pan', 'aguacate', 'huevo'] },
-  { id: 'm1_alt2', name: 'Pudding de Chía con frutos rojos y yogur griego', category: 'desayuno', calories: 310, protein: 20, carbs: 24, fats: 12, requiredIngredients: ['chia', ' yogur', 'frutos rojos'] },
+  { id: 'm1_alt2', name: 'Pudding de Chía con frutos rojos y yogur griego', category: 'desayuno', calories: 310, protein: 20, carbs: 24, fats: 12, requiredIngredients: ['chia', 'yogur', 'frutos rojos'] },
 
   // Comidas
   { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
@@ -183,7 +183,7 @@ const MASTER_MEALS: MealItem[] = [
   // Cenas
   { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
   { id: 'm3_alt', name: 'Merluza a la plancha con puré de calabacín', category: 'cena', calories: 290, protein: 38, carbs: 12, fats: 6, requiredIngredients: ['merluza', 'calabacin'] },
-  { id: 'm3_alt2', name: 'Ensalada templada de pollo desmenuzado y nueces', category: 'cena', calories: 330, protein: 36, carbs: 10, fats: 14, requiredIngredients: ['pollo',lechuga', 'nueces'] },
+  { id: 'm3_alt2', name: 'Ensalada templada de pollo desmenuzado y nueces', category: 'cena', calories: 330, protein: 36, carbs: 10, fats: 14, requiredIngredients: ['pollo', 'lechuga', 'nueces'] },
 
   // Snacks / Smoothies
   { id: 'm4', name: 'Smoothie Verde Detox Energético', category: 'snack', calories: 180, protein: 12, carbs: 28, fats: 3, requiredIngredients: ['espinacas', 'platano', 'limon'] },
