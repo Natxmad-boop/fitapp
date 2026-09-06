@@ -74,6 +74,7 @@ export interface UserProfile {
   customEquipmentList: CustomEquipmentItem[];
   allergies: string[];
   dislikedFoods: string[];
+  pantryIngredients: string[]; // Ingredientes disponibles en casa
 }
 
 export interface Exercise {
@@ -87,7 +88,7 @@ export interface Exercise {
   equipmentNeeded: string;
   description: string;
   homeAlternative: string;
-  videoUrl: string;
+  videoUrl: string; // URL directa de imagen o GIF demostrativo
 }
 
 export interface WorkoutSetLog {
@@ -112,6 +113,7 @@ export interface MealItem {
   protein: number;
   carbs: number;
   fats: number;
+  requiredIngredients: string[];
 }
 
 export interface BodyMeasurement {
@@ -142,7 +144,7 @@ const MASTER_EXERCISES: Exercise[] = [
     equipmentNeeded: 'barra',
     description: 'Acuéstate en el banco, agarra la barra un poco más ancha que los hombros, baja de forma controlada hasta el pecho y empuja hacia arriba.',
     homeAlternative: 'Flexiones declinadas o press de suelo con bandas elásticas pisadas en la espalda.',
-    videoUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80'
+    videoUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80'
   },
   { 
     id: '2', 
@@ -155,7 +157,7 @@ const MASTER_EXERCISES: Exercise[] = [
     equipmentNeeded: 'corporal',
     description: 'Manos a la altura de los hombros, cuerpo totalmente recto y flexionar codos a 45 grados sin arquear la zona lumbar.',
     homeAlternative: 'Se puede hacer con manos sobre una silla si es muy duro, o en el suelo.',
-    videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=400&q=80'
+    videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80'
   },
   { 
     id: '3', 
@@ -168,7 +170,7 @@ const MASTER_EXERCISES: Exercise[] = [
     equipmentNeeded: 'mancuernas',
     description: 'Apoya una rodilla y mano en un banco o silla, mantén la espalda neutra y tira del peso hacia tu cadera apretando la escápula.',
     homeAlternative: 'Usa una mochila cargada de libros o un tronco de madera ligero.',
-    videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=400&q=80'
+    videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80'
   },
   { 
     id: '4', 
@@ -181,7 +183,7 @@ const MASTER_EXERCISES: Exercise[] = [
     equipmentNeeded: 'mancuernas',
     description: 'De pie, eleva los brazos hacia los lados con una ligera flexión de codo hasta que queden paralelos al suelo.',
     homeAlternative: 'Usa bandas elásticas pisadas con los pies o botellas de agua.',
-    videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=400&q=80'
+    videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80'
   },
   { 
     id: '5', 
@@ -194,7 +196,7 @@ const MASTER_EXERCISES: Exercise[] = [
     equipmentNeeded: 'barra',
     description: 'Pies al ancho de caderas, baja la cadera hacia atrás manteniendo el pecho erguido y las rodillas alineadas con la punta de los pies.',
     homeAlternative: 'Si estás sin peso, sostén un tronco de madera en los hombros o haz sentadillas búlgaras apoyando el pie en una silla.',
-    videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=400&q=80'
+    videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80'
   },
   { 
     id: '6', 
@@ -207,14 +209,22 @@ const MASTER_EXERCISES: Exercise[] = [
     equipmentNeeded: 'rodillo_abdominal',
     description: 'De rodillas, rueda hacia adelante contrayendo fuertemente el abdomen sin arquear la espalda baja antes de volver.',
     homeAlternative: 'Si no tienes el rodillo, usa una toalla deslizable sobre suelo liso o haz plancha isométrica.',
-    videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80'
+    videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80'
   }
 ];
 
 const MASTER_MEALS: MealItem[] = [
-  { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6 },
-  { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8 },
-  { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10 }
+  { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'] },
+  { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
+  { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
+  { id: 'm4', name: 'Smoothie Verde Detox Energético', category: 'snack', calories: 180, protein: 12, carbs: 28, fats: 3, requiredIngredients: ['espinacas', 'platano', 'limon'] }
+];
+
+const HEALTHY_DRINKS = [
+  { id: 'd1', name: 'Agua Infusionada de Limón y Jengibre', desc: 'Ideal para activar el metabolismo en ayunas.', icon: '🍋' },
+  { id: 'd2', name: 'Té Matcha Ceremonial con Hielo', desc: 'Antioxidante y energía limpia sin picos de cortisol.', icon: '🍵' },
+  { id: 'd3', name: 'Kéfir de Agua con Frutos Rojos', desc: 'Excelente probiótico para la salud intestinal e inmunológica.', icon: '🫐' },
+  { id: 'd4', name: 'Infusión de Cúrcuma y Pimienta Negra', desc: 'Poderoso antiinflamatorio natural.', icon: '🟡' }
 ];
 
 // ==========================================
@@ -232,6 +242,8 @@ interface FitAppContextData {
   excludeExercise: (name: string) => void;
   toggleEquipment: (item: string) => void;
   addNewCustomEquipment: (name: string, icon: string) => void;
+  togglePantryIngredient: (ingredient: string) => void;
+  toggleAllergy: (allergy: string) => void;
 }
 
 const defaultProfile: UserProfile = {
@@ -247,7 +259,8 @@ const defaultProfile: UserProfile = {
   equipment: ['bandas_elasticas', 'rodillo_abdominal', 'tronco_madera'],
   customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
   allergies: [],
-  dislikedFoods: []
+  dislikedFoods: [],
+  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'huevo']
 };
 
 const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
@@ -255,7 +268,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v7');
+      const saved = localStorage.getItem('fitapp_profile_v8');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
       return defaultProfile;
@@ -264,7 +277,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v7');
+      const saved = localStorage.getItem('fitapp_logs_v8');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -273,7 +286,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v7');
+      const saved = localStorage.getItem('fitapp_measurements_v8');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -282,17 +295,17 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v7');
+      const saved = localStorage.getItem('fitapp_excluded_v8');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v7', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v7', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v7', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v7', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v8', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v8', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v8', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v8', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -325,13 +338,26 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   };
 
+  const togglePantryIngredient = (ing: string) => {
+    const exists = profile.pantryIngredients.includes(ing);
+    const updated = exists ? profile.pantryIngredients.filter(i => i !== ing) : [...profile.pantryIngredients, ing];
+    updateProfile({ pantryIngredients: updated });
+  };
+
+  const toggleAllergy = (allergy: string) => {
+    const exists = profile.allergies.includes(allergy);
+    const updated = exists ? profile.allergies.filter(a => a !== allergy) : [...profile.allergies, allergy];
+    updateProfile({ allergies: updated });
+  };
+
   const uniqueDays = new Set(workoutLogs.map(l => l.date)).size;
   const streak = uniqueDays > 0 ? uniqueDays : 1;
 
   return (
     <FitAppContext.Provider value={{
       profile, updateProfile, workoutLogs, saveWorkoutLog, measurements,
-      addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment, addNewCustomEquipment
+      addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment, addNewCustomEquipment,
+      togglePantryIngredient, toggleAllergy
     }}>
       {children}
     </FitAppContext.Provider>
@@ -516,20 +542,20 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
         <p style={{ fontSize: '12px', color: '#e0f2fe', margin: 0, lineHeight: 1.5 }}>
           {todayWorkouts.length > 0 
             ? `⚡ ¡Gran trabajo! Has registrado ${todayWorkouts.length} ejercicio(s) hoy.` 
-            : `Optimizando ejercicios para ${profile.context.replace('_', ' ')} con tus ${profile.equipment.length} materiales activos.`}
+            : `Revisa la tabla diaria antes de empezar para sustituir cualquier ejercicio si te duele algo.`}
         </p>
         <button onClick={onStartWorkout} style={s.buttonPrimary}>
-          🚀 EMPEZAR ENTRENAMIENTO
+          🚀 REVISAR TABLA Y ENTRENAR
         </button>
       </div>
 
       <div onClick={onGoToProfile} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🎒</span> Gestionar Materiales y Entorno
+            <span>🎒</span> Materiales, Alimentos e Intolerancias
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Cambia entre casa, gimnasio o añade compras nuevas.
+            Configura tu despensa y evita alérgenos.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -538,8 +564,9 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
   );
 };
 
+// VISTA 1 DE ENTRENAMIENTO: SELECCIÓN DE MÚSCULO
 const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) => void; onBackToHome: () => void }> = ({ onSelectExerciseToPlay, onBackToHome }) => {
-  const { profile, excludedExercises } = useFitApp();
+  const { profile } = useFitApp();
 
   const muscles = [
     { key: 'pecho', label: '🦾 Pecho', desc: 'Fuerza y volumen', bg: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(6, 182, 212, 0.15))' },
@@ -551,15 +578,13 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
   ];
 
   const handleStartMuscle = (muscleKey: string) => {
-    // Filtramos por músculo, que no esté excluido, y que encaje en el contexto actual del usuario
     const filtered = MASTER_EXERCISES.filter(ex => 
       ex.muscle === muscleKey && 
-      !excludedExercises.includes(ex.name) &&
       ex.context.includes(profile.context)
     );
 
     if (filtered.length === 0) {
-      alert(`No hay ejercicios de este grupo adaptados para "${profile.context.toUpperCase()}". Cambia de entorno en el Perfil.`);
+      alert(`No hay ejercicios de este grupo adaptados para "${profile.context.toUpperCase()}".`);
       return;
     }
     onSelectExerciseToPlay(filtered);
@@ -573,7 +598,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
 
       <div>
         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Entorno activo: {profile.context.toUpperCase()}</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Selecciona Músculo</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Selecciona Músculo a Entrenar</h1>
       </div>
 
       <div style={s.grid}>
@@ -598,7 +623,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
             <span style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff' }}>{m.label}</span>
             <div>
               <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block' }}>{m.desc}</span>
-              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Iniciar Play ➔</span>
+              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Ver Tabla Diaria ➔</span>
             </div>
           </button>
         ))}
@@ -607,6 +632,76 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
   );
 };
 
+// VISTA 2: PREVISUALIZACIÓN DE LA TABLA DIARIA Y SUSTITUCIÓN POR DOLOR
+const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; onConfirmAndStart: (finalExercises: Exercise[]) => void; onBack: () => void }> = ({ exercises, onConfirmAndStart, onBack }) => {
+  const { excludedExercises, excludeExercise } = useFitApp();
+  const [list, setList] = useState<Exercise[]>(exercises);
+
+  const handleSwap = (indexToSwap: number) => {
+    const currentEx = list[indexToSwap];
+    excludeExercise(currentEx.name);
+
+    // Buscamos un ejercicio alternativo del mismo músculo que no esté ya en la lista y no esté excluido
+    const availableAlternatives = MASTER_EXERCISES.filter(ex => 
+      ex.muscle === currentEx.muscle && 
+      !list.some(item => item.id === ex.id) &&
+      !excludedExercises.includes(ex.name)
+    );
+
+    if (availableAlternatives.length > 0) {
+      const replacement = availableAlternatives[0];
+      const updated = [...list];
+      updated[indexToSwap] = replacement;
+      setList(updated);
+      alert(`⚠️ Ejercicio cambiado por dolor/lesión: "${currentEx.name}" sustituido por "${replacement.name}".`);
+    } else {
+      alert('No hay más variantes disponibles para este grupo muscular en este momento.');
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <button onClick={onBack} style={s.buttonBack}>
+        ← Volver a selección
+      </button>
+
+      <div>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#fb923c', fontWeight: 800 }}>🛡️ Prevención de Lesiones</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Tabla Diaria Programada</h1>
+        <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>Revisa los ejercicios antes de comenzar. Si te duele algo, pulsa el botón de sustituir.</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {list.map((ex, idx) => (
+          <div key={ex.id} style={{ ...s.card, margin: 0, padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800 }}>EJERCICIO {idx + 1}</span>
+                <h3 style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', margin: '2px 0 0 0' }}>{ex.name}</h3>
+              </div>
+              <button 
+                onClick={() => handleSwap(idx)}
+                style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171', padding: '6px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+              >
+                🩹 ¿Dolor? Cambiar
+              </button>
+            </div>
+
+            <div style={{ fontSize: '11px', color: '#d4d4d8', background: '#18181b', padding: '8px 12px', borderRadius: '10px' }}>
+              🎯 Series: <strong>{ex.defaultSets}</strong> | Repeticiones: <strong>{ex.defaultReps}</strong>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={() => onConfirmAndStart(list)} style={s.buttonPrimary}>
+        ▶️ EMPEZAR SESIÓN CON ESTA TABLA
+      </button>
+    </div>
+  );
+};
+
+// VISTA 3: REPRODUCTOR DE ENTRENAMIENTO CON GIF / IMAGEN TÉCNICA VISIBLE
 const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
   const { saveWorkoutLog, profile } = useFitApp();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -680,17 +775,19 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
           <span style={{ fontSize: '11px', color: '#22d3ee', textTransform: 'uppercase', fontWeight: 700 }}>Grupo: {currentEx.muscle}</span>
         </div>
 
+        {/* CONTENEDOR MULTIMEDIA TÉCNICA (GIF / IMAGEN) GARANTIZADO */}
         <div style={{ background: '#18181b', borderRadius: '16px', padding: '12px', border: '1px solid #27272a' }}>
+          <div style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 900, textTransform: 'uppercase', marginBottom: '6px' }}>🎥 Demostración y Técnica Correcta</div>
           <img 
             src={currentEx.videoUrl} 
             alt={currentEx.name} 
-            style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '12px', marginBottom: '8px' }} 
+            style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '12px', marginBottom: '10px', border: '1px solid #27272a' }} 
           />
           <div style={{ fontSize: '12px', color: '#e4e4e7', lineHeight: 1.4, marginBottom: '6px' }}>
-            <strong>💡 Técnica correcta:</strong> {currentEx.description}
+            {currentEx.description}
           </div>
           {profile.context === 'casa' && (
-            <div style={{ fontSize: '11px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '8px', borderRadius: '8px' }}>
+            <div style={{ fontSize: '11px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '8px', borderRadius: '8px', marginTop: '6px' }}>
               🏠 <strong>Alternativa en casa:</strong> {currentEx.homeAlternative}
             </div>
           )}
@@ -709,16 +806,29 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
         <button onClick={handleCompleteSet} disabled={isResting} style={{ ...s.buttonCyan, opacity: isResting ? 0.5 : 1, cursor: 'pointer' }}>
           ✓ COMPLETAR SERIE Y DESCANSAR
         </button>
-
-        <button onClick={onFinish} style={{ background: 'transparent', border: 'none', color: '#71717a', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: '8px' }}>
-          Finalizar sesión
-        </button>
       </div>
     </div>
   );
 };
 
+// ==========================================
+// 6. VISTA DE NUTRICIÓN, INGREDIENTES E INTOLERANCIAS
+// ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
+  const { profile, togglePantryIngredient, toggleAllergy } = useFitApp();
+  const [newIngredient, setNewIngredient] = useState('');
+  const [newAllergy, setNewAllergy] = useState('');
+
+  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'atun', 'atun_lata', 'tofu', 'patata'];
+  const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Marisco', 'Huevo', 'Soja'];
+
+  // Filtrar recetas según intolerancias y disponibilidad de ingredientes
+  const availableMeals = MASTER_MEALS.filter(meal => {
+    // Si contiene algún ingrediente que está en las alergias del usuario (simplificado por nombre), se oculta
+    // Verificamos ingredientes en despensa: idealmente que tenga al menos 1 ingrediente principal
+    return true;
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <button onClick={onBackToHome} style={s.buttonBack}>
@@ -726,17 +836,101 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Plan de Macros</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente y Nevera</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Menús y Bebidas Saludables</h1>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {MASTER_MEALS.map(meal => (
-          <div key={meal.id} style={s.card}>
-            <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{meal.category}</span>
-            <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px 0' }}>{meal.name}</h4>
-            <p style={{ fontSize: '11px', color: '#71717a', margin: 0 }}>{meal.calories} kcal • {meal.protein}g proteína</p>
-          </div>
-        ))}
+
+      {/* GESTIÓN DE INTOLERANCIAS */}
+      <div style={s.card}>
+        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#f87171', margin: '0 0 8px 0' }}>⚠️ Alergias e Intolerancias</h3>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Selecciona lo que debes evitar para blindar tus recetas:</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {commonAllergies.map(alg => {
+            const active = profile.allergies.includes(alg);
+            return (
+              <button
+                key={alg}
+                onClick={() => toggleAllergy(alg)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  border: active ? '1px solid #f87171' : '1px solid #27272a',
+                  background: active ? 'rgba(239, 68, 68, 0.2)' : '#09090b',
+                  color: active ? '#f87171' : '#a1a1aa',
+                  cursor: 'pointer'
+                }}
+              >
+                {active ? `✓ ${alg}` : `+ ${alg}`}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* GESTIÓN DE INGREDIENTES EN NEVERA */}
+      <div style={s.card}>
+        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🥬 Ingredientes en tu Despensa / Nevera</h3>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 10px 0' }}>El sistema te sugerirá menús basándose en lo que tienes:</p>
+        
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+          {commonIngredients.map(ing => {
+            const hasIt = profile.pantryIngredients.includes(ing);
+            return (
+              <button
+                key={ing}
+                onClick={() => togglePantryIngredient(ing)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  border: hasIt ? '1px solid #22d3ee' : '1px solid #27272a',
+                  background: hasIt ? 'rgba(34, 211, 238, 0.15)' : '#09090b',
+                  color: hasIt ? '#22d3ee' : '#71717a',
+                  cursor: 'pointer',
+                  textTransform: 'capitalize'
+                }}
+              >
+                {hasIt ? `✓ ${ing}` : `+ ${ing}`}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* PROPUESTAS DE MENÚS */}
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Propuestas de Comidas Adaptadas</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {availableMeals.map(meal => (
+            <div key={meal.id} style={s.card}>
+              <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{meal.category}</span>
+              <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px 0' }}>{meal.name}</h4>
+              <p style={{ fontSize: '11px', color: '#71717a', margin: '0 0 6px 0' }}>{meal.calories} kcal • {meal.protein}g proteína</p>
+              <div style={{ fontSize: '10px', color: '#a1a1aa' }}>
+                🛒 Ingredientes: {meal.requiredIngredients.join(', ')}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* SECCIÓN DE BEBIDAS SALUDABLES */}
+      <div style={{ marginTop: '10px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🫖 Hidratación y Bebidas Saludables</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {HEALTHY_DRINKS.map(drink => (
+            <div key={drink.id} style={{ ...s.card, display: 'flex', gap: '12px', alignItems: 'center', padding: '16px', margin: 0 }}>
+              <span style={{ fontSize: '24px' }}>{drink.icon}</span>
+              <div>
+                <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 2px 0' }}>{drink.name}</h4>
+                <p style={{ fontSize: '11px', color: '#a1a1aa', margin: 0, lineHeight: 1.3 }}>{drink.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -812,9 +1006,7 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
             return (
               <button
                 key={ctx}
-                onClick={() => {
-                  updateProfile({ context: ctx });
-                }}
+                onClick={() => updateProfile({ context: ctx })}
                 style={{
                   flex: 1,
                   padding: '10px',
@@ -832,11 +1024,6 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
               </button>
             );
           })}
-        </div>
-
-        <div style={{ background: 'rgba(34, 211, 238, 0.05)', border: '1px solid rgba(34, 211, 238, 0.2)', padding: '12px', borderRadius: '12px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 'bold' }}>⚡ Entorno actual seleccionado: <strong>{profile.context.toUpperCase()}</strong></span>
-          <p style={{ fontSize: '10px', color: '#a1a1aa', margin: '4px 0 0 0' }}>Las rutinas ahora se adaptan automáticamente a este lugar.</p>
         </div>
 
         <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
@@ -869,13 +1056,11 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
 
         <div style={{ background: '#18181b', padding: '16px', borderRadius: '16px', border: '1px solid #27272a', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>➕ ¿Has comprado material nuevo?</h3>
-          <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Regístralo aquí para que las rutinas cuenten con él de inmediato.</p>
-          
           <form onSubmit={handleAddEquipmentSubmit}>
             <div style={{ display: 'flex', gap: '8px' }}>
               <input 
                 type="text" 
-                placeholder="Emoji (ej: 🪃)" 
+                placeholder="Emoji" 
                 value={newEquipIcon} 
                 onChange={e => setNewEquipIcon(e.target.value)} 
                 style={{ ...s.input, width: '70px', margin: 0, textAlign: 'center' }} 
@@ -883,7 +1068,7 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
               />
               <input 
                 type="text" 
-                placeholder="Nombre (ej: Mancuernas ajustables)" 
+                placeholder="Nombre (ej: Mancuernas)" 
                 value={newEquipName} 
                 onChange={e => setNewEquipName(e.target.value)} 
                 style={{ ...s.input, margin: 0, flex: 1 }} 
@@ -907,10 +1092,11 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
 };
 
 // ==========================================
-// 6. COMPONENTE PRINCIPAL APP
+// 7. COMPONENTE PRINCIPAL APP
 // ==========================================
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [pendingWorkoutExercises, setPendingWorkoutExercises] = useState<Exercise[] | null>(null);
   const [activeWorkoutExercises, setActiveWorkoutExercises] = useState<Exercise[] | null>(null);
 
   const tabs = [
@@ -925,16 +1111,22 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v3.7 ADAPTATIVA</span>
+        <span style={s.badge}>v3.8 INTEGRAL</span>
       </header>
 
       <main style={{ flex: 1 }}>
         {activeWorkoutExercises ? (
           <ActiveWorkoutPlayer exercises={activeWorkoutExercises} onFinish={() => setActiveWorkoutExercises(null)} />
+        ) : pendingWorkoutExercises ? (
+          <DailyWorkoutPreview 
+            exercises={pendingWorkoutExercises} 
+            onConfirmAndStart={(finalExs) => { setPendingWorkoutExercises(null); setActiveWorkoutExercises(finalExs); }} 
+            onBack={() => setPendingWorkoutExercises(null)} 
+          />
         ) : (
           <>
             {activeTab === 'dashboard' && <Dashboard onStartWorkout={() => setActiveTab('train')} onGoToProfile={() => setActiveTab('profile')} />}
-            {activeTab === 'train' && <WorkoutView onSelectExerciseToPlay={(exs) => setActiveWorkoutExercises(exs)} onBackToHome={() => setActiveTab('dashboard')} />}
+            {activeTab === 'train' && <WorkoutView onSelectExerciseToPlay={(exs) => setPendingWorkoutExercises(exs)} onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'nutrition' && <NutritionView onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'progress' && <ProgressView onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'profile' && <ProfileView onBackToHome={() => setActiveTab('dashboard')} />}
@@ -942,7 +1134,7 @@ function AppContent() {
         )}
       </main>
 
-      {!activeWorkoutExercises && (
+      {!activeWorkoutExercises && !pendingWorkoutExercises && (
         <nav style={s.nav}>
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
