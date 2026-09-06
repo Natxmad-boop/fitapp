@@ -590,7 +590,6 @@ const NutritionView: React.FC = () => {
   const { profile, updateProfile } = useFitApp();
   const [newAllergy, setNewAllergy] = useState('');
 
-  // Cálculo automático de calorías base según perfil
   const bmr = profile.gender === 'Hombre' 
     ? (10 * profile.weight) + (6.25 * profile.height) - (5 * profile.age) + 5
     : (10 * profile.weight) + (6.25 * profile.height) - (5 * profile.age) - 161;
