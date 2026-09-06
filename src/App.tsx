@@ -127,7 +127,7 @@ export interface BodyMeasurement {
 }
 
 // ==========================================
-// 2. CONSTANTES Y BIBLIOTECA MAESTRA
+// 2. CONSTANTES Y BIBLIOTECA MAESTRA AMPLIADA (RECETAS APILABLES)
 // ==========================================
 const DEFAULT_CUSTOM_EQUIPMENT: CustomEquipmentItem[] = [
   { id: 'mobiliario', name: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
@@ -173,30 +173,41 @@ const MASTER_MEALS: MealItem[] = [
   { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'] },
   { id: 'm1_alt', name: 'Tostada integral con aguacate y huevo revuelto', category: 'desayuno', calories: 340, protein: 18, carbs: 28, fats: 16, requiredIngredients: ['pan', 'aguacate', 'huevo'] },
   { id: 'm1_alt2', name: 'Pudding de Chía con frutos rojos y yogur griego', category: 'desayuno', calories: 310, protein: 20, carbs: 24, fats: 12, requiredIngredients: ['chia', 'yogur', 'frutos rojos'] },
+  { id: 'm1_alt3', name: 'Tortitas de Avena y Clara de Huevo', category: 'desayuno', calories: 320, protein: 24, carbs: 42, fats: 4, requiredIngredients: ['avena', 'huevo'] },
+  { id: 'm1_alt4', name: 'Bol de Yogur Griego con Granola y Plátano', category: 'desayuno', calories: 390, protein: 22, carbs: 48, fats: 11, requiredIngredients: ['yogur', 'platano', 'granola'] },
 
   // Comidas
   { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
   { id: 'm2_alt', name: 'Ternera salteada con quinoa y espinacas', category: 'comida', calories: 580, protein: 45, carbs: 52, fats: 14, requiredIngredients: ['ternera', 'quinoa', 'espinacas'] },
   { id: 'm2_alt2', name: 'Salmón al horno con patata asada y espárragos', category: 'comida', calories: 610, protein: 40, carbs: 45, fats: 22, requiredIngredients: ['salmon', 'patata', 'esparragos'] },
+  { id: 'm2_alt3', name: 'Pavo en salsa de tomate con puré de boniato', category: 'comida', calories: 520, protein: 46, carbs: 50, fats: 9, requiredIngredients: ['pavo', 'tomate', 'boniato'] },
+  { id: 'm2_alt4', name: 'Arroz salteado con pollo, calabacín y zanahoria', category: 'comida', calories: 540, protein: 42, carbs: 65, fats: 7, requiredIngredients: ['arroz', 'pollo', 'calabacin', 'zanahoria'] },
 
   // Cenas
   { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
   { id: 'm3_alt', name: 'Merluza a la plancha con puré de calabacín', category: 'cena', calories: 290, protein: 38, carbs: 12, fats: 6, requiredIngredients: ['merluza', 'calabacin'] },
   { id: 'm3_alt2', name: 'Ensalada templada de pollo desmenuzado y nueces', category: 'cena', calories: 330, protein: 36, carbs: 10, fats: 14, requiredIngredients: ['pollo', 'lechuga', 'nueces'] },
+  { id: 'm3_alt3', name: 'Crema ligera de calabacín con picatostes y queso fresco', category: 'cena', calories: 250, protein: 18, carbs: 22, fats: 8, requiredIngredients: ['calabacin', 'queso', 'pan'] },
+  { id: 'm3_alt4', name: 'Tortilla de claras de huevo con champiñones y jamón', category: 'cena', calories: 240, protein: 32, carbs: 4, fats: 7, requiredIngredients: ['huevo', 'champiñones', 'jamon'] },
 
   // Snacks
   { id: 'm4', name: 'Tortitas de arroz con crema de cacahuete', category: 'snack', calories: 200, protein: 7, carbs: 22, fats: 9, requiredIngredients: ['arroz', 'cacahuete'] },
   { id: 'm4_alt', name: 'Yogur griego natural con frutos secos', category: 'snack', calories: 220, protein: 15, carbs: 10, fats: 12, requiredIngredients: ['yogur', 'nueces'] },
+  { id: 'm4_alt2', name: 'Manzana con crema de almendras', category: 'snack', calories: 190, protein: 4, carbs: 25, fats: 9, requiredIngredients: ['manzana', 'almendras'] },
+  { id: 'm4_alt3', name: 'Barrita casera de avena y cacao', category: 'snack', calories: 210, protein: 6, carbs: 28, fats: 8, requiredIngredients: ['avena', 'cacao'] },
 
-  // 🥤 Batidos y Smoothies Saludables
+  // 🥤 Batidos y Smoothies Ampliados (Apilables)
   { id: 'bat_1', name: 'Smoothie Proteico de Cacao y Mantequilla de Cacahuete', category: 'batido', calories: 320, protein: 28, carbs: 22, fats: 12, requiredIngredients: ['cacao', 'cacahuete', 'proteina', 'platano'], icon: '🥤', desc: 'Ideal post-entreno para ganar músculo y calmar el apetito.' },
   { id: 'bat_1_alt', name: 'Batido Verde Detox Energético de Espinacas y Plátano', category: 'batido', calories: 180, protein: 12, carbs: 30, fats: 2, requiredIngredients: ['espinacas', 'platano', 'limon'], icon: '🥬', desc: 'Alto en antioxidantes, fibra y micronutrientes depurativos.' },
   { id: 'bat_1_alt2', name: 'Smoothie Tropical de Frutos Rojos y Coco', category: 'batido', calories: 210, protein: 10, carbs: 32, fats: 5, requiredIngredients: ['frutos rojos', 'coco', 'yogur'], icon: '🍓', desc: 'Refrescante, bajo en índice glucémico y rico en vitamina C.' },
+  { id: 'bat_1_alt3', name: 'Batido Anabólico de Avena, Plátano y Proteína', category: 'batido', calories: 410, protein: 34, carbs: 58, fats: 5, requiredIngredients: ['avena', 'platano', 'proteina'], icon: '💪', desc: 'Cargado de hidratos complejos para subir limpio de peso.' },
+  { id: 'bat_1_alt4', name: 'Smoothie Cremoso de Aguacate, Espinacas y Limón', category: 'batido', calories: 260, protein: 8, carbs: 18, fats: 18, requiredIngredients: ['aguacate', 'espinacas', 'limon'], icon: '🥑', desc: 'Grasas saludables y textura ultra cremosa.' },
 
-  // 🫖 Bebidas Saludables e Infusiones
+  // 🫖 Bebidas Saludables e Infusiones Ampliadas (Apilables)
   { id: 'beb_1', name: 'Agua Infusionada de Limón y Jengibre', category: 'bebida', calories: 5, protein: 0, carbs: 1, fats: 0, requiredIngredients: ['limon', 'jengibre'], icon: '🍋', desc: 'Excelente para activar el metabolismo y la digestión en ayunas.' },
   { id: 'beb_1_alt', name: 'Té Matcha Ceremonial con Hielo', category: 'bebida', calories: 10, protein: 1, carbs: 2, fats: 0, requiredIngredients: ['matcha'], icon: '🍵', desc: 'Energía limpia y sostenida sin picos de cortisol ni ansiedad.' },
-  { id: 'beb_1_alt2', name: 'Kéfir de Agua con Frutos Rojos', category: 'bebida', calories: 35, protein: 1, carbs: 7, fats: 0, requiredIngredients: ['kefir', 'frutos rojos'], icon: '🫐', desc: 'Probiótico natural excelente para la salud de la microbiota.' }
+  { id: 'beb_1_alt2', name: 'Kéfir de Agua con Frutos Rojos', category: 'bebida', calories: 35, protein: 1, carbs: 7, fats: 0, requiredIngredients: ['kefir', 'frutos rojos'], icon: '🫐', desc: 'Probiótico natural excelente para la salud de la microbiota.' },
+  { id: 'beb_1_alt3', name: 'Infusión Digestiva de Jengibre y Limón templada', category: 'bebida', calories: 4, protein: 0, carbs: 1, fats: 0, requiredIngredients: ['jengibre', 'limon'], icon: '🫖', desc: 'Calma el estómago después de comidas copiosas.' }
 ];
 
 // ==========================================
@@ -235,7 +246,7 @@ const defaultProfile: UserProfile = {
   customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
   allergies: [],
   dislikedFoods: [],
-  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina']
+  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina', 'agua']
 };
 
 const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
@@ -243,7 +254,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v11');
+      const saved = localStorage.getItem('fitapp_profile_v12');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
       return defaultProfile;
@@ -252,7 +263,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v11');
+      const saved = localStorage.getItem('fitapp_logs_v12');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -261,7 +272,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v11');
+      const saved = localStorage.getItem('fitapp_measurements_v12');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -270,17 +281,17 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v11');
+      const saved = localStorage.getItem('fitapp_excluded_v12');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v11', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v11', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v11', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v11', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v12', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v12', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v12', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v12', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -543,10 +554,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
       <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, #121215 100%)', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🥤</span> Menús, Batidos y Bebidas Saludables
+            <span>🥤</span> Recetas Apilables, Batidos y Bebidas
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Genera alternativas al vuelo y descubre smoothies proteicos.
+            Se desbloquean al vuelo según los alimentos de tu despensa.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -558,7 +569,7 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
             <span>🎒</span> Gestionar Materiales y Despensa
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Activa o desactiva mobiliario, mochilas y preferencias.
+            Añade ingredientes a tu despensa para apilar más recetas.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -855,13 +866,14 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 };
 
 // ==========================================
-// VISTA DE NUTRICIÓN (INCLUYE BATIDOS Y BEBIDAS)
+// VISTA DE NUTRICIÓN (MOTOR INTELIGENTE DE RECETAS APILABLES)
 // ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { profile, togglePantryIngredient, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
+  const { profile, togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
   
   const [customAllergy, setCustomAllergy] = useState('');
   const [customFood, setCustomFood] = useState('');
+  const [newIngredientInput, setNewIngredientInput] = useState('');
 
   const [selectedIndices, setSelectedIndices] = useState<Record<string, number>>({
     desayuno: 0,
@@ -872,26 +884,34 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
     bebida: 0
   });
 
-  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'chia', 'ternera', 'quinoa', 'salmon', 'patata', 'esparragos', 'calabacin', 'cacao', 'cacahuete', 'coco', 'jengibre', 'matcha', 'kefir', 'proteina', 'frutos rojos', 'yogur'];
+  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'chia', 'ternera', 'quinoa', 'salmon', 'patata', 'esparragos', 'calabacin', 'cacao', 'cacahuete', 'coco', 'jengibre', 'matcha', 'kefir', 'proteina', 'frutos rojos', 'yogur', 'granola', 'boniato', 'tomate', 'zanahoria', 'queso', 'champiñones', 'jamon', 'almendras', 'manzana', 'agua'];
   const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Huevo', 'Marisco'];
 
-  const getFilteredOptions = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
+  // MOTOR INTELIGENTE DE RECETAS APILABLES: Filtra el catálogo maestro según la despensa y restricciones
+  const getUnlockedOptions = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
     return MASTER_MEALS.filter(meal => {
       if (meal.category !== category) return false;
 
+      // 1. Filtrar por alimentos prohibidos o no deseados
       const hasDisliked = meal.requiredIngredients.some(ing => 
         profile.dislikedFoods.some(disliked => ing.toLowerCase().includes(disliked.toLowerCase()))
       );
       if (hasDisliked) return false;
 
-      return true;
+      // 2. Comprobar si los ingredientes necesarios están en la despensa del usuario
+      // (Si falta algún ingrediente clave, la receta permanece oculta/bloqueada hasta que lo agregues)
+      const hasAllIngredients = meal.requiredIngredients.every(ing => 
+        profile.pantryIngredients.some(pantryItem => pantryItem.toLowerCase().includes(ing.toLowerCase()))
+      );
+
+      return hasAllIngredients;
     });
   };
 
   const handleRefresh = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
-    const options = getFilteredOptions(category);
+    const options = getUnlockedOptions(category);
     if (options.length <= 1) {
-      alert('No hay más alternativas disponibles con tus filtros actuales. Prueba a quitar algunas restricciones.');
+      alert('No hay más recetas apiladas disponibles con los ingredientes actuales de tu despensa. ¡Añade más alimentos abajo para desbloquear más opciones!');
       return;
     }
     
@@ -903,15 +923,19 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   };
 
   const renderMealCard = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida', title: string) => {
-    const options = getFilteredOptions(category);
+    const options = getUnlockedOptions(category);
     const currentIndex = selectedIndices[category] || 0;
     const currentMeal = options[currentIndex % options.length];
 
-    if (!currentMeal) {
+    if (!options || options.length === 0 || !currentMeal) {
       return (
-        <div style={s.card}>
-          <span style={{ fontSize: '9px', fontWeight: 900, color: '#f87171', textTransform: 'uppercase' }}>{title}</span>
-          <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '8px 0 0 0' }}>No hay opciones disponibles que cumplan tus filtros estrictos.</p>
+        <div style={{ ...s.card, border: '1px dashed #27272a' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <span style={{ fontSize: '9px', fontWeight: 900, color: '#f87171', textTransform: 'uppercase' }}>{title} (BLOQUEADO)</span>
+          </div>
+          <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
+            🔒 No tienes suficientes ingredientes en tu despensa para desbloquear recetas de esta categoría. Añade más alimentos abajo.
+          </p>
         </div>
       );
     }
@@ -920,7 +944,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-            {title}
+            {title} ({options.length} apilada{options.length > 1 ? 's' : ''})
           </span>
           <button
             onClick={() => handleRefresh(category)}
@@ -937,9 +961,9 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
               alignItems: 'center',
               gap: '6px'
             }}
-            title="Generar otra alternativa"
+            title="Rotar receta desbloqueada"
           >
-            🔄 Refrescar idea
+            🔄 Siguiente receta
           </button>
         </div>
 
@@ -955,8 +979,8 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
           </div>
         </div>
 
-        <div style={{ marginTop: '10px', fontSize: '10px', color: '#a1a1aa', background: '#09090b', padding: '6px 10px', borderRadius: '8px' }}>
-          🛒 Ingredientes clave: {currentMeal.requiredIngredients.join(', ')}
+        <div style={{ marginTop: '10px', fontSize: '10px', color: '#22d3ee', background: '#09090b', padding: '6px 10px', borderRadius: '8px' }}>
+          🛒 Ingredientes en despensa cubiertos: {currentMeal.requiredIngredients.join(', ')}
         </div>
       </div>
     );
@@ -969,17 +993,68 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Menús, Batidos y Bebidas</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Sistema Inteligente Apilable</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Recetas, Batidos y Bebidas</h1>
+      </div>
+
+      <div style={{ background: 'rgba(34, 211, 238, 0.08)', border: '1px solid rgba(34, 211, 238, 0.2)', padding: '12px 16px', borderRadius: '16px', fontSize: '12px', color: '#e0f2fe', lineHeight: 1.4 }}>
+        💡 <strong>Cómo funciona:</strong> Cuantos más alimentos marques o añadas abajo en tu <strong>Despensa</strong>, más recetas, batidos y bebidas se "apilarán" y desbloquearán automáticamente.
       </div>
 
       <div>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Propuestas para hoy</h3>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Menús y Bebidas Desbloqueadas Hoy</h3>
         {renderMealCard('desayuno', 'Desayuno')}
         {renderMealCard('comida', 'Comida Principal')}
         {renderMealCard('cena', 'Cena Ligera')}
+        {renderMealCard('snack', 'Snack Saludable')}
         {renderMealCard('batido', '🥤 Batidos y Smoothies')}
-        {renderMealCard('bebida', '🫖 Bebidas Saludables e Infusiones')}
+        {renderMealCard('bebida', '🫖 Bebidas e Infusiones')}
+      </div>
+
+      <div style={s.card}>
+        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>🥬 Tu Despensa Dinámica</h3>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Marca o desmarca ingredientes según lo que tengas en casa para apilar recetas:</p>
+        
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+          {commonIngredients.map(ing => {
+            const hasIt = profile.pantryIngredients.includes(ing);
+            return (
+              <button
+                key={ing}
+                onClick={() => togglePantryIngredient(ing)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '10px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  border: hasIt ? '1px solid #22d3ee' : '1px solid #27272a',
+                  background: hasIt ? 'rgba(34, 211, 238, 0.15)' : '#09090b',
+                  color: hasIt ? '#22d3ee' : '#71717a',
+                  cursor: 'pointer',
+                  textTransform: 'capitalize'
+                }}
+              >
+                {hasIt ? `✓ ${ing}` : `+ ${ing}`}
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <input 
+            type="text" 
+            placeholder="Añadir otro ingrediente personalizado..." 
+            value={newIngredientInput} 
+            onChange={e => setNewIngredientInput(e.target.value)} 
+            style={{ ...s.input, margin: 0, flex: 1 }} 
+          />
+          <button 
+            onClick={() => { if(newIngredientInput) { togglePantryIngredient(newIngredientInput.trim().toLowerCase()); setNewIngredientInput(''); }}} 
+            style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}
+          >
+            Añadir
+          </button>
+        </div>
       </div>
 
       <div style={s.card}>
@@ -1052,7 +1127,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         <div style={{ display: 'flex', gap: '6px' }}>
           <input 
             type="text" 
-            placeholder="Ej: avena, cacao..." 
+            placeholder="Ej: cacao, pescado..." 
             value={customFood} 
             onChange={e => setCustomFood(e.target.value)} 
             style={{ ...s.input, margin: 0, flex: 1 }} 
@@ -1063,34 +1138,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
           >
             Excluir
           </button>
-        </div>
-      </div>
-
-      <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🥬 Ingredientes en tu Despensa</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-          {commonIngredients.map(ing => {
-            const hasIt = profile.pantryIngredients.includes(ing);
-            return (
-              <button
-                key={ing}
-                onClick={() => togglePantryIngredient(ing)}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '10px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  border: hasIt ? '1px solid #22d3ee' : '1px solid #27272a',
-                  background: hasIt ? 'rgba(34, 211, 238, 0.15)' : '#09090b',
-                  color: hasIt ? '#22d3ee' : '#71717a',
-                  cursor: 'pointer',
-                  textTransform: 'capitalize'
-                }}
-              >
-                {hasIt ? `✓ ${ing}` : `+ ${ing}`}
-              </button>
-            );
-          })}
         </div>
       </div>
     </div>
@@ -1242,7 +1289,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v4.3 BATIDOS & BEBIDAS</span>
+        <span style={s.badge}>v5.0 RECETAS APILABLES</span>
       </header>
 
       <main style={{ flex: 1 }}>
