@@ -511,8 +511,16 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
   );
 };
 
-const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) => void; onBackToHome: () => void }> = ({ onSelectExerciseToPlay, onBackToHome }) => {
+const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[], timeMinutes: number) => void; onBackToHome: () => void }> = ({ onSelectExerciseToPlay, onBackToHome }) => {
   const { profile } = useFitApp();
+  const [selectedTime, setSelectedTime] = useState<number>(30); // 30 min por defecto
+
+  const timeOptions = [
+    { minutes: 15, label: '15 min', desc: 'Express' },
+    { minutes: 30, label: '30 min', desc: 'Media' },
+    { minutes: 45, label: '45 min', desc: 'Completa' },
+    { minutes: 60, label: '60 min', desc: 'Pro' }
+  ];
 
   const muscles = [
     { key: 'piernas', label: '🦵 Piernas y Glúteos', desc: 'Sentadillas, zancadas, hip thrust', bg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 88, 12, 0.15))' },
@@ -524,10 +532,9 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
   ];
 
   const handleStartMuscle = (muscleKey: string) => {
-    // Permitir ejercicios de peso corporal (sin_material) + los que requieran materiales marcados en el perfil
     const allowedEquipment = new Set<string>(['sin_material', ...profile.equipment]);
 
-    const filtered = MASTER_EXERCISES.filter(ex => 
+    let filtered = MASTER_EXERCISES.filter(ex => 
       ex.muscle === muscleKey && 
       allowedEquipment.has(ex.equipment)
     );
@@ -536,7 +543,14 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
       alert(`No hay ejercicios de este grupo compatibles con tus materiales activos. Revisa tu perfil.`);
       return;
     }
-    onSelectExerciseToPlay(filtered);
+
+    // Limitar cantidad de ejercicios según el tiempo seleccionado
+    // 15 min -> máx 2 ejercicios | 30 min -> máx 3 | 45 min -> máx 4 | 60 min -> todos (hasta 6)
+    const limitMap: Record<number, number> = { 15: 2, 30: 3, 45: 4, 60: 6 };
+    const maxExercises = limitMap[selectedTime] || 4;
+    filtered = filtered.slice(0, maxExercises);
+
+    onSelectExerciseToPlay(filtered, selectedTime);
   };
 
   return (
@@ -547,41 +561,74 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
 
       <div>
         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Biblioteca Inteligente</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Selecciona Músculo</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Configurar Sesión</h1>
       </div>
 
-      <div style={s.grid}>
-        {muscles.map(m => (
-          <button
-            key={m.key}
-            onClick={() => handleStartMuscle(m.key)}
-            style={{
-              background: m.bg,
-              backgroundColor: '#121215',
-              border: '1px solid #27272a',
-              borderRadius: '20px',
-              padding: '16px',
-              textAlign: 'left',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              height: '115px'
-            }}
-          >
-            <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff' }}>{m.label}</span>
-            <div>
-              <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block' }}>{m.desc}</span>
-              <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Generar Sesión ➔</span>
-            </div>
-          </button>
-        ))}
+      {/* SELECTOR DE TIEMPO AÑADIDO */}
+      <div style={s.card}>
+        <label style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+          ⏱️ ¿Cuánto tiempo tienes hoy?
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+          {timeOptions.map(opt => {
+            const isSelected = selectedTime === opt.minutes;
+            return (
+              <button
+                key={opt.minutes}
+                onClick={() => setSelectedTime(opt.minutes)}
+                style={{
+                  padding: '10px 4px',
+                  borderRadius: '12px',
+                  border: isSelected ? '2px solid #22d3ee' : '1px solid #27272a',
+                  background: isSelected ? 'rgba(34, 211, 238, 0.2)' : '#09090b',
+                  color: isSelected ? '#22d3ee' : '#ffffff',
+                  cursor: 'pointer',
+                  textAlign: 'center'
+                }}
+              >
+                <div style={{ fontSize: '12px', fontWeight: 900 }}>{opt.label}</div>
+                <div style={{ fontSize: '9px', color: isSelected ? '#a5f3fc' : '#71717a', marginTop: '2px' }}>{opt.desc}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700, display: 'block', marginBottom: '8px' }}>Selecciona Músculo a Entrenar:</span>
+        <div style={s.grid}>
+          {muscles.map(m => (
+            <button
+              key={m.key}
+              onClick={() => handleStartMuscle(m.key)}
+              style={{
+                background: m.bg,
+                backgroundColor: '#121215',
+                border: '1px solid #27272a',
+                borderRadius: '20px',
+                padding: '16px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: '115px'
+              }}
+            >
+              <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff' }}>{m.label}</span>
+              <div>
+                <span style={{ fontSize: '11px', color: '#a1a1aa', display: 'block' }}>{m.desc}</span>
+                <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, marginTop: '4px', display: 'inline-block' }}>Generar Sesión ➔</span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
 
-const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; onConfirmAndStart: (finalExercises: Exercise[]) => void; onBack: () => void }> = ({ exercises, onConfirmAndStart, onBack }) => {
+const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; selectedTime: number; onConfirmAndStart: (finalExercises: Exercise[]) => void; onBack: () => void }> = ({ exercises, selectedTime, onConfirmAndStart, onBack }) => {
   const { excludedExercises, excludeExercise, profile } = useFitApp();
   const [list, setList] = useState<Exercise[]>(exercises);
 
@@ -615,7 +662,7 @@ const DailyWorkoutPreview: React.FC<{ exercises: Exercise[]; onConfirmAndStart: 
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#fb923c', fontWeight: 800 }}>🛡️ Personalización de Sesión</span>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#fb923c', fontWeight: 800 }}>🛡️ Sesión adaptada a {selectedTime} min</span>
         <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Tabla Diaria</h1>
       </div>
 
@@ -986,7 +1033,7 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
 // ==========================================
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [pendingWorkoutExercises, setPendingWorkoutExercises] = useState<Exercise[] | null>(null);
+  const [pendingWorkoutData, setPendingWorkoutData] = useState<{ exercises: Exercise[]; time: number } | null>(null);
   const [activeWorkoutExercises, setActiveWorkoutExercises] = useState<Exercise[] | null>(null);
 
   const tabs = [
@@ -1007,16 +1054,17 @@ function AppContent() {
       <main style={{ flex: 1 }}>
         {activeWorkoutExercises ? (
           <ActiveWorkoutPlayer exercises={activeWorkoutExercises} onFinish={() => setActiveWorkoutExercises(null)} />
-        ) : pendingWorkoutExercises ? (
+        ) : pendingWorkoutData ? (
           <DailyWorkoutPreview 
-            exercises={pendingWorkoutExercises} 
-            onConfirmAndStart={(finalExs) => { setPendingWorkoutExercises(null); setActiveWorkoutExercises(finalExs); }} 
-            onBack={() => setPendingWorkoutExercises(null)} 
+            exercises={pendingWorkoutData.exercises} 
+            selectedTime={pendingWorkoutData.time}
+            onConfirmAndStart={(finalExs) => { setPendingWorkoutData(null); setActiveWorkoutExercises(finalExs); }} 
+            onBack={() => setPendingWorkoutData(null)} 
           />
         ) : (
           <>
             {activeTab === 'dashboard' && <Dashboard onStartWorkout={() => setActiveTab('train')} onGoToProfile={() => setActiveTab('profile')} />}
-            {activeTab === 'train' && <WorkoutView onSelectExerciseToPlay={(exs) => setPendingWorkoutExercises(exs)} onBackToHome={() => setActiveTab('dashboard')} />}
+            {activeTab === 'train' && <WorkoutView onSelectExerciseToPlay={(exs, time) => setPendingWorkoutData({ exercises: exs, time })} onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'nutrition' && <NutritionView onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'progress' && <ProgressView onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'profile' && <ProfileView onBackToHome={() => setActiveTab('dashboard')} />}
@@ -1024,7 +1072,7 @@ function AppContent() {
         )}
       </main>
 
-      {!activeWorkoutExercises && !pendingWorkoutExercises && (
+      {!activeWorkoutExercises && !pendingWorkoutData && (
         <nav style={s.nav}>
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
