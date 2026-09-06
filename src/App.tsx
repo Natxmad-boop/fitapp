@@ -168,7 +168,6 @@ const MASTER_EXERCISES: Exercise[] = [
   { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Avanzado', description: 'Sentadilla, plancha, flexión opcional y salto vertical.', homeAlternative: 'Suelo.', videoUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' }
 ];
 
-// Biblioteca Maestra ampliada con sección específica de Batidos y Bebidas Saludables
 const MASTER_MEALS: MealItem[] = [
   // Desayunos
   { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'] },
@@ -864,7 +863,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   const [customAllergy, setCustomAllergy] = useState('');
   const [customFood, setCustomFood] = useState('');
 
-  // Estados locales para los índices activos de cada categoría (permiten el botón de refrescar)
   const [selectedIndices, setSelectedIndices] = useState<Record<string, number>>({
     desayuno: 0,
     comida: 0,
@@ -877,7 +875,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'chia', 'ternera', 'quinoa', 'salmon', 'patata', 'esparragos', 'calabacin', 'cacao', 'cacahuete', 'coco', 'jengibre', 'matcha', 'kefir', 'proteina', 'frutos rojos', 'yogur'];
   const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Huevo', 'Marisco'];
 
-  // Función inteligente para filtrar opciones que no tengan alimentos indeseados
   const getFilteredOptions = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
     return MASTER_MEALS.filter(meal => {
       if (meal.category !== category) return false;
@@ -976,7 +973,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Menús, Batidos y Bebidas</h1>
       </div>
 
-      {/* SECCIÓN DE COMIDAS, BATIDOS Y BEBIDAS */}
       <div>
         <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Propuestas para hoy</h3>
         {renderMealCard('desayuno', 'Desayuno')}
@@ -986,7 +982,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         {renderMealCard('bebida', '🫖 Bebidas Saludables e Infusiones')}
       </div>
 
-      {/* ALÉRGENOS E INTOLERANCIAS */}
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#f87171', margin: '0 0 8px 0' }}>⚠️ Alergias e Intolerancias</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
@@ -1029,7 +1024,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         </div>
       </div>
 
-      {/* ALIMENTOS QUE NO TE GUSTAN */}
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#fb923c', margin: '0 0 8px 0' }}>🚫 Alimentos que no te gustan (Evitar)</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
@@ -1072,7 +1066,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         </div>
       </div>
 
-      {/* DESPENSA ACTIVA */}
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🥬 Ingredientes en tu Despensa</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
