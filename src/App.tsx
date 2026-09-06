@@ -127,7 +127,7 @@ export interface BodyMeasurement {
 }
 
 // ==========================================
-// 2. CONSTANTES Y BIBLIOTECA MAESTRA AMPLIADA (RECETAS APILABLES)
+// 2. CONSTANTES Y BIBLIOTECA MAESTRA AMPLIADA
 // ==========================================
 const DEFAULT_CUSTOM_EQUIPMENT: CustomEquipmentItem[] = [
   { id: 'mobiliario', name: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
@@ -136,74 +136,61 @@ const DEFAULT_CUSTOM_EQUIPMENT: CustomEquipmentItem[] = [
 ];
 
 const MASTER_EXERCISES: Exercise[] = [
-  // 🦵 Piernas y glúteos
   { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Pies al ancho de caderas, baja la cadera manteniendo el pecho erguido.', homeAlternative: 'Sentadilla libre con peso corporal.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
   { id: 'leg_02', name: 'Sentadillas sumo', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Pies abiertos con puntas hacia fuera para enfatizar abductores y glúteos.', homeAlternative: 'Sentadilla sumo libre en casa.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
   { id: 'leg_04', name: 'Zancadas hacia delante', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Da un paso al frente y baja la rodilla trasera sin tocar el suelo.', homeAlternative: 'Zancadas clásicas.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
   { id: 'leg_06', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Pie trasero elevado en una silla o sofá.', homeAlternative: 'Usa una silla del salón.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
   { id: 'leg_07', name: 'Hip thrust apoyado en sofá', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Espalda alta apoyada en el borde del sofá, empuje de cadera.', homeAlternative: 'Usa el borde de la cama o sofá.', videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
 
-  // 💪 Pecho
   { id: 'chest_01', name: 'Flexiones clásicas', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Intermedio', description: 'Cuerpo recto, codos a 45 grados.', homeAlternative: 'Suelo de casa.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
   { id: 'chest_03', name: 'Flexiones inclinadas (mesa)', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Principiante', description: 'Manos apoyadas en una mesa o encimera alta.', homeAlternative: 'Mesa de comedor o respaldo de sofá.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
 
-  // 🪽 Espalda
   { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Intermedio', description: 'Mochila cargada con libros o botellas, inclinación de tronco a 45º.', homeAlternative: 'Mochila con libros pesados.', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
   { id: 'back_03', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Tumbado boca abajo, eleva brazos y piernas simultáneamente.', homeAlternative: 'Suelo o esterilla.', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
 
-  // 🏋️ Hombros
   { id: 'sh_01', name: 'Press militar con mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Intermedio', description: 'Sujeta la mochila por las asas y desórdala por encima de la cabeza.', homeAlternative: 'Mochila o botellas de agua.', videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
   { id: 'sh_02', name: 'Elevaciones laterales con botellas', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Principiante', description: 'Botellas de agua como mancuernas para elevación lateral.', homeAlternative: 'Botellas de 1.5L llenas de agua.', videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
 
-  // 💪 Bíceps y Tríceps
   { id: 'bic_01', name: 'Curl con botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Principiante', description: 'Flexión de codo manteniendo los codos pegados al torso.', homeAlternative: 'Botellas de agua.', videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
   { id: 'tri_01', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Manos en el borde de una silla, baja el cuerpo flexionando brazos.', homeAlternative: 'Silla firme de casa.', videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
 
-  // 🧱 Abdomen y Core
   { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Apoyo sobre antebrazos y puntas de pies con abdomen contraído.', homeAlternative: 'Suelo o esterilla.', videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
   { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Intermedio', description: 'Posición de flexión alternando rodillas al pecho a ritmo dinámico.', homeAlternative: 'Suelo.', videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
 
-  // ❤️ Cardio
   { id: 'card_01', name: 'Jumping jacks', muscle: 'cardio', defaultSets: 3, defaultReps: 40, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Saltos abriendo y cerrando piernas y brazos.', homeAlternative: 'Espacio libre.', videoUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' },
   { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Avanzado', description: 'Sentadilla, plancha, flexión opcional y salto vertical.', homeAlternative: 'Suelo.', videoUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' }
 ];
 
 const MASTER_MEALS: MealItem[] = [
-  // Desayunos
   { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'] },
   { id: 'm1_alt', name: 'Tostada integral con aguacate y huevo revuelto', category: 'desayuno', calories: 340, protein: 18, carbs: 28, fats: 16, requiredIngredients: ['pan', 'aguacate', 'huevo'] },
   { id: 'm1_alt2', name: 'Pudding de Chía con frutos rojos y yogur griego', category: 'desayuno', calories: 310, protein: 20, carbs: 24, fats: 12, requiredIngredients: ['chia', 'yogur', 'frutos rojos'] },
   { id: 'm1_alt3', name: 'Tortitas de Avena y Clara de Huevo', category: 'desayuno', calories: 320, protein: 24, carbs: 42, fats: 4, requiredIngredients: ['avena', 'huevo'] },
   { id: 'm1_alt4', name: 'Bol de Yogur Griego con Granola y Plátano', category: 'desayuno', calories: 390, protein: 22, carbs: 48, fats: 11, requiredIngredients: ['yogur', 'platano', 'granola'] },
 
-  // Comidas
   { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
   { id: 'm2_alt', name: 'Ternera salteada con quinoa y espinacas', category: 'comida', calories: 580, protein: 45, carbs: 52, fats: 14, requiredIngredients: ['ternera', 'quinoa', 'espinacas'] },
   { id: 'm2_alt2', name: 'Salmón al horno con patata asada y espárragos', category: 'comida', calories: 610, protein: 40, carbs: 45, fats: 22, requiredIngredients: ['salmon', 'patata', 'esparragos'] },
   { id: 'm2_alt3', name: 'Pavo en salsa de tomate con puré de boniato', category: 'comida', calories: 520, protein: 46, carbs: 50, fats: 9, requiredIngredients: ['pavo', 'tomate', 'boniato'] },
   { id: 'm2_alt4', name: 'Arroz salteado con pollo, calabacín y zanahoria', category: 'comida', calories: 540, protein: 42, carbs: 65, fats: 7, requiredIngredients: ['arroz', 'pollo', 'calabacin', 'zanahoria'] },
 
-  // Cenas
   { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
   { id: 'm3_alt', name: 'Merluza a la plancha con puré de calabacín', category: 'cena', calories: 290, protein: 38, carbs: 12, fats: 6, requiredIngredients: ['merluza', 'calabacin'] },
   { id: 'm3_alt2', name: 'Ensalada templada de pollo desmenuzado y nueces', category: 'cena', calories: 330, protein: 36, carbs: 10, fats: 14, requiredIngredients: ['pollo', 'lechuga', 'nueces'] },
   { id: 'm3_alt3', name: 'Crema ligera de calabacín con picatostes y queso fresco', category: 'cena', calories: 250, protein: 18, carbs: 22, fats: 8, requiredIngredients: ['calabacin', 'queso', 'pan'] },
   { id: 'm3_alt4', name: 'Tortilla de claras de huevo con champiñones y jamón', category: 'cena', calories: 240, protein: 32, carbs: 4, fats: 7, requiredIngredients: ['huevo', 'champiñones', 'jamon'] },
 
-  // Snacks
   { id: 'm4', name: 'Tortitas de arroz con crema de cacahuete', category: 'snack', calories: 200, protein: 7, carbs: 22, fats: 9, requiredIngredients: ['arroz', 'cacahuete'] },
   { id: 'm4_alt', name: 'Yogur griego natural con frutos secos', category: 'snack', calories: 220, protein: 15, carbs: 10, fats: 12, requiredIngredients: ['yogur', 'nueces'] },
   { id: 'm4_alt2', name: 'Manzana con crema de almendras', category: 'snack', calories: 190, protein: 4, carbs: 25, fats: 9, requiredIngredients: ['manzana', 'almendras'] },
   { id: 'm4_alt3', name: 'Barrita casera de avena y cacao', category: 'snack', calories: 210, protein: 6, carbs: 28, fats: 8, requiredIngredients: ['avena', 'cacao'] },
 
-  // 🥤 Batidos y Smoothies Ampliados (Apilables)
   { id: 'bat_1', name: 'Smoothie Proteico de Cacao y Mantequilla de Cacahuete', category: 'batido', calories: 320, protein: 28, carbs: 22, fats: 12, requiredIngredients: ['cacao', 'cacahuete', 'proteina', 'platano'], icon: '🥤', desc: 'Ideal post-entreno para ganar músculo y calmar el apetito.' },
   { id: 'bat_1_alt', name: 'Batido Verde Detox Energético de Espinacas y Plátano', category: 'batido', calories: 180, protein: 12, carbs: 30, fats: 2, requiredIngredients: ['espinacas', 'platano', 'limon'], icon: '🥬', desc: 'Alto en antioxidantes, fibra y micronutrientes depurativos.' },
   { id: 'bat_1_alt2', name: 'Smoothie Tropical de Frutos Rojos y Coco', category: 'batido', calories: 210, protein: 10, carbs: 32, fats: 5, requiredIngredients: ['frutos rojos', 'coco', 'yogur'], icon: '🍓', desc: 'Refrescante, bajo en índice glucémico y rico en vitamina C.' },
   { id: 'bat_1_alt3', name: 'Batido Anabólico de Avena, Plátano y Proteína', category: 'batido', calories: 410, protein: 34, carbs: 58, fats: 5, requiredIngredients: ['avena', 'platano', 'proteina'], icon: '💪', desc: 'Cargado de hidratos complejos para subir limpio de peso.' },
   { id: 'bat_1_alt4', name: 'Smoothie Cremoso de Aguacate, Espinacas y Limón', category: 'batido', calories: 260, protein: 8, carbs: 18, fats: 18, requiredIngredients: ['aguacate', 'espinacas', 'limon'], icon: '🥑', desc: 'Grasas saludables y textura ultra cremosa.' },
 
-  // 🫖 Bebidas Saludables e Infusiones Ampliadas (Apilables)
   { id: 'beb_1', name: 'Agua Infusionada de Limón y Jengibre', category: 'bebida', calories: 5, protein: 0, carbs: 1, fats: 0, requiredIngredients: ['limon', 'jengibre'], icon: '🍋', desc: 'Excelente para activar el metabolismo y la digestión en ayunas.' },
   { id: 'beb_1_alt', name: 'Té Matcha Ceremonial con Hielo', category: 'bebida', calories: 10, protein: 1, carbs: 2, fats: 0, requiredIngredients: ['matcha'], icon: '🍵', desc: 'Energía limpia y sostenida sin picos de cortisol ni ansiedad.' },
   { id: 'beb_1_alt2', name: 'Kéfir de Agua con Frutos Rojos', category: 'bebida', calories: 35, protein: 1, carbs: 7, fats: 0, requiredIngredients: ['kefir', 'frutos rojos'], icon: '🫐', desc: 'Probiótico natural excelente para la salud de la microbiota.' },
@@ -866,7 +853,7 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 };
 
 // ==========================================
-// VISTA DE NUTRICIÓN (MOTOR INTELIGENTE DE RECETAS APILABLES)
+// VISTA DE NUTRICIÓN (MOTOR INTELIGENTE)
 // ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
   const { profile, togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
@@ -887,19 +874,15 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'chia', 'ternera', 'quinoa', 'salmon', 'patata', 'esparragos', 'calabacin', 'cacao', 'cacahuete', 'coco', 'jengibre', 'matcha', 'kefir', 'proteina', 'frutos rojos', 'yogur', 'granola', 'boniato', 'tomate', 'zanahoria', 'queso', 'champiñones', 'jamon', 'almendras', 'manzana', 'agua'];
   const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Huevo', 'Marisco'];
 
-  // MOTOR INTELIGENTE DE RECETAS APILABLES: Filtra el catálogo maestro según la despensa y restricciones
   const getUnlockedOptions = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
     return MASTER_MEALS.filter(meal => {
       if (meal.category !== category) return false;
 
-      // 1. Filtrar por alimentos prohibidos o no deseados
       const hasDisliked = meal.requiredIngredients.some(ing => 
         profile.dislikedFoods.some(disliked => ing.toLowerCase().includes(disliked.toLowerCase()))
       );
       if (hasDisliked) return false;
 
-      // 2. Comprobar si los ingredientes necesarios están en la despensa del usuario
-      // (Si falta algún ingrediente clave, la receta permanece oculta/bloqueada hasta que lo agregues)
       const hasAllIngredients = meal.requiredIngredients.every(ing => 
         profile.pantryIngredients.some(pantryItem => pantryItem.toLowerCase().includes(ing.toLowerCase()))
       );
@@ -961,7 +944,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
               alignItems: 'center',
               gap: '6px'
             }}
-            title="Rotar receta desbloqueada"
           >
             🔄 Siguiente receta
           </button>
@@ -1015,7 +997,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>🥬 Tu Despensa Dinámica</h3>
         <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Marca o desmarca ingredientes según lo que tengas en casa para apilar recetas:</p>
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
           {commonIngredients.map(ing => {
             const hasIt = profile.pantryIngredients.includes(ing);
             return (
@@ -1040,20 +1022,29 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
           })}
         </div>
 
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <input 
-            type="text" 
-            placeholder="Añadir otro ingrediente personalizado..." 
-            value={newIngredientInput} 
-            onChange={e => setNewIngredientInput(e.target.value)} 
-            style={{ ...s.input, margin: 0, flex: 1 }} 
-          />
-          <button 
-            onClick={() => { if(newIngredientInput) { togglePantryIngredient(newIngredientInput.trim().toLowerCase()); setNewIngredientInput(''); }}} 
-            style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}
-          >
-            Añadir
-          </button>
+        {/* CAMBIO: Se reestructuró en columna con mejor espacio y un input ancho para que no se corte */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#09090b', padding: '12px', borderRadius: '16px', border: '1px solid #27272a' }}>
+          <label style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800 }}>➕ Añadir alimento personalizado</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="text" 
+              placeholder="Ej: nueces, miel, atún..." 
+              value={newIngredientInput} 
+              onChange={e => setNewIngredientInput(e.target.value)} 
+              style={{ ...s.input, margin: 0, flex: 1 }} 
+            />
+            <button 
+              onClick={() => { 
+                if(newIngredientInput.trim()) { 
+                  addPantryIngredient(newIngredientInput.trim()); 
+                  setNewIngredientInput(''); 
+                } 
+              }} 
+              style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', fontSize: '12px', height: '46px' }}
+            >
+              Añadir
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1289,7 +1280,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v5.0 RECETAS APILABLES</span>
+        <span style={s.badge}>v5.1 DESPENSA AMPLIADA</span>
       </header>
 
       <main style={{ flex: 1 }}>
