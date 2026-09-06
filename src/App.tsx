@@ -137,12 +137,12 @@ export interface BodyMeasurement {
 // 2. CONSTANTES Y BIBLIOTECA MAESTRA
 // ==========================================
 const DEFAULT_WEEKLY_ROUTINE: WeeklyRoutineDay[] = [
-  { dayName: 'Lunes', muscles: ['pecho', 'biceps'], isRestDay: false },
-  { dayName: 'Martes', muscles: ['piernas'], isRestDay: false },
-  { dayName: 'Miércoles', muscles: [], isRestDay: true },
-  { dayName: 'Jueves', muscles: ['espalda', 'triceps'], isRestDay: false },
-  { dayName: 'Viernes', muscles: ['hombros', 'core'], isRestDay: false },
-  { dayName: 'Sábado', muscles: [], isRestDay: true },
+  { dayName: 'Lunes', muscles: ['pecho'], isRestDay: false },
+  { dayName: 'Martes', muscles: ['espalda'], isRestDay: false },
+  { dayName: 'Miércoles', muscles: ['piernas'], isRestDay: false },
+  { dayName: 'Jueves', muscles: ['hombros'], isRestDay: false },
+  { dayName: 'Viernes', muscles: ['biceps', 'triceps'], isRestDay: false },
+  { dayName: 'Sábado', muscles: ['core', 'cardio'], isRestDay: false },
   { dayName: 'Domingo', muscles: [], isRestDay: true },
 ];
 
@@ -189,7 +189,7 @@ const MASTER_MEALS: MealItem[] = [
 ];
 
 // ==========================================
-// 3. CONTEXTO GLOBAL Y PERSISTENCIA (VERSIÓN v17 CON RESET FORZADO DE RUTINA)
+// 3. CONTEXTO GLOBAL Y PERSISTENCIA (VERSIÓN v18)
 // ==========================================
 interface FitAppContextData {
   profile: UserProfile;
@@ -218,7 +218,7 @@ const defaultProfile: UserProfile = {
   weight: 75,
   experience: 'Intermedio',
   goal: 'ganar_musculo',
-  daysAvailable: 4,
+  daysAvailable: 5,
   context: 'casa',
   equipment: ['mobiliario', 'carga_improvisada', 'accesorios'],
   customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
@@ -233,10 +233,9 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v17');
+      const saved = localStorage.getItem('fitapp_profile_v18');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Aseguramos que si existía perfil previo pero no tenía la rutina actualizada, se le inyecte la por defecto
         if (!parsed.weeklyRoutine || parsed.weeklyRoutine.length === 0) {
           parsed.weeklyRoutine = DEFAULT_WEEKLY_ROUTINE;
         }
@@ -250,7 +249,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v17');
+      const saved = localStorage.getItem('fitapp_logs_v18');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -259,7 +258,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v17');
+      const saved = localStorage.getItem('fitapp_measurements_v18');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -268,24 +267,24 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v17');
+      const saved = localStorage.getItem('fitapp_excluded_v18');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v17', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v17', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v17', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v17', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v18', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v18', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v18', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v18', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   
   const updateWeeklyRoutine = (newRoutine: WeeklyRoutineDay[]) => {
     setProfile(prev => {
       const updated = { ...prev, weeklyRoutine: newRoutine };
-      localStorage.setItem('fitapp_profile_v17', JSON.stringify(updated));
+      localStorage.setItem('fitapp_profile_v18', JSON.stringify(updated));
       return updated;
     });
   };
@@ -552,10 +551,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
       <div onClick={onGoToPlanner} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, #121215 100%)', border: '1px solid rgba(34, 211, 238, 0.4)' }}>
         <div>
           <div style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>📅</span> Planificador Semanal de Rutinas
+            <span>📅</span> Planificador de los 7 Días
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Elige los días de entrenamiento y combina múltiples músculos.
+            Gestiona libremente todos los días de la semana y cámbialos si surge un imprevisto con Manu.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '20px', fontWeight: 'bold' }}>➔</span>
@@ -589,11 +588,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
 };
 
 // ==========================================
-// COMPONENTE: PLANIFICADOR SEMANAL
+// COMPONENTE: PLANIFICADOR SEMANAL (LOS 7 DÍAS LIBRES)
 // ==========================================
 const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForDay: (muscles: string[]) => void }> = ({ onBackToHome, onStartWorkoutForDay }) => {
   const { profile, updateWeeklyRoutine } = useFitApp();
-  // Sincronización directa con profile.weeklyRoutine para reflejar cambios instantáneos
   const routine = profile.weeklyRoutine || DEFAULT_WEEKLY_ROUTINE;
 
   const availableMuscles = [
@@ -644,10 +642,10 @@ const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForD
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Personalización Total</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Planificador Semanal</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Control de la Semana Completa</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Planificador de los 7 Días</h1>
         <p style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '4px' }}>
-          Selecciona qué días entrenas y combina múltiples partes del cuerpo por sesión.
+          Visualiza y edita los 7 días (Lunes a Domingo). Si hoy te cambia un plan (como lo de Manu), pasa el día a descanso o reasigna músculos en un segundo.
         </p>
       </div>
 
@@ -676,7 +674,7 @@ const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForD
             {!day.isRestDay ? (
               <div>
                 <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
-                  Selecciona músculos para este día (puedes elegir varios):
+                  Selecciona músculos para este día:
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
                   {availableMuscles.map(m => {
@@ -723,7 +721,7 @@ const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForD
               </div>
             ) : (
               <div style={{ fontSize: '11px', color: '#71717a', fontStyle: 'italic' }}>
-                Recuperación muscular y descanso activo.
+                Libre / Descanso por imprevisto o recuperación.
               </div>
             )}
           </div>
@@ -1085,38 +1083,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   );
 };
 
-const ProgressView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { addMeasurement, streak, workoutLogs } = useFitApp();
-  const [weightInput, setWeightInput] = useState('');
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <button onClick={onBackToHome} style={s.buttonBack}>
-        ← Volver al inicio
-      </button>
-
-      <div style={s.grid}>
-        <div style={s.card}>
-          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Racha Activa</span>
-          <div style={{ fontSize: '24px', fontWeight: 900, color: '#fb923c', margin: '6px 0 0 0' }}>🔥 {streak} días</div>
-        </div>
-        <div style={s.card}>
-          <span style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 700 }}>Series Totales</span>
-          <div style={{ fontSize: '24px', fontWeight: 900, color: '#22d3ee', margin: '6px 0 0 0' }}>⚡ {workoutLogs.length}</div>
-        </div>
-      </div>
-
-      <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 8px 0' }}>Registrar Peso de Hoy</h3>
-        <form onSubmit={e => { e.preventDefault(); const w = Number(weightInput); if(w) { addMeasurement(w); setWeightInput(''); }}} style={{ display: 'flex', gap: '8px' }}>
-          <input type="number" step="0.1" placeholder="Ej: 76.5 kg" value={weightInput} onChange={e => setWeightInput(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
-          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>Guardar</button>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
   const { profile, updateProfile } = useFitApp();
   const [name, setName] = useState(profile.name);
@@ -1160,7 +1126,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v6.4 CALENDARIO SYNC</span>
+        <span style={s.badge}>v6.5 7 DÍAS LIBRES</span>
       </header>
 
       <main style={{ flex: 1 }}>
@@ -1200,7 +1166,6 @@ function AppContent() {
               />
             )}
             {activeTab === 'nutrition' && <NutritionView onBackToHome={() => setActiveTab('dashboard')} />}
-            {activeTab === 'progress' && <ProgressView onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'profile' && <ProfileView onBackToHome={() => setActiveTab('dashboard')} />}
           </>
         )}
