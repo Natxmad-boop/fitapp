@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+Import React, { createContext, useContext, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 
 // ==========================================
 // 0. CAPTURADOR VISUAL DE ERRORES (BLINDADO)
@@ -110,12 +110,14 @@ export interface WorkoutLogRecord {
 export interface MealItem {
   id: string;
   name: string;
-  category: 'desayuno' | 'comida' | 'merienda' | 'cena' | 'snack';
+  category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'bebida';
   calories: number;
   protein: number;
   carbs: number;
   fats: number;
   requiredIngredients: string[];
+  icon?: string;
+  desc?: string;
 }
 
 export interface BodyMeasurement {
@@ -166,17 +168,32 @@ const MASTER_EXERCISES: Exercise[] = [
   { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Avanzado', description: 'Sentadilla, plancha, flexión opcional y salto vertical.', homeAlternative: 'Suelo.', videoUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' }
 ];
 
+// Biblioteca Maestra de Comidas y Bebidas ampliada para permitir alternativas y regeneración
 const MASTER_MEALS: MealItem[] = [
+  // Desayunos
   { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'] },
-  { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
-  { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
-  { id: 'm4', name: 'Smoothie Verde Detox Energético', category: 'snack', calories: 180, protein: 12, carbs: 28, fats: 3, requiredIngredients: ['espinacas', 'platano', 'limon'] }
-];
+  { id: 'm1_alt', name: 'Tostada integral con aguacate y huevo revuelto', category: 'desayuno', calories: 340, protein: 18, carbs: 28, fats: 16, requiredIngredients: ['pan', 'aguacate', 'huevo'] },
+  { id: 'm1_alt2', name: 'Pudding de Chía con frutos rojos y yogur griego', category: 'desayuno', calories: 310, protein: 20, carbs: 24, fats: 12, requiredIngredients: ['chia', ' yogur', 'frutos rojos'] },
 
-const HEALTHY_DRINKS = [
-  { id: 'd1', name: 'Agua Infusionada de Limón y Jengibre', desc: 'Ideal para activar el metabolismo en ayunas.', icon: '🍋' },
-  { id: 'd2', name: 'Té Matcha Ceremonial con Hielo', desc: 'Antioxidante y energía limpia sin picos de cortisol.', icon: '🍵' },
-  { id: 'd3', name: 'Kéfir de Agua con Frutos Rojos', desc: 'Excelente probiótico para la salud intestinal e inmunológica.', icon: '🫐' }
+  // Comidas
+  { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
+  { id: 'm2_alt', name: 'Ternera salteada con quinoa y espinacas', category: 'comida', calories: 580, protein: 45, carbs: 52, fats: 14, requiredIngredients: ['ternera', 'quinoa', 'espinacas'] },
+  { id: 'm2_alt2', name: 'Salmón al horno con patata asada y espárragos', category: 'comida', calories: 610, protein: 40, carbs: 45, fats: 22, requiredIngredients: ['salmon', 'patata', 'esparragos'] },
+
+  // Cenas
+  { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
+  { id: 'm3_alt', name: 'Merluza a la plancha con puré de calabacín', category: 'cena', calories: 290, protein: 38, carbs: 12, fats: 6, requiredIngredients: ['merluza', 'calabacin'] },
+  { id: 'm3_alt2', name: 'Ensalada templada de pollo desmenuzado y nueces', category: 'cena', calories: 330, protein: 36, carbs: 10, fats: 14, requiredIngredients: ['pollo',lechuga', 'nueces'] },
+
+  // Snacks / Smoothies
+  { id: 'm4', name: 'Smoothie Verde Detox Energético', category: 'snack', calories: 180, protein: 12, carbs: 28, fats: 3, requiredIngredients: ['espinacas', 'platano', 'limon'] },
+  { id: 'm4_alt', name: 'Smoothie Proteico de Cacao y Mantequilla de Cacahuete', category: 'snack', calories: 240, protein: 22, carbs: 18, fats: 10, requiredIngredients: ['cacao', 'cacahuete', 'proteina'] },
+  { id: 'm4_alt2', name: 'Smoothie Tropical de Frutos Rojos y Coco', category: 'snack', calories: 195, protein: 10, carbs: 32, fats: 4, requiredIngredients: ['frutos rojos', 'coco'] },
+
+  // Bebidas Saludables
+  { id: 'd1', name: 'Agua Infusionada de Limón y Jengibre', category: 'bebida', calories: 5, protein: 0, carbs: 1, fats: 0, requiredIngredients: ['limon', 'jengibre'], icon: '🍋', desc: 'Ideal para activar el metabolismo en ayunas.' },
+  { id: 'd1_alt', name: 'Té Matcha Ceremonial con Hielo', category: 'bebida', calories: 10, protein: 1, carbs: 2, fats: 0, requiredIngredients: ['matcha'], icon: '🍵', desc: 'Antioxidante y energía limpia sin picos de cortisol.' },
+  { id: 'd1_alt2', name: 'Kéfir de Agua con Frutos Rojos', category: 'bebida', calories: 35, protein: 1, carbs: 7, fats: 0, requiredIngredients: ['kefir', 'frutos rojos'], icon: '🫐', desc: 'Excelente probiótico para la salud intestinal e inmunológica.' }
 ];
 
 // ==========================================
@@ -215,7 +232,7 @@ const defaultProfile: UserProfile = {
   customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
   allergies: [],
   dislikedFoods: [],
-  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'huevo']
+  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon']
 };
 
 const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
@@ -223,7 +240,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v10');
+      const saved = localStorage.getItem('fitapp_profile_v11');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
       return defaultProfile;
@@ -232,7 +249,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v10');
+      const saved = localStorage.getItem('fitapp_logs_v11');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -241,7 +258,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v10');
+      const saved = localStorage.getItem('fitapp_measurements_v11');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -250,17 +267,17 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v10');
+      const saved = localStorage.getItem('fitapp_excluded_v11');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v10', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v10', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v10', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v10', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v11', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v11', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v11', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v11', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -486,7 +503,7 @@ const s = {
 // ==========================================
 // 5. VISTAS FUNCIONALES
 // ==========================================
-const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => void }> = ({ onStartWorkout, onGoToProfile }) => {
+const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => void; onGoToNutrition: () => void }> = ({ onStartWorkout, onGoToProfile, onGoToNutrition }) => {
   const { profile, streak, workoutLogs } = useFitApp();
   const todayStr = new Date().toISOString().split('T')[0];
   const todayWorkouts = workoutLogs.filter(l => l.date === todayStr);
@@ -518,6 +535,18 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
         <button onClick={onStartWorkout} style={s.buttonPrimary}>
           🚀 REVISAR TABLA Y ENTRENAR
         </button>
+      </div>
+
+      <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, #121215 100%)', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
+        <div>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>🥗</span> Menús y Smoothies con Botón de Refrescar
+          </div>
+          <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
+            Genera alternativas al vuelo según lo que hay en tu despensa.
+          </p>
+        </div>
+        <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
       </div>
 
       <div onClick={onGoToProfile} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -822,6 +851,9 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
   );
 };
 
+// ==========================================
+// NUEVA VISTA DE NUTRICIÓN CON BOTÓN DE REFRESCAR 🔄
+// ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
   const { profile, togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
   
@@ -829,8 +861,106 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   const [customFood, setCustomFood] = useState('');
   const [customPantry, setCustomPantry] = useState('');
 
-  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon'];
+  // Estados locales para los índices activos de cada categoría (permiten el botón de refrescar)
+  const [selectedIndices, setSelectedIndices] = useState<Record<string, number>>({
+    desayuno: 0,
+    comida: 0,
+    cena: 0,
+    snack: 0,
+    bebida: 0
+  });
+
+  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'chia', 'ternera', 'quinoa', 'salmon', 'patata', 'esparragos', 'calabacin', 'cacao', 'cacahuete', 'coco', 'jengibre', 'matcha', 'kefir'];
   const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Huevo', 'Marisco'];
+
+  // Función inteligente para filtrar opciones que no tengan alimentos indeseados o alérgenos
+  const getFilteredOptions = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'bebida') => {
+    return MASTER_MEALS.filter(meal => {
+      if (meal.category !== category) return false;
+
+      // Verificar si contiene algún alimento de la lista de "no me gusta"
+      const hasDisliked = meal.requiredIngredients.some(ing => 
+        profile.dislikedFoods.some(disliked => ing.toLowerCase().includes(disliked.toLowerCase()))
+      );
+      if (hasDisliked) return false;
+
+      return true;
+    });
+  };
+
+  const handleRefresh = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'bebida') => {
+    const options = getFilteredOptions(category);
+    if (options.length <= 1) {
+      alert('No hay más alternativas disponibles con tus filtros actuales. Prueba a quitar algunas restricciones en tus preferencias.');
+      return;
+    }
+    
+    setSelectedIndices(prev => {
+      const currentIndex = prev[category] || 0;
+      const nextIndex = (currentIndex + 1) % options.length;
+      return { ...prev, [category]: nextIndex };
+    });
+  };
+
+  const renderMealCard = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'bebida', title: string) => {
+    const options = getFilteredOptions(category);
+    const currentIndex = selectedIndices[category] || 0;
+    const currentMeal = options[currentIndex % options.length];
+
+    if (!currentMeal) {
+      return (
+        <div style={s.card}>
+          <span style={{ fontSize: '9px', fontWeight: 900, color: '#f87171', textTransform: 'uppercase' }}>{title}</span>
+          <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '8px 0 0 0' }}>No hay opciones disponibles que cumplan tus filtros estrictos de alimentos no deseados.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div style={s.card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+            {title}
+          </span>
+          <button
+            onClick={() => handleRefresh(category)}
+            style={{
+              background: 'rgba(34, 211, 238, 0.15)',
+              border: '1px solid rgba(34, 211, 238, 0.4)',
+              color: '#22d3ee',
+              padding: '6px 12px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Generar otra alternativa"
+          >
+            🔄 Refrescar idea
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {currentMeal.icon && <span style={{ fontSize: '28px' }}>{currentMeal.icon}</span>}
+          <div>
+            <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', margin: '0 0 2px 0' }}>{currentMeal.name}</h4>
+            {currentMeal.desc ? (
+              <p style={{ fontSize: '11px', color: '#a1a1aa', margin: 0, lineHeight: 1.3 }}>{currentMeal.desc}</p>
+            ) : (
+              <p style={{ fontSize: '11px', color: '#71717a', margin: 0 }}>{currentMeal.calories} kcal • {currentMeal.protein}g proteína</p>
+            )}
+          </div>
+        </div>
+
+        <div style={{ marginTop: '10px', fontSize: '10px', color: '#a1a1aa', background: '#09090b', padding: '6px 10px', borderRadius: '8px' }}>
+          🛒 Ingredientes clave: {currentMeal.requiredIngredients.join(', ')}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -840,10 +970,20 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
 
       <div>
         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Menús y Preferencias</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Menús, Smoothies y Bebidas</h1>
       </div>
 
-      {/* ALÉRGENOS E INTOLERANCIAS (CON INPUT PERSONALIZADO) */}
+      {/* SECCIÓN DE MENÚS Y SMOOTHIES CON BOTÓN DE REFRESCAR */}
+      <div>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Propuestas para hoy</h3>
+        {renderMealCard('desayuno', 'Desayuno')}
+        {renderMealCard('comida', 'Comida Principal')}
+        {renderMealCard('cena', 'Cena Ligera')}
+        {renderMealCard('snack', 'Smoothie / Snack')}
+        {renderMealCard('bebida', 'Bebida Saludable')}
+      </div>
+
+      {/* ALÉRGENOS E INTOLERANCIAS */}
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#f87171', margin: '0 0 8px 0' }}>⚠️ Alergias e Intolerancias</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
@@ -868,25 +1008,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
               </button>
             );
           })}
-          {/* Alérgenos personalizados que el usuario haya añadido */}
-          {profile.allergies.filter(a => !commonAllergies.includes(a)).map(alg => (
-            <button
-              key={alg}
-              onClick={() => toggleAllergy(alg)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '10px',
-                fontSize: '11px',
-                fontWeight: 800,
-                border: '1px solid #f87171',
-                background: 'rgba(239, 68, 68, 0.2)',
-                color: '#f87171',
-                cursor: 'pointer'
-              }}
-            >
-              ✓ {alg} (Quitar)
-            </button>
-          ))}
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
           <input 
@@ -905,9 +1026,12 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         </div>
       </div>
 
-      {/* ALIMENTOS QUE NO TE GUSTAN / PREFERENCIAS */}
+      {/* ALIMENTOS QUE NO TE GUSTAN (EXCLUSIÓN AUTOMÁTICA DE RECETAS) */}
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#fb923c', margin: '0 0 8px 0' }}>🚫 Alimentos que no te gustan (Evitar)</h3>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 8px 0', lineHeight: 1.3 }}>
+          Si añades aquí un ingrediente (ej. <em>avena</em>), las recetas que lo contengan se filtrarán automáticamente o podrás darle al botón 🔄 de refrescar.
+        </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
           {profile.dislikedFoods.map(food => (
             <button
@@ -934,7 +1058,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         <div style={{ display: 'flex', gap: '6px' }}>
           <input 
             type="text" 
-            placeholder="Ej: Pescado, brócoli, cebolla..." 
+            placeholder="Ej: avena, pescado, brócoli..." 
             value={customFood} 
             onChange={e => setCustomFood(e.target.value)} 
             style={{ ...s.input, margin: 0, flex: 1 }} 
@@ -948,7 +1072,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         </div>
       </div>
 
-      {/* DESPENSA ACTIVA (CON INPUT PERSONALIZADO) */}
+      {/* DESPENSA ACTIVA */}
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🥬 Ingredientes en tu Despensa</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
@@ -974,68 +1098,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
               </button>
             );
           })}
-          {profile.pantryIngredients.filter(i => !commonIngredients.includes(i)).map(ing => (
-            <button
-              key={ing}
-              onClick={() => togglePantryIngredient(ing)}
-              style={{
-                padding: '6px 10px',
-                borderRadius: '10px',
-                fontSize: '11px',
-                fontWeight: 700,
-                border: '1px solid #22d3ee',
-                background: 'rgba(34, 211, 238, 0.15)',
-                color: '#22d3ee',
-                cursor: 'pointer',
-                textTransform: 'capitalize'
-              }}
-            >
-              ✓ {ing}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <input 
-            type="text" 
-            placeholder="Añadir otro ingrediente de tu cocina..." 
-            value={customPantry} 
-            onChange={e => setCustomPantry(e.target.value)} 
-            style={{ ...s.input, margin: 0, flex: 1 }} 
-          />
-          <button 
-            onClick={() => { if(customPantry) { addPantryIngredient(customPantry); setCustomPantry(''); }}} 
-            style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}
-          >
-            Añadir
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🍳 Propuestas de Comidas</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {MASTER_MEALS.map(meal => (
-            <div key={meal.id} style={s.card}>
-              <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{meal.category}</span>
-              <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px 0' }}>{meal.name}</h4>
-              <p style={{ fontSize: '11px', color: '#71717a', margin: '0 0 6px 0' }}>{meal.calories} kcal • {meal.protein}g proteína</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ marginTop: '10px' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 10px 0' }}>🫖 Bebidas Saludables</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {HEALTHY_DRINKS.map(drink => (
-            <div key={drink.id} style={{ ...s.card, display: 'flex', gap: '12px', alignItems: 'center', padding: '16px', margin: 0 }}>
-              <span style={{ fontSize: '24px' }}>{drink.icon}</span>
-              <div>
-                <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 2px 0' }}>{drink.name}</h4>
-                <p style={{ fontSize: '11px', color: '#a1a1aa', margin: 0, lineHeight: 1.3 }}>{drink.desc}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -1187,7 +1249,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v4.1 PERSONALIZADO</span>
+        <span style={s.badge}>v4.2 NUTRICIÓN DINÁMICA</span>
       </header>
 
       <main style={{ flex: 1 }}>
@@ -1202,7 +1264,7 @@ function AppContent() {
           />
         ) : (
           <>
-            {activeTab === 'dashboard' && <Dashboard onStartWorkout={() => setActiveTab('train')} onGoToProfile={() => setActiveTab('profile')} />}
+            {activeTab === 'dashboard' && <Dashboard onStartWorkout={() => setActiveTab('train')} onGoToProfile={() => setActiveTab('profile')} onGoToNutrition={() => setActiveTab('nutrition')} />}
             {activeTab === 'train' && <WorkoutView onSelectExerciseToPlay={(exs, time) => setPendingWorkoutData({ exercises: exs, time })} onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'nutrition' && <NutritionView onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'progress' && <ProgressView onBackToHome={() => setActiveTab('dashboard')} />}
