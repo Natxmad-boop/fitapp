@@ -233,7 +233,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v15');
+      const saved = localStorage.getItem('fitapp_profile_v16');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
       return defaultProfile;
@@ -242,7 +242,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v15');
+      const saved = localStorage.getItem('fitapp_logs_v16');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -251,7 +251,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v15');
+      const saved = localStorage.getItem('fitapp_measurements_v16');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -260,17 +260,17 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v15');
+      const saved = localStorage.getItem('fitapp_excluded_v16');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v15', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v15', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v15', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v15', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v16', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v16', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v16', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v16', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const updateWeeklyRoutine = (newRoutine: WeeklyRoutineDay[]) => setProfile(prev => ({ ...prev, weeklyRoutine: newRoutine }));
@@ -533,16 +533,16 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
         </button>
       </div>
 
-      <div onClick={onGoToPlanner} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, #121215 100%)', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
+      <div onClick={onGoToPlanner} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, #121215 100%)', border: '1px solid rgba(34, 211, 238, 0.4)' }}>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span>📅</span> Planificador Semanal de Rutinas
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Selecciona los días y combina múltiples partes del cuerpo por día.
+            Elige los días de entrenamiento y combina múltiples músculos.
           </p>
         </div>
-        <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
+        <span style={{ color: '#22d3ee', fontSize: '20px', fontWeight: 'bold' }}>➔</span>
       </div>
 
       <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -573,7 +573,7 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
 };
 
 // ==========================================
-// NUEVO COMPONENTE: PLANIFICADOR SEMANAL
+// COMPONENTE: PLANIFICADOR SEMANAL
 // ==========================================
 const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForDay: (muscles: string[]) => void }> = ({ onBackToHome, onStartWorkoutForDay }) => {
   const { profile, updateWeeklyRoutine } = useFitApp();
@@ -594,7 +594,7 @@ const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForD
     const updated = [...routine];
     const day = updated[dayIndex];
 
-    if (day.isRestDay) return; // Si es día de descanso no se añaden músculos
+    if (day.isRestDay) return;
 
     if (day.muscles.includes(muscleKey)) {
       day.muscles = day.muscles.filter(m => m !== muscleKey);
@@ -626,7 +626,7 @@ const WeeklyPlannerView: React.FC<{ onBackToHome: () => void; onStartWorkoutForD
         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Personalización Total</span>
         <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Planificador Semanal</h1>
         <p style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '4px' }}>
-          Selecciona qué días entrenas y combina varias partes del cuerpo (ej: pecho, brazos y piernas).
+          Selecciona qué días entrenas y combina múltiples partes del cuerpo por sesión.
         </p>
       </div>
 
@@ -744,7 +744,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[], ti
     );
 
     if (filtered.length === 0) {
-      alert(`No hay ejercicios de este grupo compatibles con tus materiales activos. Revisa tu perfil.`);
+      alert(`No hay ejercicios de este grupo compatibles con tus materiales activos.`);
       return;
     }
 
@@ -1002,14 +1002,9 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 };
 
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { profile, togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy } = useFitApp();
-  
+  const { addPantryIngredient } = useFitApp();
   const [quickFoodName, setQuickFoodName] = useState('');
-  const [customAllergy, setCustomAllergy] = useState('');
-  const [selectedIndices, setSelectedIndices] = useState<Record<string, number>>({ desayuno: 0, comida: 0, cena: 0, snack: 0, batido: 0, bebida: 0 });
-
-  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'proteina', 'agua', 'cacao', 'cacahuete'];
-  const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Huevo', 'Marisco'];
+  const [selectedIndices] = useState<Record<string, number>>({ desayuno: 0, comida: 0, cena: 0, snack: 0, batido: 0, bebida: 0 });
 
   const getUnlockedOptions = (category: string) => {
     return MASTER_MEALS.filter(meal => meal.category === category);
@@ -1102,14 +1097,8 @@ const ProgressView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) 
 };
 
 const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { profile, updateProfile, toggleEquipment } = useFitApp();
+  const { profile, updateProfile } = useFitApp();
   const [name, setName] = useState(profile.name);
-
-  const equipmentList: { key: EquipmentType; label: string; icon: string }[] = [
-    { key: 'mobiliario', label: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
-    { key: 'carga_improvisada', label: 'Carga improvisada (Mochila, botellas)', icon: '🎒' },
-    { key: 'accesorios', label: 'Accesorios (Bandas elásticas, esterilla)', icon: '🧻' }
-  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1140,9 +1129,9 @@ function AppContent() {
 
   const tabs = [
     { id: 'dashboard', label: 'Inicio', icon: '⚡' },
+    { id: 'planner', label: 'Rutina', icon: '📅' },
     { id: 'train', label: 'Entrenar', icon: '🔥' },
     { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
-    { id: 'progress', label: 'Progreso', icon: '📈' },
     { id: 'profile', label: 'Perfil', icon: '⚙️' },
   ];
 
@@ -1150,7 +1139,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v6.2 PLANIFICADOR</span>
+        <span style={s.badge}>v6.3 CALENDARIO</span>
       </header>
 
       <main style={{ flex: 1 }}>
