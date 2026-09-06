@@ -52,7 +52,7 @@ class ErrorBoundary extends Component<Props, State> {
 // ==========================================
 export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mantener';
 export type ExperienceLevel = 'principiante' | 'intermedio' | 'avanzado';
-export type ContextType = 'casa' | 'gimnasio' | 'mixto';
+export type ContextType = 'casa' | 'gimnasio' | 'fuera_de_casa';
 
 export interface UserProfile {
   name: string;
@@ -64,7 +64,7 @@ export interface UserProfile {
   goal: Goal;
   daysAvailable: number;
   context: ContextType;
-  equipment: string[];
+  equipment: string[]; // Ej: ['bandas_elasticas', 'rodillo_abdominal', 'tronco_madera']
   allergies: string[];
   dislikedFoods: string[];
 }
@@ -78,6 +78,9 @@ export interface Exercise {
   defaultWeight: string;
   context: ('casa' | 'gimnasio')[];
   equipmentNeeded: string;
+  description: string;
+  homeAlternative: string; // Sugerencia casera si no hay equipo
+  videoUrl: string; // Enlace simulado o de ejemplo para ilustrar el GIF/vídeo
 }
 
 export interface WorkoutSetLog {
@@ -111,33 +114,93 @@ export interface BodyMeasurement {
 }
 
 // ==========================================
-// 2. CONSTANTES (BASE DE DATOS LOCAL)
+// 2. CONSTANTES (BASE DE DATOS LOCAL MEJORADA)
 // ==========================================
 const MASTER_EXERCISES: Exercise[] = [
-  { id: '1', name: 'Press de Banca Plano', muscle: 'pecho', defaultSets: 4, defaultReps: 10, defaultWeight: '60', context: ['gimnasio'], equipmentNeeded: 'barra' },
-  { id: '2', name: 'Flexiones de Pecho', muscle: 'pecho', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
-  { id: '3', name: 'Press Inclinado con Mancuernas', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '20', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
-  { id: '4', name: 'Dominadas Libres', muscle: 'espalda', defaultSets: 4, defaultReps: 8, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'barra de dominadas' },
-  { id: '5', name: 'Remo con Barra', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], equipmentNeeded: 'barra' },
-  { id: '6', name: 'Remo con Mancuerna a 1 Mano', muscle: 'espalda', defaultSets: 3, defaultReps: 12, defaultWeight: '18', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
-  { id: '7', name: 'Press Militar de Pie', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '35', context: ['gimnasio'], equipmentNeeded: 'barra' },
-  { id: '8', name: 'Elevaciones Laterales', muscle: 'hombros', defaultSets: 4, defaultReps: 15, defaultWeight: '10', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
-  { id: '9', name: 'Sentadilla Libre', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '70', context: ['gimnasio'], equipmentNeeded: 'barra' },
-  { id: '10', name: 'Sentadillas Búlgaras', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '14', context: ['casa', 'gimnasio'], equipmentNeeded: 'mancuernas' },
-  { id: '11', name: 'Zancadas (Lunges)', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '12', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
-  { id: '12', name: 'Crunch Abdominal', muscle: 'abdomen', defaultSets: 3, defaultReps: 20, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
-  { id: '13', name: 'Plancha Isométrica', muscle: 'abdomen', defaultSets: 3, defaultReps: 60, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'corporal' },
-  { id: '14', name: 'HIIT / Carrera continua', muscle: 'cardio', defaultSets: 1, defaultReps: 20, defaultWeight: '0', context: ['casa', 'gimnasio'], equipmentNeeded: 'cinta' }
+  { 
+    id: '1', 
+    name: 'Press de Banca Plano', 
+    muscle: 'pecho', 
+    defaultSets: 4, 
+    defaultReps: 10, 
+    defaultWeight: '60', 
+    context: ['gimnasio'], 
+    equipmentNeeded: 'barra',
+    description: 'Acuéstate en el banco, agarra la barra un poco más ancha que los hombros, baja de forma controlada hasta el pecho y empuja hacia arriba.',
+    homeAlternative: 'Flexiones declinadas o press de suelo con bandas elásticas pisadas en la espalda.',
+    videoUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80'
+  },
+  { 
+    id: '2', 
+    name: 'Flexiones de Pecho', 
+    muscle: 'pecho', 
+    defaultSets: 3, 
+    defaultReps: 15, 
+    defaultWeight: '0', 
+    context: ['casa', 'gimnasio'], 
+    equipmentNeeded: 'corporal',
+    description: 'Manos a la altura de los hombros, cuerpo totalmente recto y flexionar codos a 45 grados sin arquear la zona lumbar.',
+    homeAlternative: 'Se puede hacer con manos sobre una silla si es muy duro, o en el suelo.',
+    videoUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=400&q=80'
+  },
+  { 
+    id: '3', 
+    name: 'Remo con Mancuerna a 1 Mano', 
+    muscle: 'espalda', 
+    defaultSets: 3, 
+    defaultReps: 12, 
+    defaultWeight: '18', 
+    context: ['casa', 'gimnasio'], 
+    equipmentNeeded: 'mancuernas',
+    description: 'Apoya una rodilla y mano en un banco o silla, mantén la espalda neutra y tira del peso hacia tu cadera apretando la escápula.',
+    homeAlternative: 'Usa una mochila cargada de libros o un tronco de madera ligero.',
+    videoUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=400&q=80'
+  },
+  { 
+    id: '4', 
+    name: 'Elevaciones Laterales', 
+    muscle: 'hombros', 
+    defaultSets: 4, 
+    defaultReps: 15, 
+    defaultWeight: '10', 
+    context: ['casa', 'gimnasio'], 
+    equipmentNeeded: 'mancuernas',
+    description: 'De pie, eleva los brazos hacia los lados con una ligera flexión de codo hasta que queden paralelos al suelo.',
+    homeAlternative: 'Usa bandas elásticas pisadas con los pies o botellas de agua.',
+    videoUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=400&q=80'
+  },
+  { 
+    id: '5', 
+    name: 'Sentadilla Libre / Con Carga', 
+    muscle: 'piernas', 
+    defaultSets: 4, 
+    defaultReps: 10, 
+    defaultWeight: '50', 
+    context: ['casa', 'gimnasio'], 
+    equipmentNeeded: 'barra',
+    description: 'Pies al ancho de caderas, baja la cadera hacia atrás manteniendo el pecho erguido y las rodillas alineadas con la punta de los pies.',
+    homeAlternative: 'Si estás fuera de casa o sin peso, sostén un tronco de madera en los hombros o haz sentadillas búlgaras apoyando el pie en una silla.',
+    videoUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=400&q=80'
+  },
+  { 
+    id: '6', 
+    name: 'Rueda Abdominal (Rodillo)', 
+    muscle: 'abdomen', 
+    defaultSets: 3, 
+    defaultReps: 12, 
+    defaultWeight: '0', 
+    context: ['casa', 'gimnasio'], 
+    equipmentNeeded: 'rodillo_abdominal',
+    description: 'De rodillas, rueda hacia adelante contrayendo fuertemente el abdomen sin arquear la espalda baja antes de volver.',
+    homeAlternative: 'Si no tienes el rodillo, usa una toalla deslizable sobre suelo liso o haz plancha isométrica.',
+    videoUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80'
+  }
 ];
 
 const MASTER_MEALS: MealItem[] = [
   { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6 },
-  { id: 'm2', name: 'Tostadas de aguacate con huevos revueltos', category: 'desayuno', calories: 420, protein: 22, carbs: 30, fats: 24 },
-  { id: 'm3', name: 'Pechuga de pollo a la plancha con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8 },
-  { id: 'm4', name: 'Salmón al horno con patata asada y espárragos', category: 'comida', calories: 620, protein: 42, carbs: 45, fats: 26 },
-  { id: 'm5', name: 'Yogur griego con frutos rojos y nueces', category: 'merienda', calories: 250, protein: 18, carbs: 20, fats: 12 },
-  { id: 'm6', name: 'Tortilla francesa de claras con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10 },
-  { id: 'm7', name: 'Merluza a la plancha con puré de patata casero', category: 'cena', calories: 380, protein: 38, carbs: 35, fats: 7 }
+  { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8 },
+  { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10 }
 ];
 
 // ==========================================
@@ -153,6 +216,7 @@ interface FitAppContextData {
   streak: number;
   excludedExercises: string[];
   excludeExercise: (name: string) => void;
+  toggleEquipment: (item: string) => void;
 }
 
 const defaultProfile: UserProfile = {
@@ -164,8 +228,8 @@ const defaultProfile: UserProfile = {
   experience: 'intermedio',
   goal: 'ganar_musculo',
   daysAvailable: 4,
-  context: 'gimnasio',
-  equipment: ['mancuernas', 'barra', 'banco', 'maquinas'],
+  context: 'casa',
+  equipment: ['bandas_elasticas', 'rodillo_abdominal', 'tronco_madera'],
   allergies: [],
   dislikedFoods: []
 };
@@ -175,48 +239,44 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v4');
+      const saved = localStorage.getItem('fitapp_profile_v5');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
-      localStorage.removeItem('fitapp_profile_v4');
       return defaultProfile;
     }
   });
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v4');
+      const saved = localStorage.getItem('fitapp_logs_v5');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      localStorage.removeItem('fitapp_logs_v4');
       return [];
     }
   });
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v4');
+      const saved = localStorage.getItem('fitapp_measurements_v5');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
-      localStorage.removeItem('fitapp_measurements_v4');
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     }
   });
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v4');
+      const saved = localStorage.getItem('fitapp_excluded_v5');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      localStorage.removeItem('fitapp_excluded_v4');
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v4', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v4', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v4', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v4', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v5', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v5', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v5', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v5', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -229,13 +289,19 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!excludedExercises.includes(name)) setExcludedExercises(prev => [...prev, name]);
   };
 
+  const toggleEquipment = (item: string) => {
+    const exists = profile.equipment.includes(item);
+    const newEq = exists ? profile.equipment.filter(e => e !== item) : [...profile.equipment, item];
+    updateProfile({ equipment: newEq });
+  };
+
   const uniqueDays = new Set(workoutLogs.map(l => l.date)).size;
   const streak = uniqueDays > 0 ? uniqueDays : 1;
 
   return (
     <FitAppContext.Provider value={{
       profile, updateProfile, workoutLogs, saveWorkoutLog, measurements,
-      addMeasurement, streak, excludedExercises, excludeExercise
+      addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment
     }}>
       {children}
     </FitAppContext.Provider>
@@ -379,7 +445,7 @@ const s = {
 // ==========================================
 // 5. VISTAS FUNCIONALES
 // ==========================================
-const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => void }> = ({ onStartWorkout, onGoToNutrition }) => {
+const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => void }> = ({ onStartWorkout, onGoToProfile }) => {
   const { profile, streak, workoutLogs } = useFitApp();
   const todayStr = new Date().toISOString().split('T')[0];
   const todayWorkouts = workoutLogs.filter(l => l.date === todayStr);
@@ -389,7 +455,7 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#22d3ee', fontWeight: 800 }}>PRO MEMBER</span>
+            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#22d3ee', fontWeight: 800 }}>MODO: {profile.context.toUpperCase()}</span>
             <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff' }}>Hola, {profile.name} ✨</h1>
           </div>
           <div style={{ background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.3)', padding: '8px 12px', borderRadius: '14px', color: '#fb923c', fontWeight: 900, fontSize: '12px' }}>
@@ -400,26 +466,26 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
 
       <div style={s.heroCard}>
         <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
-          Objetivo: {profile.goal.replace('_', ' ')}
+          Entorno actual: {profile.context}
         </span>
-        <h2 style={{ fontSize: '24px', fontWeight: 900, margin: '12px 0 8px 0' }}>Sesión del Día</h2>
+        <h2 style={{ fontSize: '24px', fontWeight: 900, margin: '12px 0 8px 0' }}>Sesión Adaptada</h2>
         <p style={{ fontSize: '12px', color: '#e0f2fe', margin: 0, lineHeight: 1.5 }}>
           {todayWorkouts.length > 0 
             ? `⚡ ¡Gran trabajo! Has registrado ${todayWorkouts.length} ejercicio(s) hoy.` 
-            : 'Tu motor adaptativo ha preparado una sesión óptima para tu evolución.'}
+            : `Optimizando ejercicios con tus materiales (Bandas, Rodillo, Tronco, etc.).`}
         </p>
         <button onClick={onStartWorkout} style={s.buttonPrimary}>
           🚀 EMPEZAR ENTRENAMIENTO
         </button>
       </div>
 
-      <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div onClick={onGoToProfile} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🥗</span> Nutrición Inteligente y Macros
+            <span>🎒</span> Gestionar mis Materiales y Contexto
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Alergias: {profile.allergies.length > 0 ? profile.allergies.join(', ') : 'Ninguna'}
+            Equipamiento registrado: {profile.equipment.length > 0 ? profile.equipment.join(', ') : 'Ninguno'}
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -429,7 +495,7 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToNutrition: () => v
 };
 
 const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) => void }> = ({ onSelectExerciseToPlay }) => {
-  const { excludedExercises } = useFitApp();
+  const { profile, excludedExercises } = useFitApp();
 
   const muscles = [
     { key: 'pecho', label: '🦾 Pecho', desc: 'Fuerza y volumen', bg: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(6, 182, 212, 0.15))' },
@@ -449,21 +515,13 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
     onSelectExerciseToPlay(filtered);
   };
 
-  const handleExpr = () => {
-    const filtered = MASTER_EXERCISES.filter(ex => !excludedExercises.includes(ex.name));
-    onSelectExerciseToPlay(filtered.slice(0, 4));
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Motor de Fuerza</span>
-          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Entrenamiento</h1>
+          <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Entorno: {profile.context}</span>
+          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Selecciona Músculo</h1>
         </div>
-        <button onClick={handleExpr} style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '8px 14px', borderRadius: '14px', fontSize: '11px', fontWeight: 900, cursor: 'pointer' }}>
-          ⚡ Rutina Exprés
-        </button>
       </div>
 
       <div style={s.grid}>
@@ -498,7 +556,7 @@ const WorkoutView: React.FC<{ onSelectExerciseToPlay: (exercises: Exercise[]) =>
 };
 
 const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
-  const { saveWorkoutLog } = useFitApp();
+  const { saveWorkoutLog, profile } = useFitApp();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
   const [weight, setWeight] = useState(exercises[0]?.defaultWeight || '0');
@@ -565,8 +623,25 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
         <span style={{ fontSize: '11px', color: '#22d3ee', textTransform: 'uppercase', fontWeight: 700 }}>Grupo: {currentEx.muscle}</span>
       </div>
 
+      {/* BLOQUE DE AYUDA VISUAL / GIF / DEMOSTRACIÓN */}
+      <div style={{ background: '#18181b', borderRadius: '16px', padding: '12px', border: '1px solid #27272a' }}>
+        <img 
+          src={currentEx.videoUrl} 
+          alt={currentEx.name} 
+          style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '12px', marginBottom: '8px' }} 
+        />
+        <div style={{ fontSize: '12px', color: '#e4e4e7', lineHeight: 1.4, marginBottom: '6px' }}>
+          <strong>💡 Técnica:</strong> {currentEx.description}
+        </div>
+        {profile.context === 'casa' && (
+          <div style={{ fontSize: '11px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '8px', borderRadius: '8px' }}>
+            🏠 <strong>Sugerencia si estás sin equipo específico:</strong> {currentEx.homeAlternative}
+          </div>
+        )}
+      </div>
+
       <div>
-        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso Aplicado (kg)</label>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso Aplicado (kg / Nivel)</label>
         <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={s.input} />
       </div>
 
@@ -587,69 +662,14 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 };
 
 const NutritionView: React.FC = () => {
-  const { profile, updateProfile } = useFitApp();
-  const [newAllergy, setNewAllergy] = useState('');
-
-  const bmr = profile.gender === 'Hombre' 
-    ? (10 * profile.weight) + (6.25 * profile.height) - (5 * profile.age) + 5
-    : (10 * profile.weight) + (6.25 * profile.height) - (5 * profile.age) - 161;
-  
-  const targetCalories = Math.round(
-    profile.goal === 'ganar_musculo' ? bmr + 350 :
-    profile.goal === 'perder_grasa' ? bmr - 400 : bmr
-  );
-  const targetProtein = Math.round(profile.weight * 2.0);
-
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAllergy.trim()) return;
-    updateProfile({ allergies: [...profile.allergies, newAllergy.trim()] });
-    setNewAllergy('');
-  };
-
-  const safeMeals = MASTER_MEALS.filter(meal => {
-    const nameLower = meal.name.toLowerCase();
-    return !profile.allergies.some(allergy => nameLower.includes(allergy.toLowerCase()));
-  });
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
         <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
         <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Plan de Macros</h1>
       </div>
-
-      <div style={s.card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <div>
-            <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Calorías Objetivo</span>
-            <div style={{ fontSize: '22px', fontWeight: 900, color: '#22d3ee' }}>{targetCalories} kcal</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Proteína Recomendada</span>
-            <div style={{ fontSize: '22px', fontWeight: 900, color: '#fb923c' }}>{targetProtein}g</div>
-          </div>
-        </div>
-      </div>
-
-      <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>⚠️ Alergias o Alimentos a Excluir</h3>
-        <form onSubmit={handleAdd} style={{ display: 'flex', gap: '8px' }}>
-          <input type="text" placeholder="Ej: lactosa, frutos secos..." value={newAllergy} onChange={e => setNewAllergy(e.target.value)} style={{ ...s.input, margin: 0, flex: 1 }} />
-          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>Añadir</button>
-        </form>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
-          {profile.allergies.map(a => (
-            <span key={a} style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#fbbf24', fontSize: '11px', padding: '4px 10px', borderRadius: '10px', fontWeight: 700 }}>
-              {a} <button onClick={() => updateProfile({ allergies: profile.allergies.filter(i => i !== a) })} style={{ background: 'none', border: 'none', color: '#fbbf24', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }}>×</button>
-            </span>
-          ))}
-        </div>
-      </div>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#a1a1aa', margin: 0 }}>Menús Adaptados</h3>
-        {safeMeals.map(meal => (
+        {MASTER_MEALS.map(meal => (
           <div key={meal.id} style={s.card}>
             <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>{meal.category}</span>
             <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px 0' }}>{meal.name}</h4>
@@ -690,40 +710,86 @@ const ProgressView: React.FC = () => {
           <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>Guardar</button>
         </form>
       </div>
-
-      <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 10px 0' }}>Historial de Evolución</h3>
-        {measurements.slice().reverse().map((m, idx) => (
-          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid #27272a', paddingBottom: '8px', marginBottom: '8px' }}>
-            <span style={{ color: '#a1a1aa' }}>{m.date}</span>
-            <span style={{ color: '#ffffff', fontWeight: 800 }}>{m.weight} kg</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
 
 const ProfileView: React.FC = () => {
-  const { profile, updateProfile } = useFitApp();
+  const { profile, updateProfile, toggleEquipment } = useFitApp();
   const [name, setName] = useState(profile.name);
-  const [weight, setWeight] = useState(String(profile.weight));
+
+  const availableEquipments = [
+    { id: 'bandas_elasticas', label: '🪡 Bandas elásticas' },
+    { id: 'rodillo_abdominal', label: '⭕ Rodillo de abdominales' },
+    { id: 'tronco_madera', label: '🪵 Tronco de madera' },
+    { id: 'silla_toalla', label: '🪑 Silla / Toalla casera' }
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Configuración</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Perfil Personal</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Configuración de Entorno</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Perfil y Materiales</h1>
       </div>
+
       <div style={s.card}>
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>¿Dónde vas a entrenar hoy?</label>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '6px', marginBottom: '16px' }}>
+          {(['casa', 'gimnasio', 'fuera_de_casa'] as ContextType[]).map(ctx => (
+            <button
+              key={ctx}
+              onClick={() => updateProfile({ context: ctx })}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '12px',
+                border: profile.context === ctx ? '2px solid #22d3ee' : '1px solid #27272a',
+                background: profile.context === ctx ? 'rgba(34, 211, 238, 0.15)' : '#09090b',
+                color: '#ffffff',
+                fontWeight: 800,
+                fontSize: '11px',
+                cursor: 'pointer',
+                textTransform: 'capitalize'
+              }}
+            >
+              {ctx.replace('_', ' ')}
+            </button>
+          ))}
+        </div>
+
+        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+          📦 Materiales disponibles en tu ubicación actual:
+        </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+          {availableEquipments.map(item => {
+            const isChecked = profile.equipment.includes(item.id);
+            return (
+              <div 
+                key={item.id} 
+                onClick={() => toggleEquipment(item.id)}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: isChecked ? 'rgba(34, 211, 238, 0.1)' : '#09090b',
+                  border: isChecked ? '1px solid #22d3ee' : '1px solid #27272a',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>{item.label}</span>
+                <span style={{ fontSize: '14px', color: isChecked ? '#22d3ee' : '#71717a' }}>{isChecked ? '✓ Sí' : '+ Añadir'}</span>
+              </div>
+            );
+          })}
+        </div>
+
         <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Nombre del Atleta</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} style={s.input} />
 
-        <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Peso Base (kg)</label>
-        <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={s.input} />
-
-        <button onClick={() => { updateProfile({ name, weight: Number(weight) }); alert('¡Perfil actualizado con éxito!'); }} style={s.buttonCyan}>
-          GUARDAR CAMBIOS
+        <button onClick={() => { updateProfile({ name }); alert('¡Configuración guardada!'); }} style={s.buttonCyan}>
+          GUARDAR CONFIGURACIÓN
         </button>
       </div>
     </div>
@@ -742,14 +808,14 @@ function AppContent() {
     { id: 'train', label: 'Entrenar', icon: '🔥' },
     { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
     { id: 'progress', label: 'Progreso', icon: '📈' },
-    { id: 'profile', label: 'Perfil', icon: '👤' },
+    { id: 'profile', label: 'Perfil', icon: '🎒' },
   ];
 
   return (
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v3.0 FUNCIONAL</span>
+        <span style={s.badge}>v3.5 ADAPTATIVA</span>
       </header>
 
       <main style={{ flex: 1 }}>
@@ -757,7 +823,7 @@ function AppContent() {
           <ActiveWorkoutPlayer exercises={activeWorkoutExercises} onFinish={() => setActiveWorkoutExercises(null)} />
         ) : (
           <>
-            {activeTab === 'dashboard' && <Dashboard onStartWorkout={() => setActiveTab('train')} onGoToNutrition={() => setActiveTab('nutrition')} />}
+            {activeTab === 'dashboard' && <Dashboard onStartWorkout={() => setActiveTab('train')} onGoToProfile={() => setActiveTab('profile')} />}
             {activeTab === 'train' && <WorkoutView onSelectExerciseToPlay={(exs) => setActiveWorkoutExercises(exs)} />}
             {activeTab === 'nutrition' && <NutritionView />}
             {activeTab === 'progress' && <ProgressView />}
