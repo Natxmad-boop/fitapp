@@ -61,6 +61,15 @@ export interface CustomEquipmentItem {
   icon: string;
 }
 
+export interface CustomFoodItem {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
 export interface UserProfile {
   name: string;
   age: number;
@@ -76,6 +85,7 @@ export interface UserProfile {
   allergies: string[];
   dislikedFoods: string[];
   pantryIngredients: string[]; 
+  customFoods: CustomFoodItem[];
 }
 
 export interface Exercise {
@@ -127,7 +137,7 @@ export interface BodyMeasurement {
 }
 
 // ==========================================
-// 2. CONSTANTES Y BIBLIOTECA MAESTRA AMPLIADA
+// 2. CONSTANTES Y BIBLIOTECA MAESTRA
 // ==========================================
 const DEFAULT_CUSTOM_EQUIPMENT: CustomEquipmentItem[] = [
   { id: 'mobiliario', name: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
@@ -166,35 +176,22 @@ const MASTER_MEALS: MealItem[] = [
   { id: 'm1_alt', name: 'Tostada integral con aguacate y huevo revuelto', category: 'desayuno', calories: 340, protein: 18, carbs: 28, fats: 16, requiredIngredients: ['pan', 'aguacate', 'huevo'] },
   { id: 'm1_alt2', name: 'Pudding de Chía con frutos rojos y yogur griego', category: 'desayuno', calories: 310, protein: 20, carbs: 24, fats: 12, requiredIngredients: ['chia', 'yogur', 'frutos rojos'] },
   { id: 'm1_alt3', name: 'Tortitas de Avena y Clara de Huevo', category: 'desayuno', calories: 320, protein: 24, carbs: 42, fats: 4, requiredIngredients: ['avena', 'huevo'] },
-  { id: 'm1_alt4', name: 'Bol de Yogur Griego con Granola y Plátano', category: 'desayuno', calories: 390, protein: 22, carbs: 48, fats: 11, requiredIngredients: ['yogur', 'platano', 'granola'] },
 
   { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'] },
   { id: 'm2_alt', name: 'Ternera salteada con quinoa y espinacas', category: 'comida', calories: 580, protein: 45, carbs: 52, fats: 14, requiredIngredients: ['ternera', 'quinoa', 'espinacas'] },
   { id: 'm2_alt2', name: 'Salmón al horno con patata asada y espárragos', category: 'comida', calories: 610, protein: 40, carbs: 45, fats: 22, requiredIngredients: ['salmon', 'patata', 'esparragos'] },
-  { id: 'm2_alt3', name: 'Pavo en salsa de tomate con puré de boniato', category: 'comida', calories: 520, protein: 46, carbs: 50, fats: 9, requiredIngredients: ['pavo', 'tomate', 'boniato'] },
-  { id: 'm2_alt4', name: 'Arroz salteado con pollo, calabacín y zanahoria', category: 'comida', calories: 540, protein: 42, carbs: 65, fats: 7, requiredIngredients: ['arroz', 'pollo', 'calabacin', 'zanahoria'] },
 
   { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'] },
   { id: 'm3_alt', name: 'Merluza a la plancha con puré de calabacín', category: 'cena', calories: 290, protein: 38, carbs: 12, fats: 6, requiredIngredients: ['merluza', 'calabacin'] },
-  { id: 'm3_alt2', name: 'Ensalada templada de pollo desmenuzado y nueces', category: 'cena', calories: 330, protein: 36, carbs: 10, fats: 14, requiredIngredients: ['pollo', 'lechuga', 'nueces'] },
-  { id: 'm3_alt3', name: 'Crema ligera de calabacín con picatostes y queso fresco', category: 'cena', calories: 250, protein: 18, carbs: 22, fats: 8, requiredIngredients: ['calabacin', 'queso', 'pan'] },
-  { id: 'm3_alt4', name: 'Tortilla de claras de huevo con champiñones y jamón', category: 'cena', calories: 240, protein: 32, carbs: 4, fats: 7, requiredIngredients: ['huevo', 'champiñones', 'jamon'] },
 
   { id: 'm4', name: 'Tortitas de arroz con crema de cacahuete', category: 'snack', calories: 200, protein: 7, carbs: 22, fats: 9, requiredIngredients: ['arroz', 'cacahuete'] },
   { id: 'm4_alt', name: 'Yogur griego natural con frutos secos', category: 'snack', calories: 220, protein: 15, carbs: 10, fats: 12, requiredIngredients: ['yogur', 'nueces'] },
-  { id: 'm4_alt2', name: 'Manzana con crema de almendras', category: 'snack', calories: 190, protein: 4, carbs: 25, fats: 9, requiredIngredients: ['manzana', 'almendras'] },
-  { id: 'm4_alt3', name: 'Barrita casera de avena y cacao', category: 'snack', calories: 210, protein: 6, carbs: 28, fats: 8, requiredIngredients: ['avena', 'cacao'] },
 
   { id: 'bat_1', name: 'Smoothie Proteico de Cacao y Mantequilla de Cacahuete', category: 'batido', calories: 320, protein: 28, carbs: 22, fats: 12, requiredIngredients: ['cacao', 'cacahuete', 'proteina', 'platano'], icon: '🥤', desc: 'Ideal post-entreno para ganar músculo y calmar el apetito.' },
   { id: 'bat_1_alt', name: 'Batido Verde Detox Energético de Espinacas y Plátano', category: 'batido', calories: 180, protein: 12, carbs: 30, fats: 2, requiredIngredients: ['espinacas', 'platano', 'limon'], icon: '🥬', desc: 'Alto en antioxidantes, fibra y micronutrientes depurativos.' },
-  { id: 'bat_1_alt2', name: 'Smoothie Tropical de Frutos Rojos y Coco', category: 'batido', calories: 210, protein: 10, carbs: 32, fats: 5, requiredIngredients: ['frutos rojos', 'coco', 'yogur'], icon: '🍓', desc: 'Refrescante, bajo en índice glucémico y rico en vitamina C.' },
-  { id: 'bat_1_alt3', name: 'Batido Anabólico de Avena, Plátano y Proteína', category: 'batido', calories: 410, protein: 34, carbs: 58, fats: 5, requiredIngredients: ['avena', 'platano', 'proteina'], icon: '💪', desc: 'Cargado de hidratos complejos para subir limpio de peso.' },
-  { id: 'bat_1_alt4', name: 'Smoothie Cremoso de Aguacate, Espinacas y Limón', category: 'batido', calories: 260, protein: 8, carbs: 18, fats: 18, requiredIngredients: ['aguacate', 'espinacas', 'limon'], icon: '🥑', desc: 'Grasas saludables y textura ultra cremosa.' },
 
   { id: 'beb_1', name: 'Agua Infusionada de Limón y Jengibre', category: 'bebida', calories: 5, protein: 0, carbs: 1, fats: 0, requiredIngredients: ['limon', 'jengibre'], icon: '🍋', desc: 'Excelente para activar el metabolismo y la digestión en ayunas.' },
-  { id: 'beb_1_alt', name: 'Té Matcha Ceremonial con Hielo', category: 'bebida', calories: 10, protein: 1, carbs: 2, fats: 0, requiredIngredients: ['matcha'], icon: '🍵', desc: 'Energía limpia y sostenida sin picos de cortisol ni ansiedad.' },
-  { id: 'beb_1_alt2', name: 'Kéfir de Agua con Frutos Rojos', category: 'bebida', calories: 35, protein: 1, carbs: 7, fats: 0, requiredIngredients: ['kefir', 'frutos rojos'], icon: '🫐', desc: 'Probiótico natural excelente para la salud de la microbiota.' },
-  { id: 'beb_1_alt3', name: 'Infusión Digestiva de Jengibre y Limón templada', category: 'bebida', calories: 4, protein: 0, carbs: 1, fats: 0, requiredIngredients: ['jengibre', 'limon'], icon: '🫖', desc: 'Calma el estómago después de comidas copiosas.' }
+  { id: 'beb_1_alt', name: 'Té Matcha Ceremonial con Hielo', category: 'bebida', calories: 10, protein: 1, carbs: 2, fats: 0, requiredIngredients: ['matcha'], icon: '🍵', desc: 'Energía limpia y sostenida sin picos de cortisol ni ansiedad.' }
 ];
 
 // ==========================================
@@ -213,6 +210,8 @@ interface FitAppContextData {
   toggleEquipment: (item: EquipmentType) => void;
   togglePantryIngredient: (ingredient: string) => void;
   addPantryIngredient: (ingredient: string) => void;
+  addCustomFood: (food: CustomFoodItem) => void;
+  deleteCustomFood: (id: string) => void;
   toggleAllergy: (allergy: string) => void;
   addAllergy: (allergy: string) => void;
   toggleDislikedFood: (food: string) => void;
@@ -233,7 +232,8 @@ const defaultProfile: UserProfile = {
   customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
   allergies: [],
   dislikedFoods: [],
-  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina', 'agua']
+  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina', 'agua'],
+  customFoods: []
 };
 
 const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
@@ -241,7 +241,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v12');
+      const saved = localStorage.getItem('fitapp_profile_v13');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
       return defaultProfile;
@@ -250,7 +250,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v12');
+      const saved = localStorage.getItem('fitapp_logs_v13');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -259,7 +259,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v12');
+      const saved = localStorage.getItem('fitapp_measurements_v13');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -268,17 +268,17 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v12');
+      const saved = localStorage.getItem('fitapp_excluded_v13');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v12', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v12', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v12', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v12', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v13', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v13', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v13', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v13', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -310,6 +310,22 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (clean && !profile.pantryIngredients.includes(clean)) {
       updateProfile({ pantryIngredients: [...profile.pantryIngredients, clean] });
     }
+  };
+
+  const addCustomFood = (food: CustomFoodItem) => {
+    const updatedFoods = [...profile.customFoods, food];
+    // También lo añadimos automáticamente a la despensa para que active recetas
+    const foodNameClean = food.name.trim().toLowerCase();
+    const updatedPantry = profile.pantryIngredients.includes(foodNameClean) 
+      ? profile.pantryIngredients 
+      : [...profile.pantryIngredients, foodNameClean];
+
+    updateProfile({ customFoods: updatedFoods, pantryIngredients: updatedPantry });
+  };
+
+  const deleteCustomFood = (id: string) => {
+    const updatedFoods = profile.customFoods.filter(f => f.id !== id);
+    updateProfile({ customFoods: updatedFoods });
   };
 
   const toggleAllergy = (allergy: string) => {
@@ -345,8 +361,8 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <FitAppContext.Provider value={{
       profile, updateProfile, workoutLogs, saveWorkoutLog, measurements,
       addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment,
-      togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy,
-      toggleDislikedFood, addDislikedFood
+      togglePantryIngredient, addPantryIngredient, addCustomFood, deleteCustomFood,
+      toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood
     }}>
       {children}
     </FitAppContext.Provider>
@@ -509,12 +525,21 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
   const todayStr = new Date().toISOString().split('T')[0];
   const todayWorkouts = workoutLogs.filter(l => l.date === todayStr);
 
+  const goalLabels: Record<Goal, string> = {
+    ganar_musculo: 'Ganar Músculo (Hipertrofia)',
+    perder_grasa: 'Perder Grasa (Definición)',
+    ganar_fuerza: 'Ganar Fuerza',
+    mantener: 'Mantenimiento y Salud'
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#22d3ee', fontWeight: 800 }}>ENTORNO: {profile.context.toUpperCase()}</span>
+            <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#22d3ee', fontWeight: 800 }}>
+              OBJETIVO: {goalLabels[profile.goal]}
+            </span>
             <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff' }}>Hola, {profile.name} ✨</h1>
           </div>
           <div style={{ background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.3)', padding: '8px 12px', borderRadius: '14px', color: '#fb923c', fontWeight: 900, fontSize: '12px' }}>
@@ -525,13 +550,13 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
 
       <div style={s.heroCard}>
         <span style={{ fontSize: '10px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
-          Biblioteca activa filtrada por tus materiales
+          Entorno: {profile.context.toUpperCase()}
         </span>
         <h2 style={{ fontSize: '24px', fontWeight: 900, margin: '12px 0 8px 0' }}>Sesión Adaptada</h2>
         <p style={{ fontSize: '12px', color: '#e0f2fe', margin: 0, lineHeight: 1.5 }}>
           {todayWorkouts.length > 0 
             ? `⚡ ¡Gran trabajo! Has registrado ${todayWorkouts.length} ejercicio(s) hoy.` 
-            : `El sistema seleccionará ejercicios compatibles con tu inventario actual (${profile.equipment.length} categorías de material).`}
+            : `El sistema seleccionará ejercicios compatibles con tu inventario actual y objetivo.`}
         </p>
         <button onClick={onStartWorkout} style={s.buttonPrimary}>
           🚀 REVISAR TABLA Y ENTRENAR
@@ -541,10 +566,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
       <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, #121215 100%)', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🥤</span> Recetas Apilables, Batidos y Bebidas
+            <span>🥗</span> Mis Alimentos y Recetas Apilables
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Se desbloquean al vuelo según los alimentos de tu despensa.
+            Crea tus alimentos personalizados con macros y desbloquea recetas.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -553,10 +578,10 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
       <div onClick={onGoToProfile} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>🎒</span> Gestionar Materiales y Despensa
+            <span>⚙️</span> Configurar Objetivo y Materiales
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Añade ingredientes a tu despensa para apilar más recetas.
+            Cambia tu meta de entrenamiento y equipamiento.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -853,14 +878,17 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 };
 
 // ==========================================
-// VISTA DE NUTRICIÓN (MOTOR INTELIGENTE)
+// VISTA DE NUTRICIÓN Y BASE DE DATOS DE ALIMENTOS
 // ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { profile, togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
+  const { profile, togglePantryIngredient, addCustomFood, deleteCustomFood, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
   
   const [customAllergy, setCustomAllergy] = useState('');
-  const [customFood, setCustomFood] = useState('');
-  const [newIngredientInput, setNewIngredientInput] = useState('');
+  const [customFoodName, setCustomFoodName] = useState('');
+  const [customFoodCal, setCustomFoodCal] = useState('');
+  const [customFoodProt, setCustomFoodProt] = useState('');
+  const [customFoodCarbs, setCustomFoodCarbs] = useState('');
+  const [customFoodFats, setCustomFoodFats] = useState('');
 
   const [selectedIndices, setSelectedIndices] = useState<Record<string, number>>({
     desayuno: 0,
@@ -871,7 +899,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
     bebida: 0
   });
 
-  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'chia', 'ternera', 'quinoa', 'salmon', 'patata', 'esparragos', 'calabacin', 'cacao', 'cacahuete', 'coco', 'jengibre', 'matcha', 'kefir', 'proteina', 'frutos rojos', 'yogur', 'granola', 'boniato', 'tomate', 'zanahoria', 'queso', 'champiñones', 'jamon', 'almendras', 'manzana', 'agua'];
+  const commonIngredients = ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'pan', 'aguacate', 'chia', 'ternera', 'quinoa', 'salmon', 'patata', 'esparragos', 'calabacin', 'cacao', 'cacahuete', 'coco', 'jengibre', 'matcha', 'proteina', 'frutos rojos', 'yogur', 'agua'];
   const commonAllergies = ['Gluten', 'Lácteos', 'Frutos Secos', 'Huevo', 'Marisco'];
 
   const getUnlockedOptions = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
@@ -894,7 +922,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   const handleRefresh = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
     const options = getUnlockedOptions(category);
     if (options.length <= 1) {
-      alert('No hay más recetas apiladas disponibles con los ingredientes actuales de tu despensa. ¡Añade más alimentos abajo para desbloquear más opciones!');
+      alert('No hay más recetas apiladas disponibles con los ingredientes actuales. ¡Añade o registra más alimentos abajo!');
       return;
     }
     
@@ -903,6 +931,31 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       const nextIndex = (currentIndex + 1) % options.length;
       return { ...prev, [category]: nextIndex };
     });
+  };
+
+  const handleCreateFoodSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customFoodName.trim()) {
+      alert('Por favor, introduce el nombre del alimento.');
+      return;
+    }
+
+    const newFood: CustomFoodItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: customFoodName.trim(),
+      calories: Number(customFoodCal) || 0,
+      protein: Number(customFoodProt) || 0,
+      carbs: Number(customFoodCarbs) || 0,
+      fats: Number(customFoodFats) || 0
+    };
+
+    addCustomFood(newFood);
+    setCustomFoodName('');
+    setCustomFoodCal('');
+    setCustomFoodProt('');
+    setCustomFoodCarbs('');
+    setCustomFoodFats('');
+    alert(`✅ ¡Alimento "${newFood.name}" registrado con éxito y añadido a tu despensa!`);
   };
 
   const renderMealCard = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida', title: string) => {
@@ -917,7 +970,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
             <span style={{ fontSize: '9px', fontWeight: 900, color: '#f87171', textTransform: 'uppercase' }}>{title} (BLOQUEADO)</span>
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            🔒 No tienes suficientes ingredientes en tu despensa para desbloquear recetas de esta categoría. Añade más alimentos abajo.
+            🔒 Faltan ingredientes clave en tu despensa para esta categoría. Añade más alimentos abajo.
           </p>
         </div>
       );
@@ -962,7 +1015,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
         </div>
 
         <div style={{ marginTop: '10px', fontSize: '10px', color: '#22d3ee', background: '#09090b', padding: '6px 10px', borderRadius: '8px' }}>
-          🛒 Ingredientes en despensa cubiertos: {currentMeal.requiredIngredients.join(', ')}
+          🛒 Ingredientes cubiertos: {currentMeal.requiredIngredients.join(', ')}
         </div>
       </div>
     );
@@ -975,12 +1028,68 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Sistema Inteligente Apilable</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Recetas, Batidos y Bebidas</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Base de Datos Personalizada</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Nutrición y Alimentos</h1>
       </div>
 
-      <div style={{ background: 'rgba(34, 211, 238, 0.08)', border: '1px solid rgba(34, 211, 238, 0.2)', padding: '12px 16px', borderRadius: '16px', fontSize: '12px', color: '#e0f2fe', lineHeight: 1.4 }}>
-        💡 <strong>Cómo funciona:</strong> Cuantos más alimentos marques o añadas abajo en tu <strong>Despensa</strong>, más recetas, batidos y bebidas se "apilarán" y desbloquearán automáticamente.
+      {/* REGISTRO DE ALIMENTOS PERSONALIZADOS */}
+      <div style={s.card}>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>➕ Registrar Nuevo Alimento</h3>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Añade cualquier alimento con sus macronutrientes por ración o 100g:</p>
+
+        <form onSubmit={handleCreateFoodSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div>
+            <label style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800 }}>Nombre del alimento</label>
+            <input type="text" placeholder="Ej: Atún en lata, Quinoa cocida..." value={customFoodName} onChange={e => setCustomFoodName(e.target.value)} style={s.input} />
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Calorías (kcal)</label>
+              <input type="number" placeholder="Ej: 120" value={customFoodCal} onChange={e => setCustomFoodCal(e.target.value)} style={s.input} />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Proteínas (g)</label>
+              <input type="number" placeholder="Ej: 22" value={customFoodProt} onChange={e => setCustomFoodProt(e.target.value)} style={s.input} />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div>
+              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Carbohidratos (g)</label>
+              <input type="number" placeholder="Ej: 5" value={customFoodCarbs} onChange={e => setCustomFoodCarbs(e.target.value)} style={s.input} />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Grasas (g)</label>
+              <input type="number" placeholder="Ej: 3" value={customFoodFats} onChange={e => setCustomFoodFats(e.target.value)} style={s.input} />
+            </div>
+          </div>
+
+          <button type="submit" style={s.buttonCyan}>
+            Guardar en mi Base de Datos
+          </button>
+        </form>
+
+        {profile.customFoods.length > 0 && (
+          <div style={{ marginTop: '16px', borderTop: '1px solid #27272a', paddingTop: '12px' }}>
+            <span style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800, display: 'block', marginBottom: '8px' }}>Tus Alimentos Guardados:</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {profile.customFoods.map(food => (
+                <div key={food.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#09090b', padding: '10px 12px', borderRadius: '12px', border: '1px solid #27272a' }}>
+                  <div>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>{food.name}</span>
+                    <div style={{ fontSize: '10px', color: '#a1a1aa', marginTop: '2px' }}>
+                      {food.calories} kcal • P: {food.protein}g | C: {food.carbs}g | G: {food.fats}g
+                    </div>
+                  </div>
+                  <button onClick={() => deleteCustomFood(food.id)} style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}>
+                    Eliminar
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
@@ -994,10 +1103,10 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>🥬 Tu Despensa Dinámica</h3>
-        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Marca o desmarca ingredientes según lo que tengas en casa para apilar recetas:</p>
+        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>🥬 Despensa Activa</h3>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Selecciona los ingredientes que tienes disponibles:</p>
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {commonIngredients.map(ing => {
             const hasIt = profile.pantryIngredients.includes(ing);
             return (
@@ -1020,31 +1129,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
               </button>
             );
           })}
-        </div>
-
-        {/* CAMBIO: Se reestructuró en columna con mejor espacio y un input ancho para que no se corte */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#09090b', padding: '12px', borderRadius: '16px', border: '1px solid #27272a' }}>
-          <label style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800 }}>➕ Añadir alimento personalizado</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input 
-              type="text" 
-              placeholder="Ej: nueces, miel, atún..." 
-              value={newIngredientInput} 
-              onChange={e => setNewIngredientInput(e.target.value)} 
-              style={{ ...s.input, margin: 0, flex: 1 }} 
-            />
-            <button 
-              onClick={() => { 
-                if(newIngredientInput.trim()) { 
-                  addPantryIngredient(newIngredientInput.trim()); 
-                  setNewIngredientInput(''); 
-                } 
-              }} 
-              style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', fontSize: '12px', height: '46px' }}
-            >
-              Añadir
-            </button>
-          </div>
         </div>
       </div>
 
@@ -1086,48 +1170,6 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
             style={{ background: '#f87171', color: '#fff', border: 'none', padding: '0 12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}
           >
             Añadir
-          </button>
-        </div>
-      </div>
-
-      <div style={s.card}>
-        <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#fb923c', margin: '0 0 8px 0' }}>🚫 Alimentos que no te gustan (Evitar)</h3>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-          {profile.dislikedFoods.map(food => (
-            <button
-              key={food}
-              onClick={() => toggleDislikedFood(food)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '10px',
-                fontSize: '11px',
-                fontWeight: 800,
-                border: '1px solid #fb923c',
-                background: 'rgba(251, 146, 60, 0.2)',
-                color: '#fb923c',
-                cursor: 'pointer'
-              }}
-            >
-              ✕ {food} (Quitar)
-            </button>
-          ))}
-          {profile.dislikedFoods.length === 0 && (
-            <span style={{ fontSize: '11px', color: '#71717a' }}>Ningún alimento excluido todavía.</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <input 
-            type="text" 
-            placeholder="Ej: cacao, pescado..." 
-            value={customFood} 
-            onChange={e => setCustomFood(e.target.value)} 
-            style={{ ...s.input, margin: 0, flex: 1 }} 
-          />
-          <button 
-            onClick={() => { if(customFood) { addDislikedFood(customFood); setCustomFood(''); }}} 
-            style={{ background: '#fb923c', color: '#09090b', border: 'none', padding: '0 12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}
-          >
-            Excluir
           </button>
         </div>
       </div>
@@ -1175,12 +1217,25 @@ const ProgressView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) 
 const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
   const { profile, updateProfile, toggleEquipment } = useFitApp();
   const [name, setName] = useState(profile.name);
+  const [selectedGoal, setSelectedGoal] = useState<Goal>(profile.goal);
 
   const equipmentList: { key: EquipmentType; label: string; icon: string }[] = [
     { key: 'mobiliario', label: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
     { key: 'carga_improvisada', label: 'Carga improvisada (Mochila, botellas)', icon: '🎒' },
     { key: 'accesorios', label: 'Accesorios (Bandas elásticas, esterilla)', icon: '🧻' }
   ];
+
+  const goalsList: { key: Goal; label: string; desc: string }[] = [
+    { key: 'ganar_musculo', label: 'Ganar Músculo', desc: 'Hipertrofia y sobrecarga progresiva' },
+    { key: 'perder_grasa', label: 'Perder Grasa', desc: 'Definición y gasto calórico' },
+    { key: 'ganar_fuerza', label: 'Ganar Fuerza', desc: 'Rendimiento en cargas base' },
+    { key: 'mantener', label: 'Mantenimiento', desc: 'Equilibrio y salud general' }
+  ];
+
+  const handleSave = () => {
+    updateProfile({ name, goal: selectedGoal });
+    alert('¡Perfil y objetivo actualizados correctamente!');
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1189,11 +1244,36 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Configuración de Entorno</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Perfil y Materiales</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Configuración General</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Objetivo y Perfil</h1>
       </div>
 
       <div style={s.card}>
+        <label style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+          🎯 Objetivo Principal
+        </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+          {goalsList.map(g => {
+            const isSelected = selectedGoal === g.key;
+            return (
+              <div 
+                key={g.key}
+                onClick={() => setSelectedGoal(g.key)}
+                style={{
+                  background: isSelected ? 'rgba(34, 211, 238, 0.15)' : '#09090b',
+                  border: isSelected ? '1px solid #22d3ee' : '1px solid #27272a',
+                  padding: '12px 14px',
+                  borderRadius: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ fontSize: '13px', fontWeight: 900, color: isSelected ? '#22d3ee' : '#ffffff' }}>{g.label}</div>
+                <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '2px' }}>{g.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+
         <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>¿Dónde vas a entrenar?</label>
         <div style={{ display: 'flex', gap: '8px', marginTop: '6px', marginBottom: '16px' }}>
           {(['casa', 'gimnasio', 'fuera_de_casa'] as ContextType[]).map(ctx => {
@@ -1222,7 +1302,7 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
         </div>
 
         <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
-          📦 Materiales disponibles en casa:
+          📦 Materiales disponibles:
         </label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
           {equipmentList.map(item => {
@@ -1252,8 +1332,8 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
         <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Nombre del Atleta</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} style={s.input} />
 
-        <button onClick={() => { updateProfile({ name }); alert('¡Configuración guardada!'); }} style={s.buttonCyan}>
-          GUARDAR PERFIL
+        <button onClick={handleSave} style={s.buttonCyan}>
+          GUARDAR CONFIGURACIÓN
         </button>
       </div>
     </div>
@@ -1273,14 +1353,14 @@ function AppContent() {
     { id: 'train', label: 'Entrenar', icon: '🔥' },
     { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
     { id: 'progress', label: 'Progreso', icon: '📈' },
-    { id: 'profile', label: 'Perfil', icon: '🎒' },
+    { id: 'profile', label: 'Perfil', icon: '⚙️' },
   ];
 
   return (
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v5.1 DESPENSA AMPLIADA</span>
+        <span style={s.badge}>v6.0 ALIMENTOS PERSONALIZADOS</span>
       </header>
 
       <main style={{ flex: 1 }}>
