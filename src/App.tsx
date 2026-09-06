@@ -61,15 +61,6 @@ export interface CustomEquipmentItem {
   icon: string;
 }
 
-export interface CustomFoodItem {
-  id: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-}
-
 export interface UserProfile {
   name: string;
   age: number;
@@ -85,7 +76,6 @@ export interface UserProfile {
   allergies: string[];
   dislikedFoods: string[];
   pantryIngredients: string[]; 
-  customFoods: CustomFoodItem[];
 }
 
 export interface Exercise {
@@ -210,8 +200,6 @@ interface FitAppContextData {
   toggleEquipment: (item: EquipmentType) => void;
   togglePantryIngredient: (ingredient: string) => void;
   addPantryIngredient: (ingredient: string) => void;
-  addCustomFood: (food: CustomFoodItem) => void;
-  deleteCustomFood: (id: string) => void;
   toggleAllergy: (allergy: string) => void;
   addAllergy: (allergy: string) => void;
   toggleDislikedFood: (food: string) => void;
@@ -232,8 +220,7 @@ const defaultProfile: UserProfile = {
   customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
   allergies: [],
   dislikedFoods: [],
-  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina', 'agua'],
-  customFoods: []
+  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina', 'agua']
 };
 
 const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
@@ -241,7 +228,7 @@ const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
 export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_profile_v13');
+      const saved = localStorage.getItem('fitapp_profile_v14');
       return saved ? JSON.parse(saved) : defaultProfile;
     } catch (e) {
       return defaultProfile;
@@ -250,7 +237,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_logs_v13');
+      const saved = localStorage.getItem('fitapp_logs_v14');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -259,7 +246,7 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_measurements_v13');
+      const saved = localStorage.getItem('fitapp_measurements_v14');
       return saved ? JSON.parse(saved) : [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
     } catch (e) {
       return [{ date: new Date().toISOString().split('T')[0], weight: defaultProfile.weight }];
@@ -268,17 +255,17 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fitapp_excluded_v13');
+      const saved = localStorage.getItem('fitapp_excluded_v14');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
     }
   });
 
-  useEffect(() => { localStorage.setItem('fitapp_profile_v13', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('fitapp_logs_v13', JSON.stringify(workoutLogs)); }, [workoutLogs]);
-  useEffect(() => { localStorage.setItem('fitapp_measurements_v13', JSON.stringify(measurements)); }, [measurements]);
-  useEffect(() => { localStorage.setItem('fitapp_excluded_v13', JSON.stringify(excludedExercises)); }, [excludedExercises]);
+  useEffect(() => { localStorage.setItem('fitapp_profile_v14', JSON.stringify(profile)); }, [profile]);
+  useEffect(() => { localStorage.setItem('fitapp_logs_v14', JSON.stringify(workoutLogs)); }, [workoutLogs]);
+  useEffect(() => { localStorage.setItem('fitapp_measurements_v14', JSON.stringify(measurements)); }, [measurements]);
+  useEffect(() => { localStorage.setItem('fitapp_excluded_v14', JSON.stringify(excludedExercises)); }, [excludedExercises]);
 
   const updateProfile = (newProfile: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...newProfile }));
   const saveWorkoutLog = (log: WorkoutLogRecord) => setWorkoutLogs(prev => [log, ...prev]);
@@ -310,22 +297,6 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (clean && !profile.pantryIngredients.includes(clean)) {
       updateProfile({ pantryIngredients: [...profile.pantryIngredients, clean] });
     }
-  };
-
-  const addCustomFood = (food: CustomFoodItem) => {
-    const updatedFoods = [...profile.customFoods, food];
-    // También lo añadimos automáticamente a la despensa para que active recetas
-    const foodNameClean = food.name.trim().toLowerCase();
-    const updatedPantry = profile.pantryIngredients.includes(foodNameClean) 
-      ? profile.pantryIngredients 
-      : [...profile.pantryIngredients, foodNameClean];
-
-    updateProfile({ customFoods: updatedFoods, pantryIngredients: updatedPantry });
-  };
-
-  const deleteCustomFood = (id: string) => {
-    const updatedFoods = profile.customFoods.filter(f => f.id !== id);
-    updateProfile({ customFoods: updatedFoods });
   };
 
   const toggleAllergy = (allergy: string) => {
@@ -361,8 +332,8 @@ export const FitAppProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <FitAppContext.Provider value={{
       profile, updateProfile, workoutLogs, saveWorkoutLog, measurements,
       addMeasurement, streak, excludedExercises, excludeExercise, toggleEquipment,
-      togglePantryIngredient, addPantryIngredient, addCustomFood, deleteCustomFood,
-      toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood
+      togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy,
+      toggleDislikedFood, addDislikedFood
     }}>
       {children}
     </FitAppContext.Provider>
@@ -569,7 +540,7 @@ const Dashboard: React.FC<{ onStartWorkout: () => void; onGoToProfile: () => voi
             <span>🥗</span> Mis Alimentos y Recetas Apilables
           </div>
           <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            Crea tus alimentos personalizados con macros y desbloquea recetas.
+            Añade tus alimentos rápidos y desbloquea recetas al instante.
           </p>
         </div>
         <span style={{ color: '#22d3ee', fontSize: '18px', fontWeight: 'bold' }}>➔</span>
@@ -878,17 +849,13 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
 };
 
 // ==========================================
-// VISTA DE NUTRICIÓN Y BASE DE DATOS DE ALIMENTOS
+// VISTA DE NUTRICIÓN SIMPLIFICADA (AÑADIR RÁPIDO)
 // ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { profile, togglePantryIngredient, addCustomFood, deleteCustomFood, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
+  const { profile, togglePantryIngredient, addPantryIngredient, toggleAllergy, addAllergy, toggleDislikedFood, addDislikedFood } = useFitApp();
   
+  const [quickFoodName, setQuickFoodName] = useState('');
   const [customAllergy, setCustomAllergy] = useState('');
-  const [customFoodName, setCustomFoodName] = useState('');
-  const [customFoodCal, setCustomFoodCal] = useState('');
-  const [customFoodProt, setCustomFoodProt] = useState('');
-  const [customFoodCarbs, setCustomFoodCarbs] = useState('');
-  const [customFoodFats, setCustomFoodFats] = useState('');
 
   const [selectedIndices, setSelectedIndices] = useState<Record<string, number>>({
     desayuno: 0,
@@ -922,7 +889,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   const handleRefresh = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida') => {
     const options = getUnlockedOptions(category);
     if (options.length <= 1) {
-      alert('No hay más recetas apiladas disponibles con los ingredientes actuales. ¡Añade o registra más alimentos abajo!');
+      alert('No hay más recetas disponibles con los ingredientes actuales. ¡Añade más alimentos a tu despensa!');
       return;
     }
     
@@ -933,29 +900,17 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
     });
   };
 
-  const handleCreateFoodSubmit = (e: React.FormEvent) => {
+  const handleQuickAddFood = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customFoodName.trim()) {
-      alert('Por favor, introduce el nombre del alimento.');
+    if (!quickFoodName.trim()) {
+      alert('Por favor, escribe el nombre del alimento.');
       return;
     }
 
-    const newFood: CustomFoodItem = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: customFoodName.trim(),
-      calories: Number(customFoodCal) || 0,
-      protein: Number(customFoodProt) || 0,
-      carbs: Number(customFoodCarbs) || 0,
-      fats: Number(customFoodFats) || 0
-    };
-
-    addCustomFood(newFood);
-    setCustomFoodName('');
-    setCustomFoodCal('');
-    setCustomFoodProt('');
-    setCustomFoodCarbs('');
-    setCustomFoodFats('');
-    alert(`✅ ¡Alimento "${newFood.name}" registrado con éxito y añadido a tu despensa!`);
+    addPantryIngredient(quickFoodName);
+    const addedName = quickFoodName.trim();
+    setQuickFoodName('');
+    alert(`✅ ¡"${addedName}" añadido a tu despensa y listo para desbloquear recetas!`);
   };
 
   const renderMealCard = (category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida', title: string) => {
@@ -965,22 +920,22 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
 
     if (!options || options.length === 0 || !currentMeal) {
       return (
-        <div style={{ ...s.card, border: '1px dashed #27272a' }}>
+        <div style={{ ...s.card, border: '1px dashed #27272a', padding: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '9px', fontWeight: 900, color: '#f87171', textTransform: 'uppercase' }}>{title} (BLOQUEADO)</span>
           </div>
-          <p style={{ fontSize: '12px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
-            🔒 Faltan ingredientes clave en tu despensa para esta categoría. Añade más alimentos abajo.
+          <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '4px 0 0 0' }}>
+            🔒 Faltan ingredientes en tu despensa. Añade los ingredientes abajo para desbloquearlo.
           </p>
         </div>
       );
     }
 
     return (
-      <div style={s.card}>
+      <div style={{ ...s.card, padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontSize: '9px', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-            {title} ({options.length} apilada{options.length > 1 ? 's' : ''})
+            {title} ({options.length} disponible{options.length > 1 ? 's' : ''})
           </span>
           <button
             onClick={() => handleRefresh(category)}
@@ -988,34 +943,34 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
               background: 'rgba(34, 211, 238, 0.15)',
               border: '1px solid rgba(34, 211, 238, 0.4)',
               color: '#22d3ee',
-              padding: '6px 12px',
-              borderRadius: '12px',
-              fontSize: '11px',
+              padding: '4px 10px',
+              borderRadius: '10px',
+              fontSize: '10px',
               fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '4px'
             }}
           >
-            🔄 Siguiente receta
+            🔄 Siguiente
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {currentMeal.icon && <span style={{ fontSize: '28px' }}>{currentMeal.icon}</span>}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {currentMeal.icon && <span style={{ fontSize: '24px' }}>{currentMeal.icon}</span>}
           <div>
-            <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', margin: '0 0 2px 0' }}>{currentMeal.name}</h4>
+            <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', margin: '0 0 2px 0' }}>{currentMeal.name}</h4>
             {currentMeal.desc ? (
-              <p style={{ fontSize: '11px', color: '#a1a1aa', margin: 0, lineHeight: 1.3 }}>{currentMeal.desc}</p>
+              <p style={{ fontSize: '10px', color: '#a1a1aa', margin: 0, lineHeight: 1.3 }}>{currentMeal.desc}</p>
             ) : (
-              <p style={{ fontSize: '11px', color: '#71717a', margin: 0 }}>{currentMeal.calories} kcal • {currentMeal.protein}g proteína</p>
+              <p style={{ fontSize: '10px', color: '#71717a', margin: 0 }}>{currentMeal.calories} kcal • {currentMeal.protein}g proteína</p>
             )}
           </div>
         </div>
 
-        <div style={{ marginTop: '10px', fontSize: '10px', color: '#22d3ee', background: '#09090b', padding: '6px 10px', borderRadius: '8px' }}>
-          🛒 Ingredientes cubiertos: {currentMeal.requiredIngredients.join(', ')}
+        <div style={{ marginTop: '8px', fontSize: '10px', color: '#22d3ee', background: '#09090b', padding: '6px 10px', borderRadius: '8px' }}>
+          🛒 Ingredientes: {currentMeal.requiredIngredients.join(', ')}
         </div>
       </div>
     );
@@ -1028,68 +983,27 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       </button>
 
       <div>
-        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Base de Datos Personalizada</span>
-        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Nutrición y Alimentos</h1>
+        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
+        <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Alimentos y Recetas</h1>
       </div>
 
-      {/* REGISTRO DE ALIMENTOS PERSONALIZADOS */}
+      {/* AÑADIR ALIMENTO RÁPIDO SIN MACROS */}
       <div style={s.card}>
-        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>➕ Registrar Nuevo Alimento</h3>
-        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Añade cualquier alimento con sus macronutrientes por ración o 100g:</p>
+        <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>➕ Añadir Alimento a la Despensa</h3>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 10px 0' }}>Escribe el nombre del alimento para registrarlo y desbloquear recetas automáticamente:</p>
 
-        <form onSubmit={handleCreateFoodSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div>
-            <label style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800 }}>Nombre del alimento</label>
-            <input type="text" placeholder="Ej: Atún en lata, Quinoa cocida..." value={customFoodName} onChange={e => setCustomFoodName(e.target.value)} style={s.input} />
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <div>
-              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Calorías (kcal)</label>
-              <input type="number" placeholder="Ej: 120" value={customFoodCal} onChange={e => setCustomFoodCal(e.target.value)} style={s.input} />
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Proteínas (g)</label>
-              <input type="number" placeholder="Ej: 22" value={customFoodProt} onChange={e => setCustomFoodProt(e.target.value)} style={s.input} />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <div>
-              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Carbohidratos (g)</label>
-              <input type="number" placeholder="Ej: 5" value={customFoodCarbs} onChange={e => setCustomFoodCarbs(e.target.value)} style={s.input} />
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', color: '#a1a1aa', fontWeight: 800 }}>Grasas (g)</label>
-              <input type="number" placeholder="Ej: 3" value={customFoodFats} onChange={e => setCustomFoodFats(e.target.value)} style={s.input} />
-            </div>
-          </div>
-
-          <button type="submit" style={s.buttonCyan}>
-            Guardar en mi Base de Datos
+        <form onSubmit={handleQuickAddFood} style={{ display: 'flex', gap: '8px' }}>
+          <input 
+            type="text" 
+            placeholder="Ej: Atún, merluza, nueces..." 
+            value={quickFoodName} 
+            onChange={e => setQuickFoodName(e.target.value)} 
+            style={{ ...s.input, margin: 0, flex: 1 }} 
+          />
+          <button type="submit" style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: '14px', fontWeight: 900, fontSize: '12px', cursor: 'pointer' }}>
+            Añadir
           </button>
         </form>
-
-        {profile.customFoods.length > 0 && (
-          <div style={{ marginTop: '16px', borderTop: '1px solid #27272a', paddingTop: '12px' }}>
-            <span style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 800, display: 'block', marginBottom: '8px' }}>Tus Alimentos Guardados:</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {profile.customFoods.map(food => (
-                <div key={food.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#09090b', padding: '10px 12px', borderRadius: '12px', border: '1px solid #27272a' }}>
-                  <div>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff' }}>{food.name}</span>
-                    <div style={{ fontSize: '10px', color: '#a1a1aa', marginTop: '2px' }}>
-                      {food.calories} kcal • P: {food.protein}g | C: {food.carbs}g | G: {food.fats}g
-                    </div>
-                  </div>
-                  <button onClick={() => deleteCustomFood(food.id)} style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: 'none', padding: '6px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}>
-                    Eliminar
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       <div>
@@ -1104,7 +1018,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
 
       <div style={s.card}>
         <h3 style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>🥬 Despensa Activa</h3>
-        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Selecciona los ingredientes que tienes disponibles:</p>
+        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 12px 0' }}>Selecciona o desmarca los ingredientes que tienes disponibles:</p>
         
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {commonIngredients.map(ing => {
@@ -1130,6 +1044,34 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
             );
           })}
         </div>
+
+        {/* Listado de alimentos personalizados añadidos por el usuario */}
+        {profile.pantryIngredients.filter(i => !commonIngredients.includes(i)).length > 0 && (
+          <div style={{ marginTop: '12px', borderTop: '1px solid #27272a', paddingTop: '10px' }}>
+            <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Tus Alimentos Personalizados:</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {profile.pantryIngredients.filter(i => !commonIngredients.includes(i)).map(customIng => (
+                <button
+                  key={customIng}
+                  onClick={() => togglePantryIngredient(customIng)}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '10px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    border: '1px solid #22d3ee',
+                    background: 'rgba(34, 211, 238, 0.2)',
+                    color: '#22d3ee',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  ✓ {customIng} (Quitar)
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={s.card}>
@@ -1360,7 +1302,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v6.0 ALIMENTOS PERSONALIZADOS</span>
+        <span style={s.badge}>v6.1 ALIMENTOS RÁPIDOS</span>
       </header>
 
       <main style={{ flex: 1 }}>
