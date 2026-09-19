@@ -16,15 +16,12 @@ interface State { hasError: boolean; error: Error | null; }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = { hasError: false, error: null };
-
   public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
-
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
   }
-
   public render() {
     if (this.state.hasError) {
       return (
@@ -52,9 +49,16 @@ class ErrorBoundary extends Component<Props, State> {
 export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mantener';
 export type ExperienceLevel = 'Principiante' | 'Intermedio' | 'Avanzado';
 export type ContextType = 'casa' | 'gimnasio' | 'fuera_de_casa';
-export type EquipmentType = 'sin_material' | 'mobiliario' | 'carga_improvisada' | 'accesorios';
 
-export interface CustomEquipmentItem { id: string; name: string; icon: string; }
+export interface HomeItem {
+  id: string;
+  name: string;
+  icon: string;
+  category: 'mueble' | 'peso' | 'accesorio' | 'estructura' | 'cocina';
+  description: string;
+  exercisesUnlocked: string[];
+}
+
 export interface WeeklyRoutineDay { dayName: string; muscles: string[]; isRestDay: boolean; }
 
 export interface UserProfile {
@@ -67,8 +71,7 @@ export interface UserProfile {
   goal: Goal;
   daysAvailable: number;
   context: ContextType;
-  equipment: EquipmentType[];
-  customEquipmentList: CustomEquipmentItem[];
+  homeItems: string[];
   weeklyRoutine: WeeklyRoutineDay[];
   allergies: string[];
   dislikedFoods: string[];
@@ -83,10 +86,9 @@ export interface Exercise {
   defaultReps: number;
   defaultWeight: string;
   context: ContextType[];
-  equipment: EquipmentType;
+  requiredItems: string[];
   level: ExperienceLevel;
   description: string;
-  homeAlternative: string;
   imageUrl: string;
 }
 
@@ -121,7 +123,27 @@ export interface MealItem {
 export interface BodyMeasurement { date: string; weight: number; bodyFat?: number; }
 
 // ==========================================
-// 2. CONSTANTES Y BIBLIOTECA MAESTRA
+// 2. BIBLIOTECA DE OBJETOS DE CASA
+// ==========================================
+export const HOME_ITEMS_LIBRARY: HomeItem[] = [
+  { id: 'silla', name: 'Silla', icon: '🪑', category: 'mueble', description: 'Silla firme sin ruedas', exercisesUnlocked: ['Sentadilla búlgara', 'Fondos en silla', 'Step-ups'] },
+  { id: 'sofa', name: 'Sofá', icon: '🛋️', category: 'mueble', description: 'Sofá o sillón bajo', exercisesUnlocked: ['Hip thrust', 'Elevaciones de piernas', 'Puente glúteo'] },
+  { id: 'mesa', name: 'Mesa', icon: '🪵', category: 'mueble', description: 'Mesa de comedor o escritorio', exercisesUnlocked: ['Flexiones inclinadas', 'Remo invertido'] },
+  { id: 'cama', name: 'Cama', icon: '🛏️', category: 'mueble', description: 'Cama o colchón en el suelo', exercisesUnlocked: ['Hip thrust', 'Puente glúteo', 'Plancha'] },
+  { id: 'mochila', name: 'Mochila', icon: '🎒', category: 'peso', description: 'Mochila con libros o botellas', exercisesUnlocked: ['Remo con mochila', 'Press militar', 'Sentadilla con peso'] },
+  { id: 'botellas', name: 'Botellas de agua', icon: '🍶', category: 'peso', description: 'Botellas de 1.5L o 2L', exercisesUnlocked: ['Curl con botellas', 'Elevaciones laterales', 'Press de hombros'] },
+  { id: 'garrafa', name: 'Garrafa 5L', icon: '🪣', category: 'peso', description: 'Garrafa grande o bidón', exercisesUnlocked: ['Peso muerto', 'Remo pesado', 'Sentadilla goblet'] },
+  { id: 'toalla', name: 'Toalla', icon: '🧻', category: 'accesorio', description: 'Toalla grande de baño', exercisesUnlocked: ['Deslizamientos', 'Isométricos de espalda'] },
+  { id: 'gomas', name: 'Gomas elásticas', icon: '🔗', category: 'accesorio', description: 'Bandas elásticas de cualquier resistencia', exercisesUnlocked: ['Remo con gomas', 'Aperturas', 'Patadas glúteo'] },
+  { id: 'escaleras', name: 'Escaleras', icon: '🪜', category: 'estructura', description: 'Escaleras de casa o escalón firme', exercisesUnlocked: ['Step-ups', 'Gemelos', 'Sentadilla búlgara'] },
+  { id: 'pared', name: 'Pared', icon: '🧱', category: 'estructura', description: 'Pared firme y despejada', exercisesUnlocked: ['Flexiones verticales', 'Isométrico de sentadilla'] },
+  { id: 'puerta', name: 'Marco de puerta', icon: '🚪', category: 'estructura', description: 'Marco firme para anclar', exercisesUnlocked: ['Dominadas asistidas', 'Remo con toalla'] },
+  { id: 'nevera', name: 'Nevera / Comida', icon: '🧊', category: 'cocina', description: 'Acceso a nevera y utensilios básicos', exercisesUnlocked: [] },
+  { id: 'espejo', name: 'Espejo grande', icon: '🪞', category: 'accesorio', description: 'Espejo para corregir técnica', exercisesUnlocked: ['Corrección postural'] },
+];
+
+// ==========================================
+// 3. RUTINA SEMANAL POR DEFECTO
 // ==========================================
 const DEFAULT_WEEKLY_ROUTINE: WeeklyRoutineDay[] = [
   { dayName: 'Lunes', muscles: ['pecho'], isRestDay: false },
@@ -133,43 +155,68 @@ const DEFAULT_WEEKLY_ROUTINE: WeeklyRoutineDay[] = [
   { dayName: 'Domingo', muscles: [], isRestDay: true },
 ];
 
-const DEFAULT_CUSTOM_EQUIPMENT: CustomEquipmentItem[] = [
-  { id: 'mobiliario', name: 'Mobiliario (Silla, sofá, mesa)', icon: '🪑' },
-  { id: 'carga_improvisada', name: 'Carga improvisada (Mochila, botellas)', icon: '🎒' },
-  { id: 'accesorios', name: 'Accesorios (Bandas elásticas, esterilla)', icon: '🧻' },
-];
-
+// ==========================================
+// 4. BIBLIOTECA MAESTRA DE EJERCICIOS
+// ==========================================
 const MASTER_EXERCISES: Exercise[] = [
-  { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Pies al ancho de caderas, baja la cadera manteniendo el pecho erguido.', homeAlternative: 'Sentadilla libre con peso corporal.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
-  { id: 'leg_02', name: 'Sentadillas sumo', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Pies abiertos con puntas hacia fuera.', homeAlternative: 'Sentadilla sumo libre.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
-  { id: 'leg_04', name: 'Zancadas hacia delante', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Da un paso al frente y baja la rodilla trasera.', homeAlternative: 'Zancadas clásicas.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
-  { id: 'leg_06', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Pie trasero elevado en silla o sofá.', homeAlternative: 'Usa una silla del salón.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
-  { id: 'leg_07', name: 'Hip thrust apoyado en sofá', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Espalda alta apoyada en el borde del sofá.', homeAlternative: 'Usa el borde de la cama o sofá.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
-  { id: 'chest_01', name: 'Flexiones clásicas', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Intermedio', description: 'Cuerpo recto, codos a 45 grados.', homeAlternative: 'Suelo de casa.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
-  { id: 'chest_03', name: 'Flexiones inclinadas (mesa)', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Principiante', description: 'Manos apoyadas en una mesa o encimera alta.', homeAlternative: 'Mesa de comedor.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
-  { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Intermedio', description: 'Mochila cargada, inclinación de tronco a 45º.', homeAlternative: 'Mochila con libros.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
-  { id: 'back_03', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Tumbado boca abajo, eleva brazos y piernas.', homeAlternative: 'Suelo o esterilla.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
-  { id: 'sh_01', name: 'Press militar con mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Intermedio', description: 'Sujeta la mochila por las asas y empuja arriba.', homeAlternative: 'Mochila o botellas.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
-  { id: 'sh_02', name: 'Elevaciones laterales con botellas', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Principiante', description: 'Botellas como mancuernas.', homeAlternative: 'Botellas de 1.5L.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
-  { id: 'bic_01', name: 'Curl con botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], equipment: 'carga_improvisada', level: 'Principiante', description: 'Flexión de codo con codos pegados.', homeAlternative: 'Botellas de agua.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
-  { id: 'tri_01', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], equipment: 'mobiliario', level: 'Intermedio', description: 'Manos en el borde de una silla.', homeAlternative: 'Silla firme.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
-  { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Apoyo sobre antebrazos y puntas de pies.', homeAlternative: 'Suelo o esterilla.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
-  { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Intermedio', description: 'Rodillas al pecho alternando.', homeAlternative: 'Suelo.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
-  { id: 'card_01', name: 'Jumping jacks', muscle: 'cardio', defaultSets: 3, defaultReps: 40, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Principiante', description: 'Saltos abriendo y cerrando piernas.', homeAlternative: 'Espacio libre.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' },
-  { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], equipment: 'sin_material', level: 'Avanzado', description: 'Sentadilla, plancha, flexión y salto.', homeAlternative: 'Suelo.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' },
+  // PIERNAS
+  { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Pies al ancho de caderas, baja la cadera manteniendo el pecho erguido.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_02', name: 'Sentadillas sumo', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Pies abiertos con puntas hacia fuera.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_04', name: 'Zancadas hacia delante', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Da un paso al frente y baja la rodilla trasera.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_06', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['silla'], level: 'Intermedio', description: 'Pie trasero elevado en silla.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_07', name: 'Hip thrust en sofá', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['sofa'], level: 'Intermedio', description: 'Espalda alta en el borde del sofá.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_08', name: 'Peso muerto con garrafa', muscle: 'piernas', defaultSets: 4, defaultReps: 10, defaultWeight: '5', context: ['casa', 'gimnasio'], requiredItems: ['garrafa'], level: 'Intermedio', description: 'Garrafa en el suelo, espalda recta.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_09', name: 'Step-ups en escalón', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['escaleras'], level: 'Principiante', description: 'Sube y baja de un escalón firme.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+  { id: 'leg_10', name: 'Puente glúteo en cama', muscle: 'piernas', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa'], requiredItems: ['cama'], level: 'Principiante', description: 'Espalda apoyada en la cama, empuje de cadera.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=600&q=80' },
+
+  // PECHO
+  { id: 'chest_01', name: 'Flexiones clásicas', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Cuerpo recto, codos a 45 grados.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+  { id: 'chest_03', name: 'Flexiones inclinadas en mesa', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['mesa'], level: 'Principiante', description: 'Manos apoyadas en una mesa.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+  { id: 'chest_04', name: 'Flexiones verticales en pared', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['pared'], level: 'Principiante', description: 'De pie frente a la pared, empuje controlado.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+
+  // ESPALDA
+  { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa', 'gimnasio'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Mochila cargada, inclinación de tronco a 45º.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'back_03', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Tumbado boca abajo, eleva brazos y piernas.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'back_04', name: 'Remo con gomas elásticas', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['gomas'], level: 'Principiante', description: 'Ancla la goma a un punto fijo y rema.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'back_05', name: 'Remo con toalla en puerta', muscle: 'espalda', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa'], requiredItems: ['puerta', 'toalla'], level: 'Intermedio', description: 'Toalla en el marco de la puerta, tirar con el cuerpo.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+
+  // HOMBROS
+  { id: 'sh_01', name: 'Press militar con mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa', 'gimnasio'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Sujeta la mochila y empuja arriba.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'sh_02', name: 'Elevaciones laterales con botellas', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Botellas como mancuernas.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'sh_03', name: 'Press con botellas', muscle: 'hombros', defaultSets: 3, defaultReps: 12, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Press vertical con botellas.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?auto=format&fit=crop&w=600&q=80' },
+
+  // BÍCEPS
+  { id: 'bic_01', name: 'Curl con botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Flexión de codo con codos pegados.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+  { id: 'bic_02', name: 'Curl con garrafa', muscle: 'biceps', defaultSets: 3, defaultReps: 12, defaultWeight: '5', context: ['casa'], requiredItems: ['garrafa'], level: 'Intermedio', description: 'Curl con garrafa a una mano.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80' },
+
+  // TRÍCEPS
+  { id: 'tri_01', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['silla'], level: 'Intermedio', description: 'Manos en el borde de una silla.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+  { id: 'tri_02', name: 'Fondos en sofá', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['sofa'], level: 'Intermedio', description: 'Fondos apoyados en el sofá.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?auto=format&fit=crop&w=600&q=80' },
+
+  // CORE
+  { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Apoyo sobre antebrazos y puntas de pies.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
+  { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Rodillas al pecho alternando.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
+  { id: 'core_03', name: 'Elevaciones piernas en sofá', muscle: 'core', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa'], requiredItems: ['sofa'], level: 'Intermedio', description: 'Tumbado, eleva piernas rectas.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80' },
+
+  // CARDIO
+  { id: 'card_01', name: 'Jumping jacks', muscle: 'cardio', defaultSets: 3, defaultReps: 40, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Saltos abriendo y cerrando piernas.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' },
+  { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Avanzado', description: 'Sentadilla, plancha, flexión y salto.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80' },
 ];
 
+// ==========================================
+// 5. RECETAS MAESTRAS
+// ==========================================
 const MASTER_MEALS: MealItem[] = [
-  { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'], icon: '🥣', desc: 'Desayuno completo con carbohidratos complejos y proteína.' },
-  { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'], icon: '🍗', desc: 'Comida clásica de definición y volumen limpio.' },
+  { id: 'm1', name: 'Avena con plátano y proteína', category: 'desayuno', calories: 380, protein: 25, carbs: 55, fats: 6, requiredIngredients: ['avena', 'platano', 'proteina'], icon: '🥣', desc: 'Desayuno completo con carbohidratos complejos.' },
+  { id: 'm2', name: 'Pechuga de pollo con arroz y brócoli', category: 'comida', calories: 550, protein: 48, carbs: 60, fats: 8, requiredIngredients: ['pollo', 'arroz', 'brocoli'], icon: '🍗', desc: 'Comida clásica de definición.' },
   { id: 'm3', name: 'Tortilla francesa con espinacas y pavo', category: 'cena', calories: 310, protein: 35, carbs: 5, fats: 10, requiredIngredients: ['huevo', 'espinacas', 'pavo'], icon: '🍳', desc: 'Cena ligera alta en proteína.' },
   { id: 'm4', name: 'Tortitas de arroz con crema de cacahuete', category: 'snack', calories: 200, protein: 7, carbs: 22, fats: 9, requiredIngredients: ['arroz', 'cacahuete'], icon: '🥜', desc: 'Snack rápido pre-entreno.' },
-  { id: 'bat_1', name: 'Smoothie de Cacao y Cacahuete', category: 'batido', calories: 320, protein: 28, carbs: 22, fats: 12, requiredIngredients: ['cacao', 'cacahuete', 'proteina', 'platano'], icon: '🥤', desc: 'Ideal post-entreno para ganar músculo.' },
+  { id: 'bat_1', name: 'Smoothie de Cacao y Cacahuete', category: 'batido', calories: 320, protein: 28, carbs: 22, fats: 12, requiredIngredients: ['cacao', 'cacahuete', 'proteina', 'platano'], icon: '🥤', desc: 'Ideal post-entreno.' },
   { id: 'beb_1', name: 'Agua de Limón y Jengibre', category: 'bebida', calories: 5, protein: 0, carbs: 1, fats: 0, requiredIngredients: ['limon', 'jengibre'], icon: '🍋', desc: 'Activa el metabolismo en ayunas.' },
 ];
 
 // ==========================================
-// 3. HELPERS
+// 6. HELPERS
 // ==========================================
 const STORAGE_PREFIX = 'fitapp_v20_';
 
@@ -206,7 +253,7 @@ const calculateStreak = (logs: WorkoutLogRecord[]): number => {
 };
 
 // ==========================================
-// 4. CONTEXTO GLOBAL
+// 7. CONTEXTO
 // ==========================================
 interface FitAppContextData {
   profile: UserProfile;
@@ -220,7 +267,7 @@ interface FitAppContextData {
   excludedExercises: string[];
   excludeExercise: (name: string) => void;
   resetExclusions: () => void;
-  toggleEquipment: (item: EquipmentType) => void;
+  toggleHomeItem: (itemId: string) => void;
   togglePantryIngredient: (ingredient: string) => void;
   addPantryIngredient: (ingredient: string) => void;
   clearAllData: () => void;
@@ -236,12 +283,11 @@ const defaultProfile: UserProfile = {
   goal: 'ganar_musculo',
   daysAvailable: 5,
   context: 'casa',
-  equipment: ['mobiliario', 'carga_improvisada', 'accesorios'],
-  customEquipmentList: DEFAULT_CUSTOM_EQUIPMENT,
+  homeItems: ['silla', 'mesa', 'sofa', 'mochila', 'botellas', 'nevera'],
   weeklyRoutine: DEFAULT_WEEKLY_ROUTINE,
   allergies: [],
   dislikedFoods: [],
-  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina', 'agua'],
+  pantryIngredients: ['avena', 'platano', 'pollo', 'arroz', 'brocoli', 'huevo', 'espinacas', 'pavo', 'limon', 'cacao', 'cacahuete', 'proteina', 'agua', 'jengibre'],
 };
 
 const FitAppContext = createContext<FitAppContextData | undefined>(undefined);
@@ -251,6 +297,9 @@ export const FitAppProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const loaded = loadFromStorage<UserProfile>('profile', defaultProfile);
     if (!loaded.weeklyRoutine || loaded.weeklyRoutine.length === 0) {
       loaded.weeklyRoutine = DEFAULT_WEEKLY_ROUTINE;
+    }
+    if (!loaded.homeItems) {
+      loaded.homeItems = defaultProfile.homeItems;
     }
     return loaded;
   });
@@ -295,10 +344,12 @@ export const FitAppProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const resetExclusions = () => setExcludedExercises([]);
 
-  const toggleEquipment = (item: EquipmentType) => {
-    const exists = profile.equipment.includes(item);
-    const newEq = exists ? profile.equipment.filter(e => e !== item) : [...profile.equipment, item];
-    updateProfile({ equipment: newEq });
+  const toggleHomeItem = (itemId: string) => {
+    const exists = profile.homeItems.includes(itemId);
+    const updated = exists
+      ? profile.homeItems.filter(i => i !== itemId)
+      : [...profile.homeItems, itemId];
+    updateProfile({ homeItems: updated });
   };
 
   const togglePantryIngredient = (ing: string) => {
@@ -330,7 +381,7 @@ export const FitAppProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       measurements, addMeasurement,
       streak,
       excludedExercises, excludeExercise, resetExclusions,
-      toggleEquipment, togglePantryIngredient, addPantryIngredient,
+      toggleHomeItem, togglePantryIngredient, addPantryIngredient,
       clearAllData,
     }}>
       {children}
@@ -345,109 +396,430 @@ export const useFitApp = () => {
 };
 
 // ==========================================
-// 5. ESTILOS
+// 8. ESTILOS REDISEÑADOS
 // ==========================================
 const s = {
-  container: { backgroundColor: '#09090b', color: '#f4f4f5', minHeight: '100vh', maxWidth: 480, margin: '0 auto', padding: 16, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', paddingBottom: 100, boxSizing: 'border-box' as const },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16, borderBottom: '1px solid #27272a', marginBottom: 20 },
-  logo: { fontSize: 18, fontWeight: 900, background: 'linear-gradient(90deg, #ffffff 0%, #22d3ee 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.5px' },
-  badge: { fontSize: 10, backgroundColor: '#18181b', color: '#22d3ee', border: '1px solid rgba(34, 211, 238, 0.3)', padding: '4px 10px', borderRadius: 20, fontWeight: 800 },
-  card: { backgroundColor: '#121215', border: '1px solid #27272a', borderRadius: 24, padding: 20, marginBottom: 16, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)' },
-  heroCard: { background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #1e1b4b 100%)', borderRadius: 24, padding: 24, color: '#ffffff', marginBottom: 16, boxShadow: '0 15px 30px -10px rgba(2, 132, 199, 0.4)' },
-  buttonPrimary: { width: '100%', padding: 16, backgroundColor: '#ffffff', color: '#09090b', fontWeight: 900, borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 14, letterSpacing: '0.5px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', marginTop: 12 },
-  buttonCyan: { width: '100%', padding: 16, background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%)', color: '#ffffff', fontWeight: 900, borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 14 },
-  buttonDanger: { width: '100%', padding: 14, backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#f87171', fontWeight: 800, borderRadius: 14, border: '1px solid rgba(239, 68, 68, 0.4)', cursor: 'pointer', fontSize: 13 },
-  buttonBack: { background: 'rgba(255, 255, 255, 0.08)', border: '1px solid #27272a', color: '#22d3ee', padding: '8px 14px', borderRadius: 12, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16 },
-  input: { width: '100%', backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: 16, padding: 14, color: '#ffffff', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, marginTop: 6, marginBottom: 12 },
-  select: { width: '100%', backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: 16, padding: 14, color: '#ffffff', fontSize: 14, outline: 'none', boxSizing: 'border-box' as const, marginTop: 6, marginBottom: 12 },
-  nav: { position: 'fixed' as const, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(18, 18, 21, 0.95)', backdropFilter: 'blur(10px)', borderTop: '1px solid #27272a', display: 'flex', justifyContent: 'space-around', padding: '12px 0', maxWidth: 480, margin: '0 auto', zIndex: 100 },
-  navItem: (active: boolean) => ({ background: 'none', border: 'none', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4, color: active ? '#22d3ee' : '#71717a', fontSize: 11, fontWeight: active ? 800 : 500, cursor: 'pointer' }),
-  label: { fontSize: 11, color: '#a1a1aa', fontWeight: 800, display: 'block', marginBottom: 4 },
+  container: {
+    backgroundColor: '#000000',
+    color: '#f5f5f7',
+    minHeight: '100vh',
+    maxWidth: 480,
+    margin: '0 auto',
+    padding: 20,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+    paddingBottom: 110,
+    boxSizing: 'border-box' as const,
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 18,
+    marginBottom: 24,
+  },
+  logo: {
+    fontSize: 20,
+    fontWeight: 900,
+    background: 'linear-gradient(135deg, #ffffff 0%, #22d3ee 60%, #3b82f6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    letterSpacing: '-0.8px',
+  },
+  badge: {
+    fontSize: 10,
+    backgroundColor: 'rgba(34, 211, 238, 0.12)',
+    color: '#22d3ee',
+    padding: '5px 12px',
+    borderRadius: 20,
+    fontWeight: 800,
+    letterSpacing: '0.5px',
+  },
+  card: {
+    backgroundColor: '#0f0f11',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: 28,
+    padding: 22,
+    marginBottom: 14,
+    boxShadow: '0 4px 20px -8px rgba(0, 0, 0, 0.8)',
+  },
+  heroCard: {
+    background: 'linear-gradient(140deg, #0c4a6e 0%, #0369a1 40%, #1e1b4b 100%)',
+    borderRadius: 28,
+    padding: 26,
+    color: '#ffffff',
+    marginBottom: 14,
+    boxShadow: '0 20px 40px -15px rgba(2, 132, 199, 0.5)',
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+  },
+  buttonPrimary: {
+    width: '100%',
+    padding: 18,
+    backgroundColor: '#ffffff',
+    color: '#000000',
+    fontWeight: 900,
+    borderRadius: 18,
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 15,
+    letterSpacing: '0.5px',
+    marginTop: 16,
+    transition: 'transform 0.15s ease',
+  },
+  buttonCyan: {
+    width: '100%',
+    padding: 18,
+    background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%)',
+    color: '#ffffff',
+    fontWeight: 900,
+    borderRadius: 18,
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 15,
+    transition: 'transform 0.15s ease',
+  },
+  buttonDanger: {
+    width: '100%',
+    padding: 16,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    color: '#f87171',
+    fontWeight: 800,
+    borderRadius: 16,
+    border: '1px solid rgba(239, 68, 68, 0.35)',
+    cursor: 'pointer',
+    fontSize: 14,
+  },
+  buttonBack: {
+    background: 'rgba(255, 255, 255, 0.06)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#22d3ee',
+    padding: '10px 16px',
+    borderRadius: 14,
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 20,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: '#000000',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    color: '#ffffff',
+    fontSize: 15,
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    marginTop: 6,
+    marginBottom: 14,
+  },
+  nav: {
+    position: 'fixed' as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(15, 15, 17, 0.96)',
+    backdropFilter: 'blur(20px)',
+    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+    display: 'flex',
+    justifyContent: 'space-around',
+    padding: '14px 0',
+    maxWidth: 480,
+    margin: '0 auto',
+    zIndex: 100,
+  },
+  navItem: (active: boolean) => ({
+    background: 'none',
+    border: 'none',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: 4,
+    color: active ? '#22d3ee' : '#52525b',
+    fontSize: 10,
+    fontWeight: active ? 800 : 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  }),
+  label: {
+    fontSize: 12,
+    color: '#a1a1aa',
+    fontWeight: 700,
+    display: 'block',
+    marginBottom: 6,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+  },
+  statNumber: {
+    fontSize: 32,
+    fontWeight: 900,
+    color: '#ffffff',
+    letterSpacing: '-1px',
+    lineHeight: 1,
+  },
+  statLabel: {
+    fontSize: 10,
+    color: '#71717a',
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    marginTop: 4,
+  },
 };
 
 // ==========================================
-// 6. VISTAS
+// 9. VISTA: DASHBOARD
 // ==========================================
 const Dashboard: React.FC<{
   onStartWorkout: () => void;
   onGoToProfile: () => void;
   onGoToNutrition: () => void;
   onGoToPlanner: () => void;
-}> = ({ onStartWorkout, onGoToProfile, onGoToNutrition, onGoToPlanner }) => {
+  onGoToHome: () => void;
+}> = ({ onStartWorkout, onGoToProfile, onGoToNutrition, onGoToPlanner, onGoToHome }) => {
   const { profile, streak, workoutLogs } = useFitApp();
   const todayStr = new Date().toISOString().split('T')[0];
   const todayWorkouts = workoutLogs.filter(l => l.date === todayStr);
 
   const goalLabels: Record<Goal, string> = {
-    ganar_musculo: 'Ganar Músculo (Hipertrofia)',
-    perder_grasa: 'Perder Grasa (Definición)',
+    ganar_musculo: 'Ganar Músculo',
+    perder_grasa: 'Perder Grasa',
     ganar_fuerza: 'Ganar Fuerza',
-    mantener: 'Mantenimiento y Salud',
+    mantener: 'Mantenimiento',
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Saludo */}
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: '#22d3ee', fontWeight: 800 }}>
-              OBJETIVO: {goalLabels[profile.goal]}
+            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.2, color: '#22d3ee', fontWeight: 800 }}>
+              {goalLabels[profile.goal]}
             </span>
-            <h1 style={{ fontSize: 20, fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff' }}>Hola, {profile.name} ✨</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 900, margin: '6px 0 0 0', color: '#ffffff', letterSpacing: '-0.8px' }}>
+              Hola, {profile.name}
+            </h1>
           </div>
-          <div style={{ background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.3)', padding: '8px 12px', borderRadius: 14, color: '#fb923c', fontWeight: 900, fontSize: 12 }}>
-            🔥 {streak} DÍAS
+          <div style={{ background: 'rgba(249, 115, 22, 0.15)', padding: '10px 14px', borderRadius: 16, color: '#fb923c', fontWeight: 900, fontSize: 13 }}>
+            🔥 {streak}d
           </div>
         </div>
       </div>
 
+      {/* Hero */}
       <div style={s.heroCard}>
-        <span style={{ fontSize: 10, background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>
-          Entorno: {profile.context.toUpperCase()}
+        <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.15)', padding: '5px 12px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 800 }}>
+          {profile.context === 'casa' ? '🏠 EN CASA' : profile.context === 'gimnasio' ? '🏋️ GIMNASIO' : '🌳 EXTERIOR'}
         </span>
-        <h2 style={{ fontSize: 24, fontWeight: 900, margin: '12px 0 8px 0' }}>Sesión Adaptada</h2>
-        <p style={{ fontSize: 12, color: '#e0f2fe', margin: 0, lineHeight: 1.5 }}>
+        <h2 style={{ fontSize: 28, fontWeight: 900, margin: '14px 0 6px 0', letterSpacing: '-1px' }}>Sesión de hoy</h2>
+        <p style={{ fontSize: 13, color: '#cffafe', margin: 0, lineHeight: 1.5 }}>
           {todayWorkouts.length > 0
-            ? `⚡ ¡Gran trabajo! Has registrado ${todayWorkouts.length} ejercicio(s) hoy.`
-            : `El sistema seleccionará ejercicios compatibles con tu inventario actual y objetivo.`}
+            ? `⚡ ¡Vas genial! ${todayWorkouts.length} serie(s) registradas hoy.`
+            : `La app seleccionará los mejores ejercicios según los objetos que tienes en casa.`}
         </p>
-        <button onClick={onStartWorkout} style={s.buttonPrimary}>🚀 ENTRENAR HOY</button>
+        <button
+          onClick={onStartWorkout}
+          style={s.buttonPrimary}
+        >
+          🚀 EMPEZAR ENTRENAMIENTO
+        </button>
       </div>
 
-      <div onClick={onGoToPlanner} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, #121215 100%)', border: '1px solid rgba(34, 211, 238, 0.4)' }}>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>📅</span> Planificador Semanal
-          </div>
-          <p style={{ fontSize: 12, color: '#a1a1aa', margin: '4px 0 0 0' }}>Gestiona los 7 días y adáptalos si surge un imprevisto.</p>
+      {/* Accesos rápidos */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div onClick={onGoToHome} style={{ ...s.card, margin: 0, cursor: 'pointer', textAlign: 'center', padding: 20 }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>🏠</div>
+          <div style={{ fontSize: 13, fontWeight: 900, color: '#ffffff' }}>Mi Casa</div>
+          <div style={{ fontSize: 10, color: '#71717a', marginTop: 2 }}>{profile.homeItems.length} objetos</div>
         </div>
-        <span style={{ color: '#22d3ee', fontSize: 20, fontWeight: 'bold' }}>➔</span>
+        <div onClick={onGoToPlanner} style={{ ...s.card, margin: 0, cursor: 'pointer', textAlign: 'center', padding: 20 }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>📅</div>
+          <div style={{ fontSize: 13, fontWeight: 900, color: '#ffffff' }}>Planificar</div>
+          <div style={{ fontSize: 10, color: '#71717a', marginTop: 2 }}>7 días</div>
+        </div>
       </div>
 
+      {/* Acceso a nutrición */}
       <div onClick={onGoToNutrition} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>🥗</span> Mis Alimentos y Recetas
-          </div>
-          <p style={{ fontSize: 12, color: '#a1a1aa', margin: '4px 0 0 0' }}>Añade alimentos y desbloquea recetas al instante.</p>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#ffffff' }}>🥗 Nutrición</div>
+          <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>Recetas, batidos y menú semanal</div>
         </div>
-        <span style={{ color: '#22d3ee', fontSize: 18, fontWeight: 'bold' }}>➔</span>
+        <span style={{ color: '#22d3ee', fontSize: 20 }}>➔</span>
       </div>
 
+      {/* Acceso a perfil */}
       <div onClick={onGoToProfile} style={{ ...s.card, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>⚙️</span> Mi Perfil
-          </div>
-          <p style={{ fontSize: 12, color: '#a1a1aa', margin: '4px 0 0 0' }}>Configura tus datos, objetivo y equipamiento.</p>
+          <div style={{ fontSize: 15, fontWeight: 900, color: '#ffffff' }}>⚙️ Perfil</div>
+          <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>Objetivo, peso y configuración</div>
         </div>
-        <span style={{ color: '#22d3ee', fontSize: 18, fontWeight: 'bold' }}>➔</span>
+        <span style={{ color: '#22d3ee', fontSize: 20 }}>➔</span>
       </div>
     </div>
   );
 };
 
-// =============== PLANNER ===============
+// ==========================================
+// 10. VISTA: MI CASA (NUEVA)
+// ==========================================
+const HomeInventoryView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
+  const { profile, toggleHomeItem } = useFitApp();
+
+  const categories: { key: HomeItem['category']; label: string; icon: string }[] = [
+    { key: 'mueble', label: 'Muebles', icon: '🪑' },
+    { key: 'peso', label: 'Pesos caseros', icon: '⚖️' },
+    { key: 'accesorio', label: 'Accesorios', icon: '🧰' },
+    { key: 'estructura', label: 'Estructura', icon: '🏗️' },
+    { key: 'cocina', label: 'Cocina', icon: '🍳' },
+  ];
+
+  // Sugerir objetos que desbloquean más ejercicios
+  const suggestions = HOME_ITEMS_LIBRARY
+    .filter(item => !profile.homeItems.includes(item.id))
+    .filter(item => item.exercisesUnlocked.length > 0)
+    .sort((a, b) => b.exercisesUnlocked.length - a.exercisesUnlocked.length)
+    .slice(0, 3);
+
+  const exercisesAvailable = MASTER_EXERCISES.filter(ex =>
+    ex.requiredItems.length === 0 ||
+    ex.requiredItems.every(item => profile.homeItems.includes(item))
+  ).length;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <button onClick={onBackToHome} style={s.buttonBack}>← Volver</button>
+
+      <div>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800, letterSpacing: 1 }}>
+          Inventario Doméstico
+        </span>
+        <h1 style={{ fontSize: 24, fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff', letterSpacing: '-0.8px' }}>
+          Mi Casa
+        </h1>
+        <p style={{ fontSize: 12, color: '#a1a1aa', marginTop: 6, lineHeight: 1.5 }}>
+          Marca los objetos que tienes. La app adaptará los ejercicios automáticamente.
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={s.card}>
+          <div style={s.statNumber}>{profile.homeItems.length}</div>
+          <div style={s.statLabel}>Objetos marcados</div>
+        </div>
+        <div style={s.card}>
+          <div style={s.statNumber}>{exercisesAvailable}</div>
+          <div style={s.statLabel}>Ejercicios disponibles</div>
+        </div>
+      </div>
+
+      {/* Sugerencias */}
+      {suggestions.length > 0 && (
+        <div style={{ ...s.card, background: 'linear-gradient(135deg, rgba(34,211,238,0.08) 0%, #0f0f11 100%)', border: '1px solid rgba(34,211,238,0.25)' }}>
+          <div style={{ fontSize: 12, color: '#22d3ee', fontWeight: 900, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
+            💡 Sugerencias para desbloquear más
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {suggestions.map(item => (
+              <div
+                key={item.id}
+                onClick={() => toggleHomeItem(item.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: 12,
+                  background: 'rgba(0,0,0,0.4)',
+                  borderRadius: 16,
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 28 }}>{item.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#ffffff' }}>{item.name}</div>
+                  <div style={{ fontSize: 11, color: '#22d3ee', marginTop: 2 }}>
+                    +{item.exercisesUnlocked.length} ejercicios
+                  </div>
+                </div>
+                <span style={{ color: '#22d3ee', fontSize: 18, fontWeight: 900 }}>+</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lista por categorías */}
+      {categories.map(cat => {
+        const items = HOME_ITEMS_LIBRARY.filter(i => i.category === cat.key);
+        if (items.length === 0) return null;
+        return (
+          <div key={cat.key} style={s.card}>
+            <div style={{ fontSize: 12, color: '#71717a', fontWeight: 900, textTransform: 'uppercase', marginBottom: 12, letterSpacing: 0.5 }}>
+              {cat.icon} {cat.label}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {items.map(item => {
+                const isSelected = profile.homeItems.includes(item.id);
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => toggleHomeItem(item.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: 12,
+                      borderRadius: 16,
+                      background: isSelected ? 'rgba(34, 211, 238, 0.12)' : 'rgba(255,255,255,0.03)',
+                      border: isSelected ? '1px solid rgba(34,211,238,0.4)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <span style={{ fontSize: 26 }}>{item.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: isSelected ? '#22d3ee' : '#ffffff' }}>
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: 10, color: '#71717a', marginTop: 2 }}>
+                        {item.description}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        background: isSelected ? '#22d3ee' : 'rgba(255,255,255,0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: isSelected ? '#000' : '#52525b',
+                        fontSize: 12,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {isSelected ? '✓' : ''}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ==========================================
+// 11. VISTA: PLANNER SEMANAL
+// ==========================================
 const WeeklyPlannerView: React.FC<{
   onBackToHome: () => void;
   onStartWorkoutForDay: (muscles: string[]) => void;
@@ -456,14 +828,14 @@ const WeeklyPlannerView: React.FC<{
   const routine = profile.weeklyRoutine || DEFAULT_WEEKLY_ROUTINE;
 
   const availableMuscles = [
-    { key: 'pecho', label: '🦾 Pecho' },
-    { key: 'espalda', label: '🦇 Espalda' },
-    { key: 'piernas', label: '🦵 Piernas' },
-    { key: 'hombros', label: '🛡️ Hombros' },
-    { key: 'biceps', label: '💪 Bíceps' },
-    { key: 'triceps', label: '🦾 Tríceps' },
-    { key: 'core', label: '⚡ Core' },
-    { key: 'cardio', label: '🏃 Cardio' },
+    { key: 'pecho', label: 'Pecho' },
+    { key: 'espalda', label: 'Espalda' },
+    { key: 'piernas', label: 'Piernas' },
+    { key: 'hombros', label: 'Hombros' },
+    { key: 'biceps', label: 'Bíceps' },
+    { key: 'triceps', label: 'Tríceps' },
+    { key: 'core', label: 'Core' },
+    { key: 'cardio', label: 'Cardio' },
   ];
 
   const handleToggleMuscle = (dayIndex: number, muscleKey: string) => {
@@ -488,32 +860,36 @@ const WeeklyPlannerView: React.FC<{
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <button onClick={onBackToHome} style={s.buttonBack}>← Volver al inicio</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <button onClick={onBackToHome} style={s.buttonBack}>← Volver</button>
 
       <div>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Control Semanal</span>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Planificador de los 7 Días</h1>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800, letterSpacing: 1 }}>
+          Control Semanal
+        </span>
+        <h1 style={{ fontSize: 24, fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff', letterSpacing: '-0.8px' }}>
+          Planificador
+        </h1>
       </div>
 
       {routine.map((day, dayIndex) => (
-        <div key={day.dayName} style={{ ...s.card, margin: 0, padding: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 900, color: '#ffffff', margin: 0 }}>{day.dayName}</h3>
+        <div key={day.dayName} style={{ ...s.card, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 900, color: '#ffffff', margin: 0 }}>{day.dayName}</h3>
             <button
               onClick={() => handleToggleRestDay(dayIndex)}
               style={{
-                background: day.isRestDay ? 'rgba(34, 211, 238, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                border: day.isRestDay ? '1px solid #22d3ee' : '1px solid #27272a',
-                color: day.isRestDay ? '#22d3ee' : '#a1a1aa',
-                padding: '4px 10px',
-                borderRadius: 10,
+                background: day.isRestDay ? 'rgba(34, 211, 238, 0.15)' : 'rgba(255,255,255,0.05)',
+                border: day.isRestDay ? '1px solid rgba(34,211,238,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                color: day.isRestDay ? '#22d3ee' : '#71717a',
+                padding: '6px 12px',
+                borderRadius: 12,
                 fontSize: 10,
                 fontWeight: 800,
                 cursor: 'pointer',
               }}
             >
-              {day.isRestDay ? '💤 Descanso' : '🏋️ Entreno'}
+              {day.isRestDay ? '💤 DESCANSO' : '🏋️ ENTRENO'}
             </button>
           </div>
 
@@ -527,17 +903,17 @@ const WeeklyPlannerView: React.FC<{
                       key={m.key}
                       onClick={() => handleToggleMuscle(dayIndex, m.key)}
                       style={{
-                        padding: '6px 10px',
-                        borderRadius: 10,
+                        padding: '7px 12px',
+                        borderRadius: 12,
                         fontSize: 11,
-                        fontWeight: 700,
-                        border: isSelected ? '1px solid #22d3ee' : '1px solid #27272a',
-                        background: isSelected ? 'rgba(34, 211, 238, 0.2)' : '#09090b',
+                        fontWeight: 800,
+                        border: isSelected ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)',
+                        background: isSelected ? 'rgba(34, 211, 238, 0.15)' : 'rgba(0,0,0,0.4)',
                         color: isSelected ? '#22d3ee' : '#71717a',
                         cursor: 'pointer',
                       }}
                     >
-                      {isSelected ? `✓ ${m.label}` : `+ ${m.label}`}
+                      {isSelected ? `✓ ${m.label}` : m.label}
                     </button>
                   );
                 })}
@@ -550,19 +926,19 @@ const WeeklyPlannerView: React.FC<{
                     background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%)',
                     color: '#ffffff',
                     border: 'none',
-                    padding: 10,
-                    borderRadius: 12,
+                    padding: 14,
+                    borderRadius: 14,
                     fontWeight: 900,
                     fontSize: 12,
                     cursor: 'pointer',
                   }}
                 >
-                  🚀 Entrenar este día ({day.muscles.join(', ')})
+                  🚀 ENTRENAR ESTE DÍA
                 </button>
               )}
             </div>
           ) : (
-            <div style={{ fontSize: 11, color: '#71717a', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 12, color: '#52525b', fontStyle: 'italic' }}>
               Día de descanso / recuperación.
             </div>
           )}
@@ -572,7 +948,9 @@ const WeeklyPlannerView: React.FC<{
   );
 };
 
-// =============== WORKOUT CONFIG ===============
+// ==========================================
+// 12. VISTA: CONFIG ENTRENAMIENTO
+// ==========================================
 const WorkoutView: React.FC<{
   onSelectExerciseToPlay: (exercises: Exercise[], timeMinutes: number) => void;
   onBackToHome: () => void;
@@ -620,18 +998,17 @@ const WorkoutView: React.FC<{
       return;
     }
 
-    const allowedEquipment = new Set<string>(['sin_material', ...profile.equipment]);
-
-    let filtered = MASTER_EXERCISES.filter(ex =>
-      selectedMuscles.includes(ex.muscle) && allowedEquipment.has(ex.equipment)
-    );
+    let filtered = MASTER_EXERCISES.filter(ex => {
+      if (!selectedMuscles.includes(ex.muscle)) return false;
+      if (ex.requiredItems.length === 0) return true;
+      return ex.requiredItems.every(item => profile.homeItems.includes(item));
+    });
 
     if (filtered.length === 0) {
-      alert('No hay ejercicios compatibles con tu equipamiento actual.');
+      alert('No hay ejercicios compatibles con los objetos que has marcado en Mi Casa.');
       return;
     }
 
-    // Mezclar para no repetir siempre los mismos
     filtered = [...filtered].sort(() => Math.random() - 0.5);
 
     const limitMap: Record<number, number> = { 15: 2, 30: 4, 45: 6, 60: 8 };
@@ -642,16 +1019,20 @@ const WorkoutView: React.FC<{
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <button onClick={onBackToHome} style={s.buttonBack}>← Volver al inicio</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <button onClick={onBackToHome} style={s.buttonBack}>← Volver</button>
 
       <div>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Biblioteca Inteligente</span>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Configurar Sesión</h1>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800, letterSpacing: 1 }}>
+          Biblioteca Inteligente
+        </span>
+        <h1 style={{ fontSize: 24, fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff', letterSpacing: '-0.8px' }}>
+          Configurar Sesión
+        </h1>
       </div>
 
       <div style={s.card}>
-        <label style={s.label}>⏱️ ¿Cuánto tiempo tienes hoy?</label>
+        <label style={s.label}>⏱️ Duración</label>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           {timeOptions.map(opt => {
             const isSelected = selectedTime === opt.minutes;
@@ -660,17 +1041,17 @@ const WorkoutView: React.FC<{
                 key={opt.minutes}
                 onClick={() => setSelectedTime(opt.minutes)}
                 style={{
-                  padding: '10px 4px',
-                  borderRadius: 12,
-                  border: isSelected ? '2px solid #22d3ee' : '1px solid #27272a',
-                  background: isSelected ? 'rgba(34, 211, 238, 0.2)' : '#09090b',
+                  padding: '12px 4px',
+                  borderRadius: 14,
+                  border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)',
+                  background: isSelected ? 'rgba(34, 211, 238, 0.15)' : 'rgba(0,0,0,0.4)',
                   color: isSelected ? '#22d3ee' : '#ffffff',
                   cursor: 'pointer',
                   textAlign: 'center',
                 }}
               >
                 <div style={{ fontSize: 12, fontWeight: 900 }}>{opt.label}</div>
-                <div style={{ fontSize: 9, color: isSelected ? '#a5f3fc' : '#71717a', marginTop: 2 }}>{opt.desc}</div>
+                <div style={{ fontSize: 9, color: isSelected ? '#a5f3fc' : '#52525b', marginTop: 3 }}>{opt.desc}</div>
               </button>
             );
           })}
@@ -678,7 +1059,7 @@ const WorkoutView: React.FC<{
       </div>
 
       <div style={s.card}>
-        <label style={s.label}>🎯 Selecciona músculos (puedes elegir varios)</label>
+        <label style={s.label}>🎯 Músculos (puedes elegir varios)</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           {muscles.map(m => {
             const isSelected = selectedMuscles.includes(m.key);
@@ -688,9 +1069,9 @@ const WorkoutView: React.FC<{
                 onClick={() => toggleMuscle(m.key)}
                 style={{
                   padding: '10px 14px',
-                  borderRadius: 12,
-                  border: isSelected ? '2px solid #22d3ee' : '1px solid #27272a',
-                  background: isSelected ? 'rgba(34, 211, 238, 0.2)' : '#09090b',
+                  borderRadius: 14,
+                  border: isSelected ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)',
+                  background: isSelected ? 'rgba(34, 211, 238, 0.15)' : 'rgba(0,0,0,0.4)',
                   color: isSelected ? '#22d3ee' : '#ffffff',
                   fontWeight: 800,
                   fontSize: 12,
@@ -708,7 +1089,9 @@ const WorkoutView: React.FC<{
   );
 };
 
-// =============== PREVIEW ===============
+// ==========================================
+// 13. VISTA: PREVIEW
+// ==========================================
 const DailyWorkoutPreview: React.FC<{
   exercises: Exercise[];
   selectedTime: number;
@@ -722,12 +1105,11 @@ const DailyWorkoutPreview: React.FC<{
     const currentEx = list[indexToSwap];
     excludeExercise(currentEx.name);
 
-    const allowedEquipment = new Set<string>(['sin_material', ...profile.equipment]);
     const availableAlternatives = MASTER_EXERCISES.filter(ex =>
       ex.muscle === currentEx.muscle &&
       !list.some(item => item.id === ex.id) &&
       !excludedExercises.includes(ex.name) &&
-      allowedEquipment.has(ex.equipment)
+      (ex.requiredItems.length === 0 || ex.requiredItems.every(item => profile.homeItems.includes(item)))
     );
 
     if (availableAlternatives.length > 0) {
@@ -736,48 +1118,50 @@ const DailyWorkoutPreview: React.FC<{
       updated[indexToSwap] = replacement;
       setList(updated);
     } else {
-      alert('No hay más variantes disponibles con tu equipamiento actual.');
+      alert('No hay más variantes disponibles con tus objetos actuales.');
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <button onClick={onBack} style={s.buttonBack}>← Volver</button>
 
       <div>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#fb923c', fontWeight: 800 }}>
-          🛡️ Sesión adaptada a {selectedTime} min
+        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#fb923c', fontWeight: 800, letterSpacing: 1 }}>
+          Sesión de {selectedTime} min
         </span>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Tabla Diaria</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff', letterSpacing: '-0.8px' }}>
+          Tu tabla
+        </h1>
       </div>
 
       {list.map((ex, idx) => (
-        <div key={ex.id} style={{ ...s.card, margin: 0, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 800, textTransform: 'uppercase' }}>
-                Material: {ex.equipment.replace('_', ' ')}
+        <div key={ex.id} style={{ ...s.card, padding: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {ex.muscle}
               </span>
-              <h3 style={{ fontSize: 15, fontWeight: 900, color: '#ffffff', margin: '2px 0 0 0' }}>{ex.name}</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 900, color: '#ffffff', margin: '4px 0 0 0' }}>{ex.name}</h3>
             </div>
             <button
               onClick={() => handleSwap(idx)}
               style={{
                 background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.4)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
                 color: '#f87171',
-                padding: '6px 10px',
-                borderRadius: 10,
+                padding: '8px 12px',
+                borderRadius: 12,
                 fontSize: 11,
                 fontWeight: 800,
                 cursor: 'pointer',
               }}
             >
-              🩹 Cambiar
+              🩹
             </button>
           </div>
-          <div style={{ fontSize: 11, color: '#d4d4d8', background: '#18181b', padding: '8px 12px', borderRadius: 10 }}>
-            🎯 Series: <strong>{ex.defaultSets}</strong> | Reps: <strong>{ex.defaultReps}</strong>
+          <div style={{ fontSize: 12, color: '#d4d4d8', background: 'rgba(0,0,0,0.4)', padding: '10px 14px', borderRadius: 12 }}>
+            <strong>{ex.defaultSets}</strong> series × <strong>{ex.defaultReps}</strong> reps
           </div>
         </div>
       ))}
@@ -789,7 +1173,9 @@ const DailyWorkoutPreview: React.FC<{
   );
 };
 
-// =============== PLAYER ===============
+// ==========================================
+// 14. VISTA: PLAYER ACTIVO
+// ==========================================
 const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
   const { saveWorkoutLog } = useFitApp();
   const [sessionId] = useState(() => Math.random().toString(36).substring(2, 11));
@@ -837,67 +1223,73 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
         setIsResting(true);
         setRestTime(60);
       } else {
-        alert('🏆 ¡Entrenamiento completado con éxito!');
+        alert('🏆 ¡Entrenamiento completado!');
         onFinish();
       }
     }
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <button onClick={onFinish} style={s.buttonBack}>← Salir al menú</button>
+  const progress = ((currentIndex + (currentSet - 1) / currentEx.defaultSets) / exercises.length) * 100;
 
-      <div style={{ ...s.card, display: 'flex', flexDirection: 'column', gap: 16, margin: 0 }}>
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <button onClick={onFinish} style={s.buttonBack}>← Salir</button>
+
+      {/* Barra de progreso */}
+      <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%)', transition: 'width 0.3s ease' }} />
+      </div>
+
+      <div style={{ ...s.card, display: 'flex', flexDirection: 'column', gap: 18 }}>
         {isResting && (
-          <div style={{ background: '#082f49', border: '1px solid #0284c7', padding: 16, borderRadius: 16, textAlign: 'center' }}>
-            <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase' }}>⏸ Descanso</span>
-            <div style={{ fontSize: 36, fontWeight: 900, color: '#ffffff', margin: '4px 0' }}>
+          <div style={{ background: 'linear-gradient(135deg, #082f49, #0c4a6e)', padding: 20, borderRadius: 20, textAlign: 'center', border: '1px solid rgba(56,189,248,0.3)' }}>
+            <div style={{ fontSize: 11, color: '#38bdf8', fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>Descanso</div>
+            <div style={{ fontSize: 48, fontWeight: 900, color: '#ffffff', margin: '8px 0', letterSpacing: '-2px' }}>
               0:{restTime < 10 ? `0${restTime}` : restTime}
             </div>
             <button
               onClick={skipRest}
-              style={{ background: '#0369a1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 10, fontSize: 11, fontWeight: 'bold', cursor: 'pointer' }}
+              style={{ background: 'rgba(56,189,248,0.2)', color: '#38bdf8', border: 'none', padding: '8px 16px', borderRadius: 12, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
             >
-              Saltar Descanso
+              SALTAR
             </button>
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#a1a1aa', fontWeight: 800 }}>
-          <span>Ejercicio {currentIndex + 1} de {exercises.length}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#71717a', fontWeight: 800 }}>
+          <span>{currentIndex + 1} / {exercises.length}</span>
           <span style={{ color: '#22d3ee' }}>Serie {currentSet} / {currentEx.defaultSets}</span>
         </div>
 
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 900, color: '#ffffff', margin: 0 }}>{currentEx.name}</h2>
-          <span style={{ fontSize: 11, color: '#22d3ee', textTransform: 'uppercase', fontWeight: 700 }}>
-            Grupo: {currentEx.muscle}
+          <h2 style={{ fontSize: 24, fontWeight: 900, color: '#ffffff', margin: 0, letterSpacing: '-0.8px' }}>{currentEx.name}</h2>
+          <span style={{ fontSize: 12, color: '#22d3ee', textTransform: 'uppercase', fontWeight: 800, letterSpacing: 0.5 }}>
+            {currentEx.muscle}
           </span>
         </div>
 
-        <div style={{ background: '#18181b', borderRadius: 16, padding: 12, border: '1px solid #27272a' }}>
-          <div style={{ fontSize: 10, color: '#22d3ee', fontWeight: 900, textTransform: 'uppercase', marginBottom: 6 }}>
-            🎥 Técnica
+        <img
+          src={currentEx.imageUrl}
+          alt={currentEx.name}
+          style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 18 }}
+        />
+
+        <div style={{ fontSize: 13, color: '#d4d4d8', lineHeight: 1.5, background: 'rgba(0,0,0,0.4)', padding: 14, borderRadius: 14 }}>
+          {currentEx.description}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <label style={s.label}>Peso (kg)</label>
+            <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={{ ...s.input, marginBottom: 0 }} />
           </div>
-          <img
-            src={currentEx.imageUrl}
-            alt={currentEx.name}
-            style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 12, marginBottom: 10, border: '1px solid #27272a' }}
-          />
-          <div style={{ fontSize: 12, color: '#e4e4e7', lineHeight: 1.4 }}>{currentEx.description}</div>
+          <div>
+            <label style={s.label}>Reps</label>
+            <input type="number" value={reps} onChange={e => setReps(e.target.value)} style={{ ...s.input, marginBottom: 0 }} />
+          </div>
         </div>
 
-        <div>
-          <label style={s.label}>Carga (kg)</label>
-          <input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={{ ...s.input, marginBottom: 0 }} />
-        </div>
-
-        <div>
-          <label style={s.label}>Repeticiones</label>
-          <input type="number" value={reps} onChange={e => setReps(e.target.value)} style={{ ...s.input, marginBottom: 0 }} />
-        </div>
-
-        <button onClick={handleCompleteSet} disabled={isResting} style={{ ...s.buttonCyan, opacity: isResting ? 0.5 : 1 }}>
+        <button onClick={handleCompleteSet} disabled={isResting} style={{ ...s.buttonCyan, opacity: isResting ? 0.4 : 1 }}>
           ✓ COMPLETAR SERIE
         </button>
       </div>
@@ -905,9 +1297,11 @@ const ActiveWorkoutPlayer: React.FC<{ exercises: Exercise[]; onFinish: () => voi
   );
 };
 
-// =============== NUTRITION ===============
+// ==========================================
+// 15. VISTA: NUTRICIÓN (mejorada)
+// ==========================================
 const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
-  const { profile, addPantryIngredient } = useFitApp();
+  const { profile, addPantryIngredient, togglePantryIngredient } = useFitApp();
   const [quickFoodName, setQuickFoodName] = useState('');
 
   const availableMeals = MASTER_MEALS.filter(meal =>
@@ -928,16 +1322,20 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <button onClick={onBackToHome} style={s.buttonBack}>← Volver al inicio</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <button onClick={onBackToHome} style={s.buttonBack}>← Volver</button>
 
       <div>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Nutrición Inteligente</span>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Alimentos y Recetas</h1>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800, letterSpacing: 1 }}>
+          Nutrición Inteligente
+        </span>
+        <h1 style={{ fontSize: 24, fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff', letterSpacing: '-0.8px' }}>
+          Alimentos y Recetas
+        </h1>
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>➕ Añadir alimento a la despensa</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 12px 0' }}>➕ Añadir alimento</h3>
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -957,7 +1355,7 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
           />
           <button
             type="submit"
-            style={{ background: '#22d3ee', color: '#09090b', border: 'none', padding: '0 16px', borderRadius: 14, fontWeight: 900, fontSize: 12, cursor: 'pointer' }}
+            style={{ background: '#22d3ee', color: '#000', border: 'none', padding: '0 20px', borderRadius: 16, fontWeight: 900, fontSize: 13, cursor: 'pointer' }}
           >
             Añadir
           </button>
@@ -965,28 +1363,54 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>
-          ✅ Disponibles ahora ({availableMeals.length})
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 12px 0' }}>
+          ✅ Mi despensa ({profile.pantryIngredients.length})
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {profile.pantryIngredients.map(ing => (
+            <button
+              key={ing}
+              onClick={() => togglePantryIngredient(ing)}
+              style={{
+                background: 'rgba(34,211,238,0.12)',
+                border: '1px solid rgba(34,211,238,0.35)',
+                color: '#22d3ee',
+                padding: '6px 12px',
+                borderRadius: 12,
+                fontSize: 11,
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              {ing} ✕
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={s.card}>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 12px 0' }}>
+          ✅ Recetas disponibles ({availableMeals.length})
         </h3>
         {availableMeals.length === 0 ? (
-          <p style={{ fontSize: 12, color: '#a1a1aa', margin: 0 }}>
-            Añade más ingredientes a tu despensa para desbloquear recetas.
+          <p style={{ fontSize: 12, color: '#71717a', margin: 0 }}>
+            Añade más ingredientes para desbloquear recetas.
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {availableMeals.map(m => (
-              <div key={m.id} style={{ background: '#09090b', borderRadius: 14, padding: 12, border: '1px solid #27272a' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#ffffff' }}>
+              <div key={m.id} style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 16, padding: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: '#ffffff' }}>
                     {m.icon} {m.name}
                   </span>
                   <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 800, textTransform: 'uppercase' }}>
                     {categoryLabels[m.category]}
                   </span>
                 </div>
-                {m.desc && <p style={{ fontSize: 11, color: '#a1a1aa', margin: '4px 0' }}>{m.desc}</p>}
-                <div style={{ display: 'flex', gap: 12, fontSize: 10, color: '#d4d4d8', marginTop: 6 }}>
-                  <span>🔥 {m.calories} kcal</span>
+                {m.desc && <p style={{ fontSize: 11, color: '#a1a1aa', margin: '4px 0 8px 0' }}>{m.desc}</p>}
+                <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#d4d4d8', fontWeight: 700 }}>
+                  <span>🔥 {m.calories}</span>
                   <span>🥩 {m.protein}g</span>
                   <span>🍞 {m.carbs}g</span>
                   <span>🥑 {m.fats}g</span>
@@ -999,14 +1423,14 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
 
       {lockedMeals.length > 0 && (
         <div style={s.card}>
-          <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>
+          <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 12px 0' }}>
             🔒 Bloqueadas ({lockedMeals.length})
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {lockedMeals.map(m => {
               const missing = m.requiredIngredients.filter(i => !profile.pantryIngredients.includes(i));
               return (
-                <div key={m.id} style={{ background: '#09090b', borderRadius: 14, padding: 12, border: '1px solid #27272a', opacity: 0.6 }}>
+                <div key={m.id} style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 16, padding: 12, opacity: 0.55 }}>
                   <span style={{ fontSize: 12, fontWeight: 800, color: '#ffffff' }}>
                     {m.icon} {m.name}
                   </span>
@@ -1023,7 +1447,9 @@ const NutritionView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome })
   );
 };
 
-// =============== PROFILE ===============
+// ==========================================
+// 16. VISTA: PERFIL
+// ==========================================
 const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
   const { profile, updateProfile, clearAllData, resetExclusions, excludedExercises } = useFitApp();
   const [name, setName] = useState(profile.name);
@@ -1046,12 +1472,6 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
     alert('✅ Perfil guardado');
   };
 
-  const equipmentOptions: { key: EquipmentType; label: string }[] = [
-    { key: 'mobiliario', label: '🪑 Mobiliario' },
-    { key: 'carga_improvisada', label: '🎒 Carga improvisada' },
-    { key: 'accesorios', label: '🧻 Accesorios' },
-  ];
-
   const goalOptions: { key: Goal; label: string }[] = [
     { key: 'perder_grasa', label: '🔥 Perder grasa' },
     { key: 'ganar_musculo', label: '💪 Ganar músculo' },
@@ -1059,13 +1479,23 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
     { key: 'mantener', label: '⚖️ Mantener' },
   ];
 
+  const contextOptions: { key: ContextType; label: string }[] = [
+    { key: 'casa', label: '🏠 En casa' },
+    { key: 'gimnasio', label: '🏋️ Gimnasio' },
+    { key: 'fuera_de_casa', label: '🌳 Exterior' },
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <button onClick={onBackToHome} style={s.buttonBack}>← Volver al inicio</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <button onClick={onBackToHome} style={s.buttonBack}>← Volver</button>
 
       <div>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800 }}>Ajustes</span>
-        <h1 style={{ fontSize: 20, fontWeight: 900, margin: '2px 0 0 0', color: '#ffffff' }}>Mi Perfil</h1>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#22d3ee', fontWeight: 800, letterSpacing: 1 }}>
+          Ajustes
+        </span>
+        <h1 style={{ fontSize: 24, fontWeight: 900, margin: '4px 0 0 0', color: '#ffffff', letterSpacing: '-0.8px' }}>
+          Mi Perfil
+        </h1>
       </div>
 
       <div style={s.card}>
@@ -1085,7 +1515,7 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🎯 Objetivo</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 12px 0' }}>🎯 Objetivo</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {goalOptions.map(g => {
             const isActive = profile.goal === g.key;
@@ -1095,9 +1525,9 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
                 onClick={() => updateProfile({ goal: g.key })}
                 style={{
                   padding: '10px 14px',
-                  borderRadius: 12,
-                  border: isActive ? '2px solid #22d3ee' : '1px solid #27272a',
-                  background: isActive ? 'rgba(34, 211, 238, 0.2)' : '#09090b',
+                  borderRadius: 14,
+                  border: isActive ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)',
+                  background: isActive ? 'rgba(34, 211, 238, 0.15)' : 'rgba(0,0,0,0.4)',
                   color: isActive ? '#22d3ee' : '#ffffff',
                   fontWeight: 800,
                   fontSize: 12,
@@ -1112,31 +1542,26 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🏠 Equipamiento</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 12px 0' }}>🌍 Contexto</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {equipmentOptions.map(e => {
-            const isActive = profile.equipment.includes(e.key);
+          {contextOptions.map(c => {
+            const isActive = profile.context === c.key;
             return (
               <button
-                key={e.key}
-                onClick={() => {
-                  const newEq = isActive
-                    ? profile.equipment.filter(x => x !== e.key)
-                    : [...profile.equipment, e.key];
-                  updateProfile({ equipment: newEq });
-                }}
+                key={c.key}
+                onClick={() => updateProfile({ context: c.key })}
                 style={{
                   padding: '10px 14px',
-                  borderRadius: 12,
-                  border: isActive ? '2px solid #22d3ee' : '1px solid #27272a',
-                  background: isActive ? 'rgba(34, 211, 238, 0.2)' : '#09090b',
+                  borderRadius: 14,
+                  border: isActive ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)',
+                  background: isActive ? 'rgba(34, 211, 238, 0.15)' : 'rgba(0,0,0,0.4)',
                   color: isActive ? '#22d3ee' : '#ffffff',
                   fontWeight: 800,
                   fontSize: 12,
                   cursor: 'pointer',
                 }}
               >
-                {e.label}
+                {c.label}
               </button>
             );
           })}
@@ -1144,7 +1569,7 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
       </div>
 
       <div style={s.card}>
-        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>🚫 Datos</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 900, color: '#ffffff', margin: '0 0 12px 0' }}>🗑️ Datos</h3>
         <p style={{ fontSize: 11, color: '#a1a1aa', margin: '0 0 12px 0' }}>
           Ejercicios excluidos: <strong>{excludedExercises.length}</strong>
         </p>
@@ -1153,24 +1578,28 @@ const ProfileView: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) =
             Restaurar ejercicios excluidos
           </button>
         )}
-        <button onClick={() => {
-          if (confirm('¿Seguro que quieres borrar TODOS tus datos? Esta acción no se puede deshacer.')) {
-            clearAllData();
-          }
-        }} style={s.buttonDanger}>
-          🗑️ Borrar todos mis datos
+        <button
+          onClick={() => {
+            if (confirm('¿Seguro que quieres borrar TODOS tus datos?')) {
+              clearAllData();
+            }
+          }}
+          style={s.buttonDanger}
+        >
+          Borrar todos mis datos
         </button>
       </div>
 
-      <p style={{ fontSize: 10, color: '#52525b', textAlign: 'center', marginTop: 8 }}>
-        🔒 Todos los datos se guardan SOLO en este dispositivo. Nadie más los ve.
+      <p style={{ fontSize: 10, color: '#52525b', textAlign: 'center', marginTop: 8, lineHeight: 1.5 }}>
+        🔒 Todos los datos se guardan SOLO en este dispositivo.<br />
+        Nadie más puede verlos.
       </p>
     </div>
   );
 };
 
 // ==========================================
-// 7. APP PRINCIPAL
+// 17. APP PRINCIPAL
 // ==========================================
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1182,6 +1611,7 @@ function AppContent() {
     { id: 'dashboard', label: 'Inicio', icon: '⚡' },
     { id: 'planner', label: 'Rutina', icon: '📅' },
     { id: 'train', label: 'Entrenar', icon: '🔥' },
+    { id: 'home', label: 'Casa', icon: '🏠' },
     { id: 'nutrition', label: 'Nutrición', icon: '🥗' },
     { id: 'profile', label: 'Perfil', icon: '⚙️' },
   ];
@@ -1189,8 +1619,8 @@ function AppContent() {
   return (
     <div style={s.container}>
       <header style={s.header}>
-        <span style={s.logo}>FITAPP PRO</span>
-        <span style={s.badge}>v6.7 LOCAL</span>
+        <span style={s.logo}>FITAPP</span>
+        <span style={s.badge}>v7.0 CASA</span>
       </header>
 
       <main style={{ flex: 1 }}>
@@ -1217,8 +1647,10 @@ function AppContent() {
                 onGoToProfile={() => setActiveTab('profile')}
                 onGoToNutrition={() => setActiveTab('nutrition')}
                 onGoToPlanner={() => setActiveTab('planner')}
+                onGoToHome={() => setActiveTab('home')}
               />
             )}
+            {activeTab === 'home' && <HomeInventoryView onBackToHome={() => setActiveTab('dashboard')} />}
             {activeTab === 'planner' && (
               <WeeklyPlannerView
                 onBackToHome={() => setActiveTab('dashboard')}
