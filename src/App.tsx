@@ -37,6 +37,7 @@ export interface Exercise {
   id: string; name: string; muscle: string; defaultSets: number; defaultReps: number;
   defaultWeight: string; context: ContextType[]; requiredItems: string[];
   level: string; description: string; steps: string[]; mistakes: string; tip: string; imageUrl: string;
+  emoji: string;
 }
 export interface WorkoutSetLog { setNumber: number; weight: number; reps: number; completed: boolean; }
 export interface WorkoutLogRecord { id: string; sessionId: string; date: string; exerciseName: string; sets: WorkoutSetLog[]; }
@@ -103,51 +104,49 @@ export const HOME_ITEMS_LIBRARY: HomeItem[] = [
 ];
 
 export const MASTER_EXERCISES: Exercise[] = [
-  { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Ejercicio básico de piernas.', steps: ['Pies al ancho de caderas', 'Baja la cadera como si te sentaras', 'Rodillas alineadas con pies', 'Sube empujando talones'], mistakes: 'Rodillas hacia dentro o talones despegados.', tip: 'Baja hasta muslos paralelos.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_02', name: 'Zancadas', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Trabajo unilateral.', steps: ['Paso al frente', 'Baja la rodilla trasera', 'Vuelve con talón delantero', 'Alterna piernas'], mistakes: 'Inclinar el torso.', tip: 'Mantén torso recto.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_03', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', description: 'Unilateral con pie elevado.', steps: ['Empeine trasero en silla', 'Pie delantero a 60 cm', 'Baja flexionando', 'Sube con talón'], mistakes: 'Apoyar peso en silla.', tip: 'Apóyate en pared si falta equilibrio.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_04', name: 'Hip thrust', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['sofa'], level: 'Intermedio', description: 'Aislamiento glúteos.', steps: ['Espalda alta en sofá', 'Pies al ancho caderas', 'Baja cadera', 'Sube apretando glúteos'], mistakes: 'Empujar con lumbar.', tip: 'Aprieta glúteo 2 seg arriba.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_05', name: 'Peso muerto', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['barra'], level: 'Avanzado', description: 'Cadena posterior.', steps: ['Barra cerca espinillas', 'Bisagra cadera', 'Agarra barra', 'Sube extendiendo'], mistakes: 'Redondear espalda.', tip: 'Empuja suelo con pies.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'leg_06', name: 'Step-ups', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['escaleras'], level: 'Principiante', description: 'Subida escalón.', steps: ['Apoya pie completo', 'Sube empujando', 'Baja controlado', 'Alterna'], mistakes: 'Impulsarse.', tip: 'Controla bajada.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'chest_01', name: 'Flexiones', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Pecho peso corporal.', steps: ['Manos altura hombros', 'Cuerpo recto', 'Baja pecho', 'Sube empujando'], mistakes: 'Cadera arriba/abajo.', tip: 'Codos a 45º.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'chest_02', name: 'Flexiones inclinadas', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['mesa'], level: 'Principiante', description: 'Flexiones manos elevadas.', steps: ['Manos en mesa', 'Cuerpo diagonal', 'Baja pecho', 'Sube controlado'], mistakes: 'Cadera caída.', tip: 'Más alto más fácil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'chest_03', name: 'Press banca', muscle: 'pecho', defaultSets: 4, defaultReps: 10, defaultWeight: '40', context: ['gimnasio'], requiredItems: ['barra', 'banco'], level: 'Intermedio', description: 'Press con barra.', steps: ['Pies firmes', 'Agarre ancho', 'Baja barra', 'Empuja extensión'], mistakes: 'Rebotar barra.', tip: 'Retrae escápulas.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'chest_04', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', description: 'Fondos silla.', steps: ['Manos borde silla', 'Piernas extendidas', 'Baja flexionando', 'Sube empujando'], mistakes: 'Codos abiertos.', tip: 'Pies lejos más difícil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Remo peso improvisado.', steps: ['Mochila cargada', 'Bisagra 45º', 'Tira al pecho', 'Baja controlado'], mistakes: 'Tirar con lumbar.', tip: 'Junta escápulas.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'back_02', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Extensión lumbar.', steps: ['Boca abajo', 'Brazos al frente', 'Eleva brazos y piernas', 'Mantén 2 seg'], mistakes: 'Forzar cuello.', tip: 'Mira al suelo.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'back_03', name: 'Remo con gomas', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['gomas'], level: 'Principiante', description: 'Remo banda.', steps: ['Ancla goma', 'Siéntate o de pie', 'Tira al pecho', 'Vuelve controlado'], mistakes: 'Usar torso.', tip: 'Ajusta distancia.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'back_04', name: 'Dominadas', muscle: 'espalda', defaultSets: 4, defaultReps: 6, defaultWeight: '0', context: ['gimnasio', 'fuera_de_casa'], requiredItems: ['barra_parque'], level: 'Avanzado', description: 'Dominadas en barra.', steps: ['Agarre prono', 'Cuélgate', 'Tira hasta barbilla', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Usa banda.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'back_05', name: 'Jalón al pecho', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], requiredItems: ['polea_alta'], level: 'Intermedio', description: 'Jalón polea.', steps: ['Siéntate', 'Agarre ancho', 'Tira al pecho', 'Vuelve'], mistakes: 'Tirar con brazos.', tip: 'Codos abajo.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'sh_01', name: 'Press militar mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Press vertical.', steps: ['Mochila al pecho', 'Empuja arriba', 'Bloquea', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Activa core.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
-  { id: 'sh_02', name: 'Elevaciones laterales', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Deltoides lateral.', steps: ['Botellas a los lados', 'Eleva altura hombros', 'Baja controlado'], mistakes: 'Subir por encima.', tip: 'Imagina verter agua.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
-  { id: 'sh_03', name: 'Press banca militar', muscle: 'hombros', defaultSets: 4, defaultReps: 8, defaultWeight: '30', context: ['gimnasio'], requiredItems: ['barra', 'banco_incl'], level: 'Intermedio', description: 'Press militar barra.', steps: ['Siéntate banco', 'Barra clavículas', 'Empuja arriba', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Aprieta core.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
-  { id: 'bic_01', name: 'Curl botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Curl bíceps.', steps: ['Botellas a los lados', 'Codos pegados', 'Sube botellas', 'Baja controlado'], mistakes: 'Balancear.', tip: 'Aprieta arriba.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'bic_02', name: 'Curl con barra', muscle: 'biceps', defaultSets: 3, defaultReps: 10, defaultWeight: '20', context: ['gimnasio'], requiredItems: ['barra'], level: 'Principiante', description: 'Curl barra.', steps: ['De pie', 'Agarre supino', 'Sube barra', 'Baja controlado'], mistakes: 'Balancear.', tip: 'Codos fijos.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'tri_01', name: 'Fondos banco', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa', 'gimnasio'], requiredItems: ['banco_publico'], level: 'Principiante', description: 'Fondos banco.', steps: ['Manos en banco', 'Piernas extendidas', 'Baja codos', 'Sube'], mistakes: 'Codos abiertos.', tip: 'Talones al suelo.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'tri_02', name: 'Extensión tríceps polea', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '20', context: ['gimnasio'], requiredItems: ['polea_alta'], level: 'Principiante', description: 'Extensión polea.', steps: ['Frente polea', 'Codos pegados', 'Extiende abajo', 'Vuelve controlado'], mistakes: 'Mover codos.', tip: 'Separa cuerda.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Isométrico core.', steps: ['Antebrazos y puntas pies', 'Cuerpo recto', 'Abdomen contraído', 'Mantén'], mistakes: 'Cadera elevada.', tip: 'Aprieta glúteos.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
-  { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Core dinámico.', steps: ['Posición flexión', 'Rodilla al pecho', 'Alterna rápido'], mistakes: 'Cadera alta.', tip: 'Corre en plancha.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
-  { id: 'core_03', name: 'Elevación piernas', muscle: 'core', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: [], level: 'Intermedio', description: 'Abdomen inferior.', steps: ['Boca arriba', 'Piernas rectas', 'Eleva a 90º', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Flexiona rodillas si cuesta.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
-  { id: 'card_01', name: 'Jumping jacks', muscle: 'cardio', defaultSets: 3, defaultReps: 40, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Cardio clásico.', steps: ['Pies juntos', 'Salta abriendo', 'Vuelve', 'Ritmo constante'], mistakes: 'Saltos pequeños.', tip: 'Aterriza rodillas flexionadas.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
-  { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Avanzado', description: 'Cardio completo.', steps: ['De pie a cuclillas', 'Salta a plancha', 'Flexión opcional', 'Salta arriba'], mistakes: 'No completar.', tip: 'Por tiempo si novato.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
-  { id: 'card_03', name: 'Salto cuerda', muscle: 'cardio', defaultSets: 3, defaultReps: 60, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['cuerda_saltar'], level: 'Principiante', description: 'Cardio cuerda.', steps: ['Cuerda detrás', 'Salta con muñecas', 'Ritmo constante'], mistakes: 'Saltos altos.', tip: 'Salta 2 cm.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
-  { id: 'gym_sent', name: 'Sentadilla con barra', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '60', context: ['gimnasio'], requiredItems: ['barra', 'rack'], level: 'Avanzado', description: 'Sentadilla trasera.', steps: ['Barra trapecios', 'Pies al ancho', 'Baja controlado', 'Sube talones'], mistakes: 'Rodillas dentro.', tip: 'Respira profundo.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'gym_prensa', name: 'Prensa piernas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '100', context: ['gimnasio'], requiredItems: ['prensa'], level: 'Principiante', description: 'Prensa.', steps: ['Siéntate', 'Pies en plataforma', 'Empuja', 'Baja controlado'], mistakes: 'Bloquear rodillas.', tip: 'No estires del todo.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'gym_remo', name: 'Remo con barra', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], requiredItems: ['barra'], level: 'Intermedio', description: 'Remo inclinado.', steps: ['Bisagra 45º', 'Agarra barra', 'Tira abdomen', 'Baja controlado'], mistakes: 'Torso erguido.', tip: 'Junta escápulas.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'gym_hack', name: 'Hack squat', muscle: 'piernas', defaultSets: 4, defaultReps: 10, defaultWeight: '60', context: ['gimnasio'], requiredItems: ['hack'], level: 'Intermedio', description: 'Sentadilla hack.', steps: ['Espalda apoyada', 'Pies plataforma', 'Baja controlado', 'Sube extendiendo'], mistakes: 'Talones despegados.', tip: 'Bueno para cuádriceps.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'gym_goblet', name: 'Goblet squat', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '16', context: ['gimnasio'], requiredItems: ['kettlebell'], level: 'Principiante', description: 'Sentadilla kettlebell.', steps: ['Kettlebell pecho', 'Pies al ancho', 'Baja controlado', 'Sube empujando'], mistakes: 'Torso inclinado.', tip: 'Codos entre rodillas.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'out_sprint', name: 'Sprints cuesta', muscle: 'cardio', defaultSets: 6, defaultReps: 1, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['cuesta'], level: 'Intermedio', description: 'Sprint pendiente.', steps: ['Calienta 5 min', 'Sprint 20-30m', 'Baja caminando', 'Repite'], mistakes: 'No calentar.', tip: 'Bueno para grasa.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
-  { id: 'out_fondos', name: 'Fondos banco parque', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['banco_publico'], level: 'Principiante', description: 'Fondos aire libre.', steps: ['Manos banco', 'Piernas extendidas', 'Baja codos', 'Sube'], mistakes: 'Codos abiertos.', tip: 'Talones al suelo.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'out_dominadas', name: 'Dominadas parque', muscle: 'espalda', defaultSets: 4, defaultReps: 6, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['barra_parque'], level: 'Intermedio', description: 'Dominadas outdoor.', steps: ['Agarre prono', 'Cuélgate', 'Tira barbilla', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Banda si no puedes.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'out_step', name: 'Step-ups escalón parque', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['escaleras_parque'], level: 'Principiante', description: 'Subida outdoor.', steps: ['Apoya pie', 'Sube empujando', 'Baja controlado', 'Alterna'], mistakes: 'Impulsarse.', tip: 'Controla bajada.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'out_plancha', name: 'Plancha en arena', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['arena'], level: 'Intermedio', description: 'Plancha inestable.', steps: ['Antebrazos arena', 'Cuerpo recto', 'Abdomen contraído', 'Mantén'], mistakes: 'Cadera elevada.', tip: 'Aprieta core.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
-  { id: 'gym_curl_manc', name: 'Curl mancuernas', muscle: 'biceps', defaultSets: 3, defaultReps: 12, defaultWeight: '10', context: ['gimnasio'], requiredItems: ['mancuernas'], level: 'Principiante', description: 'Curl mancuernas.', steps: ['Mancuernas a los lados', 'Codos pegados', 'Sube girando', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Aprieta arriba.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'gym_press_hombros', name: 'Press hombros mancuernas', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '15', context: ['gimnasio'], requiredItems: ['mancuernas'], level: 'Intermedio', description: 'Press mancuernas.', steps: ['Sentado', 'Mancuernas a hombros', 'Empuja arriba', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Core activo.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
+  { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Ejercicio básico de piernas.', steps: ['Pies al ancho de caderas', 'Baja la cadera como si te sentaras', 'Rodillas alineadas con pies', 'Sube empujando talones'], mistakes: 'Rodillas hacia dentro o talones despegados.', tip: 'Baja hasta muslos paralelos.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400', emoji: '🦵' },
+  { id: 'leg_02', name: 'Zancadas', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Trabajo unilateral.', steps: ['Paso al frente', 'Baja la rodilla trasera', 'Vuelve con talón delantero', 'Alterna piernas'], mistakes: 'Inclinar el torso.', tip: 'Mantén torso recto.', imageUrl: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?w=400', emoji: '🦵' },
+  { id: 'leg_03', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', description: 'Unilateral con pie elevado.', steps: ['Empeine trasero en silla', 'Pie delantero a 60 cm', 'Baja flexionando', 'Sube con talón'], mistakes: 'Apoyar peso en silla.', tip: 'Apóyate en pared si falta equilibrio.', imageUrl: 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=400', emoji: '🦵' },
+  { id: 'leg_04', name: 'Hip thrust', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['sofa'], level: 'Intermedio', description: 'Aislamiento glúteos.', steps: ['Espalda alta en sofá', 'Pies al ancho caderas', 'Baja cadera', 'Sube apretando glúteos'], mistakes: 'Empujar con lumbar.', tip: 'Aprieta glúteo 2 seg arriba.', imageUrl: 'https://images.unsplash.com/photo-1591940765139-9a9c1c1a1b0f?w=400', emoji: '🍑' },
+  { id: 'leg_05', name: 'Peso muerto', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['barra'], level: 'Avanzado', description: 'Cadena posterior.', steps: ['Barra cerca espinillas', 'Bisagra cadera', 'Agarra barra', 'Sube extendiendo'], mistakes: 'Redondear espalda.', tip: 'Empuja suelo con pies.', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400', emoji: '🏋️' },
+  { id: 'leg_06', name: 'Step-ups', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['escaleras'], level: 'Principiante', description: 'Subida escalón.', steps: ['Apoya pie completo', 'Sube empujando', 'Baja controlado', 'Alterna'], mistakes: 'Impulsarse.', tip: 'Controla bajada.', imageUrl: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?w=400', emoji: '🦵' },
+  { id: 'chest_01', name: 'Flexiones', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Pecho peso corporal.', steps: ['Manos altura hombros', 'Cuerpo recto', 'Baja pecho', 'Sube empujando'], mistakes: 'Cadera arriba/abajo.', tip: 'Codos a 45º.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400', emoji: '💪' },
+  { id: 'chest_02', name: 'Flexiones inclinadas', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['mesa'], level: 'Principiante', description: 'Flexiones manos elevadas.', steps: ['Manos en mesa', 'Cuerpo diagonal', 'Baja pecho', 'Sube controlado'], mistakes: 'Cadera caída.', tip: 'Más alto más fácil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400', emoji: '💪' },
+  { id: 'chest_03', name: 'Press banca', muscle: 'pecho', defaultSets: 4, defaultReps: 10, defaultWeight: '40', context: ['gimnasio'], requiredItems: ['barra', 'banco'], level: 'Intermedio', description: 'Press con barra.', steps: ['Pies firmes', 'Agarre ancho', 'Baja barra', 'Empuja extensión'], mistakes: 'Rebotar barra.', tip: 'Retrae escápulas.', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400', emoji: '💪' },
+  { id: 'chest_04', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', description: 'Fondos silla.', steps: ['Manos borde silla', 'Piernas extendidas', 'Baja flexionando', 'Sube empujando'], mistakes: 'Codos abiertos.', tip: 'Pies lejos más difícil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400', emoji: '💪' },
+  { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Remo peso improvisado.', steps: ['Mochila cargada', 'Bisagra 45º', 'Tira al pecho', 'Baja controlado'], mistakes: 'Tirar con lumbar.', tip: 'Junta escápulas.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400', emoji: '🦇' },
+  { id: 'back_02', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Extensión lumbar.', steps: ['Boca abajo', 'Brazos al frente', 'Eleva brazos y piernas', 'Mantén 2 seg'], mistakes: 'Forzar cuello.', tip: 'Mira al suelo.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400', emoji: '🦇' },
+  { id: 'back_03', name: 'Remo con gomas', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['gomas'], level: 'Principiante', description: 'Remo banda.', steps: ['Ancla goma', 'Siéntate o de pie', 'Tira al pecho', 'Vuelve controlado'], mistakes: 'Usar torso.', tip: 'Ajusta distancia.', imageUrl: 'https://images.unsplash.com/photo-1591940765139-9a9c1c1a1b0f?w=400', emoji: '🦇' },
+  { id: 'back_04', name: 'Dominadas', muscle: 'espalda', defaultSets: 4, defaultReps: 6, defaultWeight: '0', context: ['gimnasio', 'fuera_de_casa'], requiredItems: ['barra_parque'], level: 'Avanzado', description: 'Dominadas en barra.', steps: ['Agarre prono', 'Cuélgate', 'Tira hasta barbilla', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Usa banda.', imageUrl: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=400', emoji: '🦇' },
+  { id: 'back_05', name: 'Jalón al pecho', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], requiredItems: ['polea_alta'], level: 'Intermedio', description: 'Jalón polea.', steps: ['Siéntate', 'Agarre ancho', 'Tira al pecho', 'Vuelve'], mistakes: 'Tirar con brazos.', tip: 'Codos abajo.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400', emoji: '🦇' },
+  { id: 'sh_01', name: 'Press militar mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Press vertical.', steps: ['Mochila al pecho', 'Empuja arriba', 'Bloquea', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Activa core.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400', emoji: '🛡️' },
+  { id: 'sh_02', name: 'Elevaciones laterales', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Deltoides lateral.', steps: ['Botellas a los lados', 'Eleva altura hombros', 'Baja controlado'], mistakes: 'Subir por encima.', tip: 'Imagina verter agua.', imageUrl: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400', emoji: '🛡️' },
+  { id: 'sh_03', name: 'Press banca militar', muscle: 'hombros', defaultSets: 4, defaultReps: 8, defaultWeight: '30', context: ['gimnasio'], requiredItems: ['barra', 'banco_incl'], level: 'Intermedio', description: 'Press militar barra.', steps: ['Siéntate banco', 'Barra clavículas', 'Empuja arriba', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Aprieta core.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400', emoji: '🛡️' },
+  { id: 'bic_01', name: 'Curl botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Curl bíceps.', steps: ['Botellas a los lados', 'Codos pegados', 'Sube botellas', 'Baja controlado'], mistakes: 'Balancear.', tip: 'Aprieta arriba.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400', emoji: '💪' },
+  { id: 'bic_02', name: 'Curl con barra', muscle: 'biceps', defaultSets: 3, defaultReps: 10, defaultWeight: '20', context: ['gimnasio'], requiredItems: ['barra'], level: 'Principiante', description: 'Curl barra.', steps: ['De pie', 'Agarre supino', 'Sube barra', 'Baja controlado'], mistakes: 'Balancear.', tip: 'Codos fijos.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400', emoji: '💪' },
+  { id: 'tri_01', name: 'Fondos banco', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa', 'gimnasio'], requiredItems: ['banco_publico'], level: 'Principiante', description: 'Fondos banco.', steps: ['Manos en banco', 'Piernas extendidas', 'Baja codos', 'Sube'], mistakes: 'Codos abiertos.', tip: 'Talones al suelo.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400', emoji: '💪' },
+  { id: 'tri_02', name: 'Extensión tríceps polea', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '20', context: ['gimnasio'], requiredItems: ['polea_alta'], level: 'Principiante', description: 'Extensión polea.', steps: ['Frente polea', 'Codos pegados', 'Extiende abajo', 'Vuelve controlado'], mistakes: 'Mover codos.', tip: 'Separa cuerda.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400', emoji: '💪' },
+  { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Isométrico core.', steps: ['Antebrazos y puntas pies', 'Cuerpo recto', 'Abdomen contraído', 'Mantén'], mistakes: 'Cadera elevada.', tip: 'Aprieta glúteos.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400', emoji: '⚡' },
+  { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Core dinámico.', steps: ['Posición flexión', 'Rodilla al pecho', 'Alterna rápido'], mistakes: 'Cadera alta.', tip: 'Corre en plancha.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400', emoji: '⚡' },
+  { id: 'core_03', name: 'Elevación piernas', muscle: 'core', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: [], level: 'Intermedio', description: 'Abdomen inferior.', steps: ['Boca arriba', 'Piernas rectas', 'Eleva a 90º', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Flexiona rodillas si cuesta.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400', emoji: '⚡' },
+  { id: 'card_01', name: 'Jumping jacks', muscle: 'cardio', defaultSets: 3, defaultReps: 40, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Cardio clásico.', steps: ['Pies juntos', 'Salta abriendo', 'Vuelve', 'Ritmo constante'], mistakes: 'Saltos pequeños.', tip: 'Aterriza rodillas flexionadas.', imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400', emoji: '🏃' },
+  { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Avanzado', description: 'Cardio completo.', steps: ['De pie a cuclillas', 'Salta a plancha', 'Flexión opcional', 'Salta arriba'], mistakes: 'No completar.', tip: 'Por tiempo si novato.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400', emoji: '🏃' },
+  { id: 'card_03', name: 'Salto cuerda', muscle: 'cardio', defaultSets: 3, defaultReps: 60, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['cuerda_saltar'], level: 'Principiante', description: 'Cardio cuerda.', steps: ['Cuerda detrás', 'Salta con muñecas', 'Ritmo constante'], mistakes: 'Saltos altos.', tip: 'Salta 2 cm.', imageUrl: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?w=400', emoji: '🏃' },
+  { id: 'gym_sent', name: 'Sentadilla con barra', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '60', context: ['gimnasio'], requiredItems: ['barra', 'rack'], level: 'Avanzado', description: 'Sentadilla trasera.', steps: ['Barra trapecios', 'Pies al ancho', 'Baja controlado', 'Sube talones'], mistakes: 'Rodillas dentro.', tip: 'Respira profundo.', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400', emoji: '🏋️' },
+  { id: 'gym_prensa', name: 'Prensa piernas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '100', context: ['gimnasio'], requiredItems: ['prensa'], level: 'Principiante', description: 'Prensa.', steps: ['Siéntate', 'Pies en plataforma', 'Empuja', 'Baja controlado'], mistakes: 'Bloquear rodillas.', tip: 'No estires del todo.', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400', emoji: '🦵' },
+  { id: 'gym_remo', name: 'Remo con barra', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], requiredItems: ['barra'], level: 'Intermedio', description: 'Remo inclinado.', steps: ['Bisagra 45º', 'Agarra barra', 'Tira abdomen', 'Baja controlado'], mistakes: 'Torso erguido.', tip: 'Junta escápulas.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400', emoji: '🦇' },
+  { id: 'gym_hack', name: 'Hack squat', muscle: 'piernas', defaultSets: 4, defaultReps: 10, defaultWeight: '60', context: ['gimnasio'], requiredItems: ['hack'], level: 'Intermedio', description: 'Sentadilla hack.', steps: ['Espalda apoyada', 'Pies plataforma', 'Baja controlado', 'Sube extendiendo'], mistakes: 'Talones despegados.', tip: 'Bueno para cuádriceps.', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400', emoji: '🦵' },
+  { id: 'gym_goblet', name: 'Goblet squat', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '16', context: ['gimnasio'], requiredItems: ['kettlebell'], level: 'Principiante', description: 'Sentadilla kettlebell.', steps: ['Kettlebell pecho', 'Pies al ancho', 'Baja controlado', 'Sube empujando'], mistakes: 'Torso inclinado.', tip: 'Codos entre rodillas.', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400', emoji: '🏋️' },
+  { id: 'out_sprint', name: 'Sprints cuesta', muscle: 'cardio', defaultSets: 6, defaultReps: 1, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['cuesta'], level: 'Intermedio', description: 'Sprint pendiente.', steps: ['Calienta 5 min', 'Sprint 20-30m', 'Baja caminando', 'Repite'], mistakes: 'No calentar.', tip: 'Bueno para grasa.', imageUrl: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400', emoji: '🏃' },
+  { id: 'out_fondos', name: 'Fondos banco parque', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['banco_publico'], level: 'Principiante', description: 'Fondos aire libre.', steps: ['Manos banco', 'Piernas extendidas', 'Baja codos', 'Sube'], mistakes: 'Codos abiertos.', tip: 'Talones al suelo.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400', emoji: '💪' },
+  { id: 'out_dominadas', name: 'Dominadas parque', muscle: 'espalda', defaultSets: 4, defaultReps: 6, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['barra_parque'], level: 'Intermedio', description: 'Dominadas outdoor.', steps: ['Agarre prono', 'Cuélgate', 'Tira barbilla', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Banda si no puedes.', imageUrl: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=400', emoji: '🦇' },
+  { id: 'out_step', name: 'Step-ups escalón parque', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['escaleras_parque'], level: 'Principiante', description: 'Subida outdoor.', steps: ['Apoya pie', 'Sube empujando', 'Baja controlado', 'Alterna'], mistakes: 'Impulsarse.', tip: 'Controla bajada.', imageUrl: 'https://images.unsplash.com/photo-1434608519344-49d77a699e1d?w=400', emoji: '🦵' },
+  { id: 'out_plancha', name: 'Plancha en arena', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['arena'], level: 'Intermedio', description: 'Plancha inestable.', steps: ['Antebrazos arena', 'Cuerpo recto', 'Abdomen contraído', 'Mantén'], mistakes: 'Cadera elevada.', tip: 'Aprieta core.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400', emoji: '⚡' },
+  { id: 'gym_curl_manc', name: 'Curl mancuernas', muscle: 'biceps', defaultSets: 3, defaultReps: 12, defaultWeight: '10', context: ['gimnasio'], requiredItems: ['mancuernas'], level: 'Principiante', description: 'Curl mancuernas.', steps: ['Mancuernas a los lados', 'Codos pegados', 'Sube girando', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Aprieta arriba.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400', emoji: '💪' },
+  { id: 'gym_press_hombros', name: 'Press hombros mancuernas', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '15', context: ['gimnasio'], requiredItems: ['mancuernas'], level: 'Intermedio', description: 'Press mancuernas.', steps: ['Sentado', 'Mancuernas a hombros', 'Empuja arriba', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Core activo.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400', emoji: '🛡️' },
 ];
 
-// ALIMENTOS con campo "uses" para saber en qué recetas encajan
 export const FOOD_DATABASE: Food[] = [
-  // PROTEÍNAS SÓLIDAS (para plato, salteado)
   { id: 'pollo', name: 'Pechuga pollo', aliases: ['pollo'], category: 'proteina', kcal: 165, protein: 31, carbs: 0, fats: 3.6, unit: '100g', uses: ['plato', 'salteado'] },
   { id: 'ternera', name: 'Ternera magra', aliases: ['ternera'], category: 'proteina', kcal: 187, protein: 26, carbs: 0, fats: 9, unit: '100g', uses: ['plato', 'salteado'] },
   { id: 'pavo', name: 'Pavo', aliases: ['pavo'], category: 'proteina', kcal: 135, protein: 29, carbs: 0, fats: 1.7, unit: '100g', uses: ['plato', 'salteado'] },
@@ -162,10 +161,7 @@ export const FOOD_DATABASE: Food[] = [
   { id: 'tempeh', name: 'Tempeh', aliases: ['tempeh'], category: 'proteina', kcal: 195, protein: 19, carbs: 8, fats: 11, unit: '100g', uses: ['plato', 'salteado'] },
   { id: 'lentejas', name: 'Lentejas', aliases: ['lentejas'], category: 'proteina', kcal: 116, protein: 9, carbs: 20, fats: 0.4, unit: '100g', uses: ['plato'] },
   { id: 'garbanzos', name: 'Garbanzos', aliases: ['garbanzos'], category: 'proteina', kcal: 164, protein: 8.9, carbs: 27, fats: 2.6, unit: '100g', uses: ['plato'] },
-  // PROTEÍNAS PARA BATIDO (lácteas / polvo)
   { id: 'proteina_polvo', name: 'Proteína polvo', aliases: ['whey'], category: 'proteina', kcal: 400, protein: 80, carbs: 8, fats: 5, unit: '100g', uses: ['batido'] },
-
-  // CARBOHIDRATOS
   { id: 'arroz', name: 'Arroz blanco', aliases: ['arroz'], category: 'carbo', kcal: 130, protein: 2.7, carbs: 28, fats: 0.3, unit: '100g', uses: ['plato'] },
   { id: 'arroz_int', name: 'Arroz integral', aliases: ['arroz int'], category: 'carbo', kcal: 123, protein: 2.7, carbs: 26, fats: 1, unit: '100g', uses: ['plato'] },
   { id: 'pasta', name: 'Pasta cocida', aliases: ['pasta'], category: 'carbo', kcal: 158, protein: 6, carbs: 31, fats: 0.9, unit: '100g', uses: ['plato'] },
@@ -181,8 +177,6 @@ export const FOOD_DATABASE: Food[] = [
   { id: 'maiz', name: 'Maíz', aliases: ['maiz'], category: 'carbo', kcal: 86, protein: 3.3, carbs: 19, fats: 1.4, unit: '100g', uses: ['plato'] },
   { id: 'tortitas_arroz', name: 'Tortitas arroz', aliases: ['tortitas'], category: 'carbo', kcal: 387, protein: 8, carbs: 82, fats: 3, unit: '100g', uses: ['snack'] },
   { id: 'wrap', name: 'Tortilla wrap', aliases: ['wrap'], category: 'carbo', kcal: 290, protein: 8, carbs: 48, fats: 7, unit: '100g', uses: ['plato'] },
-
-  // GRASAS
   { id: 'aceite', name: 'Aceite oliva', aliases: ['aceite'], category: 'grasa', kcal: 884, protein: 0, carbs: 0, fats: 100, unit: '100ml', uses: ['plato', 'salteado'] },
   { id: 'aceite_coco', name: 'Aceite coco', aliases: ['aceite coco'], category: 'grasa', kcal: 862, protein: 0, carbs: 0, fats: 100, unit: '100ml', uses: ['plato'] },
   { id: 'aguacate', name: 'Aguacate', aliases: ['aguacate'], category: 'grasa', kcal: 160, protein: 2, carbs: 9, fats: 15, unit: '100g', uses: ['plato', 'salteado', 'snack'] },
@@ -195,8 +189,6 @@ export const FOOD_DATABASE: Food[] = [
   { id: 'chia', name: 'Chía', aliases: ['chia'], category: 'grasa', kcal: 486, protein: 17, carbs: 42, fats: 31, unit: '100g', uses: ['desayuno', 'snack'] },
   { id: 'lino', name: 'Lino', aliases: ['lino'], category: 'grasa', kcal: 534, protein: 18, carbs: 29, fats: 42, unit: '100g', uses: ['desayuno'] },
   { id: 'tahini', name: 'Tahini', aliases: ['tahini'], category: 'grasa', kcal: 595, protein: 17, carbs: 21, fats: 54, unit: '100g', uses: ['salteado'] },
-
-  // VERDURAS
   { id: 'brocoli', name: 'Brócoli', aliases: ['brocoli'], category: 'verdura', kcal: 34, protein: 2.8, carbs: 7, fats: 0.4, unit: '100g', uses: ['plato', 'salteado'] },
   { id: 'espinaca', name: 'Espinacas', aliases: ['espinaca'], category: 'verdura', kcal: 23, protein: 2.9, carbs: 3.6, fats: 0.4, unit: '100g', uses: ['plato', 'salteado', 'smoothie'] },
   { id: 'tomate', name: 'Tomate', aliases: ['tomate'], category: 'verdura', kcal: 18, protein: 0.9, carbs: 3.9, fats: 0.2, unit: '100g', uses: ['plato', 'salteado'] },
@@ -212,8 +204,6 @@ export const FOOD_DATABASE: Food[] = [
   { id: 'berenjena', name: 'Berenjena', aliases: ['berenjena'], category: 'verdura', kcal: 25, protein: 1, carbs: 6, fats: 0.2, unit: '100g', uses: ['plato', 'salteado'] },
   { id: 'champinones', name: 'Champiñones', aliases: ['champiñones'], category: 'verdura', kcal: 22, protein: 3.1, carbs: 3.3, fats: 0.3, unit: '100g', uses: ['plato', 'salteado'] },
   { id: 'esparragos', name: 'Espárragos', aliases: ['esparragos'], category: 'verdura', kcal: 20, protein: 2.2, carbs: 3.9, fats: 0.1, unit: '100g', uses: ['plato', 'salteado'] },
-
-  // FRUTAS
   { id: 'platano', name: 'Plátano', aliases: ['platano'], category: 'fruta', kcal: 89, protein: 1.1, carbs: 23, fats: 0.3, unit: '100g', uses: ['batido', 'snack', 'desayuno', 'smoothie'] },
   { id: 'manzana', name: 'Manzana', aliases: ['manzana'], category: 'fruta', kcal: 52, protein: 0.3, carbs: 14, fats: 0.2, unit: '100g', uses: ['snack', 'desayuno', 'smoothie'] },
   { id: 'naranja', name: 'Naranja', aliases: ['naranja'], category: 'fruta', kcal: 47, protein: 0.9, carbs: 12, fats: 0.1, unit: '100g', uses: ['snack', 'desayuno', 'smoothie', 'bebida'] },
@@ -226,8 +216,6 @@ export const FOOD_DATABASE: Food[] = [
   { id: 'melocoton', name: 'Melocotón', aliases: ['melocoton'], category: 'fruta', kcal: 39, protein: 0.9, carbs: 10, fats: 0.3, unit: '100g', uses: ['snack', 'smoothie'] },
   { id: 'uvas', name: 'Uvas', aliases: ['uvas'], category: 'fruta', kcal: 69, protein: 0.7, carbs: 18, fats: 0.2, unit: '100g', uses: ['snack'] },
   { id: 'limon', name: 'Limón', aliases: ['limon'], category: 'fruta', kcal: 29, protein: 1.1, carbs: 9, fats: 0.3, unit: '100g', uses: ['bebida'] },
-
-  // LÁCTEOS (para batido, snack, desayuno)
   { id: 'yogur', name: 'Yogur griego', aliases: ['yogur'], category: 'lacteo', kcal: 97, protein: 9, carbs: 4, fats: 5, unit: '100g', uses: ['batido', 'snack', 'desayuno'] },
   { id: 'yogur_nat', name: 'Yogur natural', aliases: ['yogur nat'], category: 'lacteo', kcal: 61, protein: 3.5, carbs: 4.7, fats: 3.3, unit: '100g', uses: ['batido', 'snack', 'desayuno'] },
   { id: 'skyr', name: 'Skyr', aliases: ['skyr'], category: 'lacteo', kcal: 63, protein: 11, carbs: 4, fats: 0.2, unit: '100g', uses: ['batido', 'snack', 'desayuno'] },
@@ -236,8 +224,6 @@ export const FOOD_DATABASE: Food[] = [
   { id: 'queso_fresco', name: 'Queso fresco', aliases: ['queso'], category: 'lacteo', kcal: 78, protein: 12, carbs: 4, fats: 1.5, unit: '100g', uses: ['batido', 'snack'] },
   { id: 'mozzarella', name: 'Mozzarella', aliases: ['mozzarella'], category: 'lacteo', kcal: 254, protein: 18, carbs: 3, fats: 19, unit: '100g', uses: ['plato'] },
   { id: 'feta', name: 'Queso feta', aliases: ['feta'], category: 'lacteo', kcal: 264, protein: 14, carbs: 4, fats: 21, unit: '100g', uses: ['plato', 'salteado'] },
-
-  // OTROS
   { id: 'cacao', name: 'Cacao puro', aliases: ['cacao'], category: 'otro', kcal: 228, protein: 20, carbs: 58, fats: 14, unit: '100g', uses: ['batido', 'desayuno'] },
   { id: 'miel', name: 'Miel', aliases: ['miel'], category: 'otro', kcal: 304, protein: 0.3, carbs: 82, fats: 0, unit: '100g', uses: ['desayuno', 'batido'] },
   { id: 'chocolate85', name: 'Chocolate negro 85%', aliases: ['chocolate'], category: 'otro', kcal: 592, protein: 10, carbs: 22, fats: 54, unit: '100g', uses: ['snack'] },
@@ -308,7 +294,6 @@ const searchFoods = (query: string): Food[] => {
   return FOOD_DATABASE.filter(f => f.name.toLowerCase().includes(q) || f.aliases.some(a => a.toLowerCase().includes(q))).slice(0, 5);
 };
 
-// PLANTILLAS DE RECETAS con lógica culinaria correcta
 const RECIPE_TEMPLATES: Record<string, { use: FoodUse; name: string; icon: string; desc: string; neededCats: FoodCategory[] }> = {
   plato_proteina_carbo_verdura: { use: 'plato', name: 'Plato', icon: '🍽️', desc: 'Proteína con carbohidrato y verdura.', neededCats: ['proteina', 'carbo', 'verdura'] },
   plato_proteina_verdura: { use: 'plato', name: 'Salteado', icon: '🥗', desc: 'Salteado proteico con verduras.', neededCats: ['proteina', 'verdura'] },
@@ -321,21 +306,16 @@ const RECIPE_TEMPLATES: Record<string, { use: FoodUse; name: string; icon: strin
   bebida_infusion: { use: 'bebida', name: 'Infusión', icon: '🍵', desc: 'Bebida saludable refrescante.', neededCats: ['fruta'] },
 };
 
-// Genera una receta cogiendo solo alimentos que tengan el "use" requerido
 const generateRecipe = (foods: Food[], templateKey: string, category: string): Recipe | null => {
   const tpl = RECIPE_TEMPLATES[templateKey];
   if (!tpl) return null;
-
-  const candidates: Food[][] = tpl.neededCats.map(cat => 
+  const candidates: Food[][] = tpl.neededCats.map(cat =>
     foods.filter(f => f.category === cat && f.uses.includes(tpl.use))
   );
-
   if (candidates.some(list => list.length === 0)) return null;
-
   const grams: Record<string, number> = { proteina: 150, carbo: 80, grasa: 15, verdura: 100, fruta: 100, lacteo: 150, otro: 20 };
   const chosen: { name: string; grams: number }[] = [];
   let kcal = 0, protein = 0, carbs = 0, fats = 0;
-
   tpl.neededCats.forEach((cat, i) => {
     const food = candidates[i][Math.floor(Math.random() * candidates[i].length)];
     const g = grams[cat] || 100;
@@ -343,7 +323,6 @@ const generateRecipe = (foods: Food[], templateKey: string, category: string): R
     const f = g / 100;
     kcal += food.kcal * f; protein += food.protein * f; carbs += food.carbs * f; fats += food.fats * f;
   });
-
   const main = chosen[0].name.split(' ')[0];
   return {
     id: Math.random().toString(36).substring(2, 11),
@@ -353,25 +332,31 @@ const generateRecipe = (foods: Food[], templateKey: string, category: string): R
   };
 };
 
-// Elige la mejor plantilla según la categoría de receta y los alimentos disponibles
 const generateMeal = (foods: Food[], category: string): Recipe | null => {
   const templates: string[] = [];
-  if (category === 'comida' || category === 'cena') {
-    templates.push('plato_proteina_carbo_verdura', 'plato_proteina_verdura');
-  } else if (category === 'desayuno') {
-    templates.push('desayuno_completo', 'batido_proteico');
-  } else if (category === 'snack') {
-    templates.push('snack_yogur_fruta', 'snack_fruta_seco');
-  } else if (category === 'batido') {
-    templates.push('batido_proteico', 'batido_polvo');
-  } else if (category === 'bebida') {
-    templates.push('bebida_infusion');
-  }
+  if (category === 'comida' || category === 'cena') templates.push('plato_proteina_carbo_verdura', 'plato_proteina_verdura');
+  else if (category === 'desayuno') templates.push('desayuno_completo', 'batido_proteico');
+  else if (category === 'snack') templates.push('snack_yogur_fruta', 'snack_fruta_seco');
+  else if (category === 'batido') templates.push('batido_proteico', 'batido_polvo');
+  else if (category === 'bebida') templates.push('bebida_infusion');
   for (const t of templates) {
     const r = generateRecipe(foods, t, category);
     if (r) return r;
   }
   return null;
+};
+
+// Búsqueda en YouTube
+const getYouTubeUrl = (exerciseName: string, context: ContextType): string => {
+  const ctx = context === 'casa' ? 'en casa' : context === 'gimnasio' ? 'en gimnasio' : 'parque';
+  const query = `${exerciseName} ${ctx} técnica correcta`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+};
+
+// Nombre del material a partir del id
+const getItemName = (id: string): string => {
+  const item = HOME_ITEMS_LIBRARY.find(i => i.id === id);
+  return item ? `${item.icon} ${item.name}` : id;
 };
 
 interface FitAppContextData {
@@ -701,15 +686,28 @@ const Preview: React.FC<{ exercises: Exercise[]; time: number; onStart: (e: Exer
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 800 }}>{ex.muscle.toUpperCase()}</span>
-              <h3 style={{ fontSize: 15, fontWeight: 900, margin: '2px 0 0 0' }}>{ex.name}</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 900, margin: '2px 0 0 0' }}>{ex.emoji} {ex.name}</h3>
             </div>
-            <button onClick={() => swap(i)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171', padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>🩹</button>
+            <button onClick={() => swap(i)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171', padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer', height: 32 }}>🩹</button>
           </div>
-          <div style={{ fontSize: 12, color: '#d4d4d8', background: 'rgba(0,0,0,0.4)', padding: 10, borderRadius: 10, marginBottom: 8 }}><strong>{ex.defaultSets}</strong> series × <strong>{ex.defaultReps}</strong> reps</div>
+          <div style={{ fontSize: 12, color: '#d4d4d8', background: 'rgba(0,0,0,0.4)', padding: 10, borderRadius: 10, marginBottom: 8 }}>
+            <strong>{ex.defaultSets}</strong> series × <strong>{ex.defaultReps}</strong> reps
+          </div>
+          <div style={{ fontSize: 12, color: ex.requiredItems.length === 0 ? '#22c55e' : '#fbbf24', background: 'rgba(0,0,0,0.4)', padding: 10, borderRadius: 10, marginBottom: 8 }}>
+            📦 Material: {ex.requiredItems.length === 0 ? 'Sin material (peso corporal)' : ex.requiredItems.map(i => getItemName(i)).join(' + ')}
+          </div>
+          <a
+            href={getYouTubeUrl(ex.name, profile.context)}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: 'block', textAlign: 'center', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.5)', color: '#f87171', padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 800, textDecoration: 'none', marginBottom: 8 }}
+          >
+            🎥 Ver vídeo en YouTube
+          </a>
           <button onClick={() => setShowTut(showTut === i ? null : i)} style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.3)', color: '#22d3ee', padding: '8px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer', width: '100%' }}>{showTut === i ? '▲ Ocultar tutorial' : '❓ Cómo se hace'}</button>
           {showTut === i && (
             <div style={{ marginTop: 10, background: 'rgba(0,0,0,0.5)', padding: 12, borderRadius: 12 }}>
-              <img src={ex.imageUrl} alt={ex.name} style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10, marginBottom: 10 }} />
+              <img src={ex.imageUrl} alt={ex.name} style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10, marginBottom: 10 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <div style={{ fontSize: 11, color: '#22d3ee', fontWeight: 800, marginBottom: 6 }}>PASOS:</div>
               {ex.steps.map((st, si) => <div key={si} style={{ fontSize: 11, color: '#d4d4d8', marginBottom: 4 }}>{si + 1}. {st}</div>)}
               <div style={{ fontSize: 11, color: '#f87171', fontWeight: 800, marginTop: 8 }}>⚠️ ERROR: {ex.mistakes}</div>
@@ -724,7 +722,7 @@ const Preview: React.FC<{ exercises: Exercise[]; time: number; onStart: (e: Exer
 };
 
 const Player: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
-  const { saveWorkoutLog } = useFitApp();
+  const { saveWorkoutLog, profile } = useFitApp();
   const [sid] = useState(() => Math.random().toString(36).substring(2, 11));
   const [idx, setIdx] = useState(0);
   const [set, setSet] = useState(1);
@@ -732,7 +730,9 @@ const Player: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exe
   const [reps, setReps] = useState(String(exercises[0]?.defaultReps || 10));
   const [resting, setResting] = useState(false);
   const [restTime, setRestTime] = useState(60);
+  const [imgError, setImgError] = useState(false);
   const cur = exercises[idx];
+  useEffect(() => { setImgError(false); }, [idx]);
   useEffect(() => {
     if (!resting) return;
     if (restTime <= 0) { setResting(false); return; }
@@ -767,10 +767,27 @@ const Player: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exe
           <span>Ejercicio {idx + 1}/{exercises.length}</span>
           <span style={{ color: '#22d3ee' }}>Serie {set}/{cur.defaultSets}</span>
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>{cur.name}</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>{cur.emoji} {cur.name}</h2>
         <span style={{ fontSize: 11, color: '#22d3ee', textTransform: 'uppercase', fontWeight: 800 }}>{cur.muscle}</span>
-        <img src={cur.imageUrl} alt={cur.name} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 16, marginTop: 12 }} />
+        {!imgError ? (
+          <img src={cur.imageUrl} alt={cur.name} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 16, marginTop: 12 }} onError={() => setImgError(true)} />
+        ) : (
+          <div style={{ width: '100%', height: 160, borderRadius: 16, marginTop: 12, background: 'linear-gradient(135deg, #0c4a6e, #1e1b4b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72 }}>
+            {cur.emoji}
+          </div>
+        )}
+        <div style={{ fontSize: 12, color: '#fbbf24', background: 'rgba(0,0,0,0.4)', padding: 10, borderRadius: 10, marginTop: 10 }}>
+          📦 Material: {cur.requiredItems.length === 0 ? 'Sin material (peso corporal)' : cur.requiredItems.map(i => getItemName(i)).join(' + ')}
+        </div>
         <div style={{ fontSize: 12, color: '#d4d4d8', background: 'rgba(0,0,0,0.4)', padding: 12, borderRadius: 12, marginTop: 10 }}>{cur.description}</div>
+        <a
+          href={getYouTubeUrl(cur.name, profile.context)}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: 'block', textAlign: 'center', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.5)', color: '#f87171', padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 800, textDecoration: 'none', marginTop: 10 }}
+        >
+          🎥 Ver vídeo en YouTube
+        </a>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
           <div><label style={s.label}>Peso (kg)</label><input type="number" value={weight} onChange={e => setWeight(e.target.value)} style={{ ...s.input, marginBottom: 0 }} /></div>
           <div><label style={s.label}>Reps</label><input type="number" value={reps} onChange={e => setReps(e.target.value)} style={{ ...s.input, marginBottom: 0 }} /></div>
@@ -1096,7 +1113,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP</span>
-        <span style={s.badge}>v10.1 RECETAS OK</span>
+        <span style={s.badge}>v10.2 VÍDEOS YT</span>
       </header>
       <main>
         {active ? <Player exercises={active} onFinish={() => setActive(null)} />
