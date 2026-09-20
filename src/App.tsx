@@ -1,35 +1,19 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  Component,
-  ErrorInfo,
-  ReactNode,
-} from 'react';
+import React, { createContext, useContext, useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props { children: ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = { hasError: false, error: null };
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-  }
+  public static getDerivedStateFromError(error: Error): State { return { hasError: true, error }; }
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) { console.error('Error:', error, errorInfo); }
   public render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 20, backgroundColor: '#7f1d1d', color: '#fff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+        <div style={{ padding: 20, backgroundColor: '#7f1d1d', color: '#fff', minHeight: '100vh' }}>
           <h2>¡Algo ha fallado!</h2>
-          <p style={{ fontSize: 12, background: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 8, wordBreak: 'break-all' }}>
-            {this.state.error?.toString()}
-          </p>
-          <button onClick={() => { localStorage.clear(); window.location.reload(); }} style={{ marginTop: 20, padding: 12, background: '#fff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer' }}>
-            Limpiar datos y reiniciar
-          </button>
+          <p style={{ fontSize: 12 }}>{this.state.error?.toString()}</p>
+          <button onClick={() => { localStorage.clear(); window.location.reload(); }} style={{ marginTop: 20, padding: 12, background: '#fff', color: '#000', border: 'none', borderRadius: 8, fontWeight: 'bold' }}>Limpiar y reiniciar</button>
         </div>
       );
     }
@@ -38,184 +22,217 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mantener';
-export type ExperienceLevel = 'Principiante' | 'Intermedio' | 'Avanzado';
 export type ContextType = 'casa' | 'gimnasio' | 'fuera_de_casa';
 export type FoodCategory = 'proteina' | 'carbo' | 'grasa' | 'verdura' | 'fruta' | 'lacteo' | 'otro';
 
-export interface HomeItem {
-  id: string; name: string; icon: string; context: ContextType;
-  category: string; description: string;
-}
-
+export interface HomeItem { id: string; name: string; icon: string; context: ContextType; category: string; description: string; }
 export interface WeeklyRoutineDay { dayName: string; muscles: string[]; isRestDay: boolean; }
-
 export interface UserProfile {
   name: string; age: number; gender: string; height: number; weight: number;
-  experience: ExperienceLevel; goal: Goal; daysAvailable: number; context: ContextType;
-  homeItems: string[]; weeklyRoutine: WeeklyRoutineDay[];
+  goal: Goal; context: ContextType; homeItems: string[]; weeklyRoutine: WeeklyRoutineDay[];
   pantryIngredients: string[]; hiddenFoods: string[]; hiddenExercises: string[]; hiddenHomeItems: string[];
 }
-
 export interface Exercise {
   id: string; name: string; muscle: string; defaultSets: number; defaultReps: number;
   defaultWeight: string; context: ContextType[]; requiredItems: string[];
-  level: ExperienceLevel; type: 'generico' | 'especifico';
-  description: string; steps: string[]; mistakes: string; tip: string; imageUrl: string;
-  isCustom?: boolean;
+  level: string; description: string; steps: string[]; mistakes: string; tip: string; imageUrl: string;
 }
-
 export interface WorkoutSetLog { setNumber: number; weight: number; reps: number; completed: boolean; }
 export interface WorkoutLogRecord { id: string; sessionId: string; date: string; exerciseName: string; sets: WorkoutSetLog[]; }
+export interface Food { id: string; name: string; aliases: string[]; category: FoodCategory; kcal: number; protein: number; carbs: number; fats: number; unit: string; }
+export interface Recipe { id: string; name: string; category: string; ingredients: { name: string; grams: number }[]; kcal: number; protein: number; carbs: number; fats: number; desc: string; icon: string; }
+export interface WeeklyMenuDay { dayName: string; meals: { desayuno: Recipe | null; comida: Recipe | null; cena: Recipe | null; snack: Recipe | null; }; }
 
-export interface Food {
-  id: string; name: string; aliases: string[]; category: FoodCategory;
-  kcal: number; protein: number; carbs: number; fats: number; unit: string;
-  isCustom?: boolean;
-}
-
-export interface Recipe {
-  id: string; name: string; category: 'desayuno' | 'comida' | 'cena' | 'snack' | 'batido' | 'bebida';
-  ingredients: { name: string; grams: number }[];
-  kcal: number; protein: number; carbs: number; fats: number;
-  desc: string; icon: string;
-}
-
-export interface WeeklyMenuDay {
-  dayName: string;
-  meals: { desayuno: Recipe | null; comida: Recipe | null; cena: Recipe | null; snack: Recipe | null; };
-}
-
-// ==========================================
-// BIBLIOTECA DE MATERIALES (18)
-// ==========================================
 export const HOME_ITEMS_LIBRARY: HomeItem[] = [
-  { id: 'silla', name: 'Silla', icon: '🪑', context: 'casa', category: 'mueble', description: 'Silla firme sin ruedas' },
-  { id: 'sofa', name: 'Sofá', icon: '🛋️', context: 'casa', category: 'mueble', description: 'Sofá o sillón bajo' },
+  { id: 'silla', name: 'Silla', icon: '🪑', context: 'casa', category: 'mueble', description: 'Silla firme' },
+  { id: 'sofa', name: 'Sofá', icon: '🛋️', context: 'casa', category: 'mueble', description: 'Sofá bajo' },
   { id: 'mesa', name: 'Mesa', icon: '🪵', context: 'casa', category: 'mueble', description: 'Mesa firme' },
-  { id: 'mochila', name: 'Mochila', icon: '🎒', context: 'casa', category: 'peso', description: 'Con libros o botellas' },
+  { id: 'cama', name: 'Cama', icon: '🛏️', context: 'casa', category: 'mueble', description: 'Cama o colchón' },
+  { id: 'pared', name: 'Pared', icon: '🧱', context: 'casa', category: 'estructura', description: 'Pared firme' },
+  { id: 'puerta', name: 'Marco puerta', icon: '🚪', context: 'casa', category: 'estructura', description: 'Marco firme' },
+  { id: 'escaleras', name: 'Escaleras', icon: '🪜', context: 'casa', category: 'estructura', description: 'Escaleras' },
+  { id: 'mochila', name: 'Mochila', icon: '🎒', context: 'casa', category: 'peso', description: 'Con libros' },
   { id: 'botellas', name: 'Botellas agua', icon: '🍶', context: 'casa', category: 'peso', description: 'Botellas 1.5L' },
-  { id: 'gomas', name: 'Gomas elásticas', icon: '🔗', context: 'casa', category: 'accesorio', description: 'Bandas de resistencia' },
-  { id: 'escaleras', name: 'Escaleras', icon: '🪜', context: 'casa', category: 'estructura', description: 'Escaleras o escalón' },
-  { id: 'esterilla', name: 'Esterilla', icon: '🧘', context: 'casa', category: 'accesorio', description: 'Esterilla de yoga' },
-
-  { id: 'mancuernas', name: 'Mancuernas', icon: '🏋️', context: 'gimnasio', category: 'peso', description: 'Mancuernas varias' },
-  { id: 'barra', name: 'Barra y discos', icon: '➖', context: 'gimnasio', category: 'peso', description: 'Barra olímpica con discos' },
-  { id: 'banco', name: 'Banco', icon: '🛏️', context: 'gimnasio', category: 'mueble', description: 'Banco plano o inclinado' },
-  { id: 'polea', name: 'Polea', icon: '🎣', context: 'gimnasio', category: 'maquina', description: 'Polea alta o baja' },
-  { id: 'rack', name: 'Rack', icon: '🛗', context: 'gimnasio', category: 'estructura', description: 'Rack de sentadillas' },
-  { id: 'prensa', name: 'Prensa piernas', icon: '🦵', context: 'gimnasio', category: 'maquina', description: 'Prensa 45º' },
-
-  { id: 'barra_parque', name: 'Barra parque', icon: '🌳', context: 'fuera_de_casa', category: 'estructura', description: 'Barra de calistenia' },
-  { id: 'banco_publico', name: 'Banco público', icon: '🪑', context: 'fuera_de_casa', category: 'mueble', description: 'Banco de parque' },
-  { id: 'escaleras_parque', name: 'Escaleras parque', icon: '🪜', context: 'fuera_de_casa', category: 'estructura', description: 'Escaleras al aire libre' },
-  { id: 'espacio_abierto', name: 'Espacio abierto', icon: '🌅', context: 'fuera_de_casa', category: 'estructura', description: 'Zona amplia' },
+  { id: 'garrafa', name: 'Garrafa 5L', icon: '🪣', context: 'casa', category: 'peso', description: 'Garrafa' },
+  { id: 'gomas', name: 'Gomas elásticas', icon: '🔗', context: 'casa', category: 'accesorio', description: 'Bandas' },
+  { id: 'bandas', name: 'Bandas resistencia', icon: '🎗️', context: 'casa', category: 'accesorio', description: 'Bandas' },
+  { id: 'esterilla', name: 'Esterilla', icon: '🧘', context: 'casa', category: 'accesorio', description: 'Yoga mat' },
+  { id: 'toalla', name: 'Toalla', icon: '🧻', context: 'casa', category: 'accesorio', description: 'Toalla' },
+  { id: 'pelota_pilates', name: 'Pelota pilates', icon: '⚪', context: 'casa', category: 'accesorio', description: 'Pelota' },
+  { id: 'cuerda_saltar', name: 'Cuerda saltar', icon: '🪢', context: 'casa', category: 'cardio', description: 'Cuerda' },
+  { id: 'trx_casero', name: 'TRX casero', icon: '🪢', context: 'casa', category: 'accesorio', description: 'TRX' },
+  { id: 'barra_puerta', name: 'Barra puerta', icon: '🚪', context: 'casa', category: 'estructura', description: 'Barra' },
+  { id: 'nevera', name: 'Nevera', icon: '🧊', context: 'casa', category: 'cocina', description: 'Nevera' },
+  { id: 'espejo', name: 'Espejo', icon: '🪞', context: 'casa', category: 'accesorio', description: 'Espejo' },
+  { id: 'mancuernas', name: 'Mancuernas', icon: '🏋️', context: 'gimnasio', category: 'peso', description: 'Mancuernas' },
+  { id: 'mancuernas_ajust', name: 'Mancuernas ajustables', icon: '⚙️', context: 'gimnasio', category: 'peso', description: 'Regulables' },
+  { id: 'barra', name: 'Barra olímpica', icon: '➖', context: 'gimnasio', category: 'peso', description: 'Barra 20kg' },
+  { id: 'discos', name: 'Discos', icon: '⚫', context: 'gimnasio', category: 'peso', description: 'Discos' },
+  { id: 'kettlebell', name: 'Kettlebell', icon: '🔔', context: 'gimnasio', category: 'peso', description: 'Pesa rusa' },
+  { id: 'banco', name: 'Banco plano', icon: '🛏️', context: 'gimnasio', category: 'mueble', description: 'Banco' },
+  { id: 'banco_incl', name: 'Banco inclinado', icon: '📐', context: 'gimnasio', category: 'mueble', description: 'Banco incl' },
+  { id: 'rack', name: 'Rack sentadillas', icon: '🛗', context: 'gimnasio', category: 'estructura', description: 'Rack' },
+  { id: 'polea_alta', name: 'Polea alta', icon: '🎣', context: 'gimnasio', category: 'maquina', description: 'Polea alta' },
+  { id: 'polea_baja', name: 'Polea baja', icon: '🎣', context: 'gimnasio', category: 'maquina', description: 'Polea baja' },
+  { id: 'smith', name: 'Máquina Smith', icon: '🏗️', context: 'gimnasio', category: 'maquina', description: 'Smith' },
+  { id: 'prensa', name: 'Prensa piernas', icon: '🦵', context: 'gimnasio', category: 'maquina', description: 'Prensa' },
+  { id: 'hack', name: 'Hack squat', icon: '🦿', context: 'gimnasio', category: 'maquina', description: 'Hack' },
+  { id: 'trx', name: 'TRX', icon: '🪢', context: 'gimnasio', category: 'accesorio', description: 'TRX' },
+  { id: 'cajon', name: 'Cajón pliométrico', icon: '📦', context: 'gimnasio', category: 'estructura', description: 'Cajón' },
+  { id: 'banda_gym', name: 'Banda gym', icon: '🎗️', context: 'gimnasio', category: 'accesorio', description: 'Banda' },
+  { id: 'barra_dominadas', name: 'Barra dominadas', icon: '🏗️', context: 'gimnasio', category: 'estructura', description: 'Barra fija' },
+  { id: 'cinta', name: 'Cinta correr', icon: '🏃', context: 'gimnasio', category: 'cardio', description: 'Treadmill' },
+  { id: 'bici', name: 'Bici estática', icon: '🚴', context: 'gimnasio', category: 'cardio', description: 'Bici' },
+  { id: 'remo_maquina', name: 'Máquina remo', icon: '🚣', context: 'gimnasio', category: 'cardio', description: 'Remo' },
+  { id: 'barra_parque', name: 'Barra parque', icon: '🌳', context: 'fuera_de_casa', category: 'estructura', description: 'Barra calistenia' },
+  { id: 'banco_publico', name: 'Banco público', icon: '🪑', context: 'fuera_de_casa', category: 'mueble', description: 'Banco parque' },
+  { id: 'escaleras_parque', name: 'Escaleras parque', icon: '🪜', context: 'fuera_de_casa', category: 'estructura', description: 'Escaleras' },
+  { id: 'cuesta', name: 'Cuesta', icon: '⛰️', context: 'fuera_de_casa', category: 'estructura', description: 'Pendiente' },
+  { id: 'arena', name: 'Arena', icon: '🏖️', context: 'fuera_de_casa', category: 'estructura', description: 'Arena' },
+  { id: 'columpio', name: 'Columpio', icon: '🎠', context: 'fuera_de_casa', category: 'estructura', description: 'Columpio' },
+  { id: 'valla', name: 'Valla baja', icon: '🚧', context: 'fuera_de_casa', category: 'estructura', description: 'Valla' },
+  { id: 'arbol', name: 'Árbol rama', icon: '🌲', context: 'fuera_de_casa', category: 'estructura', description: 'Rama' },
+  { id: 'muro', name: 'Muro bajo', icon: '🧱', context: 'fuera_de_casa', category: 'estructura', description: 'Muro' },
+  { id: 'terreno', name: 'Terreno irregular', icon: '🌄', context: 'fuera_de_casa', category: 'estructura', description: 'Desniveles' },
+  { id: 'campo', name: 'Campo fútbol', icon: '⚽', context: 'fuera_de_casa', category: 'estructura', description: 'Campo' },
+  { id: 'parque_inf', name: 'Parque infantil', icon: '🛝', context: 'fuera_de_casa', category: 'estructura', description: 'Parque' },
+  { id: 'espacio', name: 'Espacio abierto', icon: '🌅', context: 'fuera_de_casa', category: 'estructura', description: 'Espacio' },
+  { id: 'pergola', name: 'Banco pérgola', icon: '🏛️', context: 'fuera_de_casa', category: 'estructura', description: 'Pérgola' },
+  { id: 'plaza', name: 'Plaza juegos', icon: '🎡', context: 'fuera_de_casa', category: 'estructura', description: 'Plaza' },
 ];
 
-// ==========================================
-// EJERCICIOS (20)
-// ==========================================
 export const MASTER_EXERCISES: Exercise[] = [
-  // PIERNAS
-  { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', type: 'generico', description: 'Ejercicio básico de piernas.', steps: ['Pies al ancho de caderas', 'Baja la cadera como si te sentaras', 'Rodillas alineadas con pies', 'Sube empujando talones'], mistakes: 'Rodillas hacia dentro o talones despegados.', tip: 'Baja hasta que los muslos queden paralelos al suelo.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_02', name: 'Zancadas', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', type: 'generico', description: 'Trabajo unilateral de piernas.', steps: ['Da un paso al frente', 'Baja la rodilla trasera', 'Vuelve empujando con talón delantero', 'Alterna piernas'], mistakes: 'Inclinar el torso hacia delante.', tip: 'Mantén el torso recto y mira al frente.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_03', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', type: 'generico', description: 'Sentadilla con pie elevado.', steps: ['Empeine trasero en silla', 'Pie delantero a 60 cm', 'Baja flexionando rodilla delantera', 'Sube con el talón'], mistakes: 'Apoyar peso en la silla.', tip: 'Apóyate en una pared si te falta equilibrio.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_04', name: 'Hip thrust', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['sofa'], level: 'Intermedio', type: 'generico', description: 'Aislamiento de glúteos.', steps: ['Espalda alta en el sofá', 'Pies al ancho de caderas', 'Baja la cadera sin tocar el suelo', 'Sube apretando glúteos'], mistakes: 'Empujar con lumbar en vez de glúteos.', tip: 'Aprieta el glúteo 2 segundos arriba.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-  { id: 'leg_05', name: 'Peso muerto', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['barra'], level: 'Avanzado', type: 'especifico', description: 'Cadena posterior con barra.', steps: ['Barra cerca de espinillas', 'Bisagra de cadera con espalda recta', 'Agarra la barra', 'Sube extendiendo cadera y rodillas'], mistakes: 'Redondear la espalda.', tip: 'Empuja el suelo con los pies.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'leg_06', name: 'Step-ups', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['escaleras'], level: 'Principiante', type: 'generico', description: 'Subida a escalón.', steps: ['Apoya pie completo en escalón', 'Sube empujando con ese pie', 'Baja controlado', 'Alterna piernas'], mistakes: 'Impulsarse con la pierna de abajo.', tip: 'Controla la bajada, no te dejes caer.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
-
-  // PECHO
-  { id: 'chest_01', name: 'Flexiones', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', type: 'generico', description: 'Pecho con peso corporal.', steps: ['Manos a la altura de hombros', 'Cuerpo recto', 'Baja el pecho al suelo', 'Sube empujando palmas'], mistakes: 'Cadera arriba o abajo.', tip: 'Codos a 45º del torso.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'chest_02', name: 'Flexiones inclinadas', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['mesa'], level: 'Principiante', type: 'generico', description: 'Flexiones con manos elevadas.', steps: ['Manos en la mesa', 'Cuerpo diagonal recto', 'Baja pecho a la mesa', 'Sube controlado'], mistakes: 'Cadera caída.', tip: 'Cuanto más alto, más fácil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'chest_03', name: 'Press banca', muscle: 'pecho', defaultSets: 4, defaultReps: 10, defaultWeight: '40', context: ['gimnasio'], requiredItems: ['barra', 'banco'], level: 'Intermedio', type: 'especifico', description: 'Press banca con barra.', steps: ['Túmbate con pies firmes', 'Agarre más ancho que hombros', 'Baja barra al pecho', 'Empuja a extensión'], mistakes: 'Rebotar la barra.', tip: 'Retrae escápulas y arquea ligeramente.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-  { id: 'chest_04', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', type: 'generico', description: 'Fondos con silla.', steps: ['Manos en el borde de la silla', 'Piernas extendidas', 'Baja flexionando codos', 'Sube empujando'], mistakes: 'Codos abiertos a 90º.', tip: 'Cuanto más lejos los pies, más difícil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-
-  // ESPALDA
-  { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', type: 'generico', description: 'Remo con peso improvisado.', steps: ['Mochila cargada con libros', 'Bisagra cadera a 45º', 'Tira mochila al pecho', 'Baja controlado'], mistakes: 'Tirar con la lumbar.', tip: 'Junta escápulas al final.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'back_02', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', type: 'generico', description: 'Extensión lumbar.', steps: ['Boca abajo en el suelo', 'Brazos extendidos al frente', 'Eleva brazos y piernas', 'Mantén 2 seg'], mistakes: 'Forzar el cuello.', tip: 'Mira al suelo para no tensionar cuello.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'back_03', name: 'Remo con gomas', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['gomas'], level: 'Principiante', type: 'generico', description: 'Remo con banda.', steps: ['Ancla la goma', 'Siéntate o de pie', 'Tira al pecho', 'Vuelve controlado'], mistakes: 'Usar el torso para tirar.', tip: 'Ajusta distancia para sentir tensión.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'back_04', name: 'Dominadas', muscle: 'espalda', defaultSets: 4, defaultReps: 6, defaultWeight: '0', context: ['gimnasio', 'fuera_de_casa'], requiredItems: ['barra_parque'], level: 'Avanzado', type: 'generico', description: 'Dominadas en barra.', steps: ['Agarre prono ancho', 'Cuélgate con brazos extendidos', 'Tira hasta que barbilla pase barra', 'Baja controlado'], mistakes: 'Balanceo del cuerpo.', tip: 'Usa banda elástica si no puedes ninguna.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-
-  // HOMBROS
-  { id: 'sh_01', name: 'Press militar mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', type: 'generico', description: 'Press vertical con mochila.', steps: ['Mochila a la altura pecho', 'Empuja arriba', 'Bloquea brazos', 'Baja controlado'], mistakes: 'Arquear la lumbar.', tip: 'Activa core para no arquear.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
-  { id: 'sh_02', name: 'Elevaciones laterales', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', type: 'generico', description: 'Deltoides lateral.', steps: ['Botellas a los lados', 'Eleva brazos a altura hombros', 'Baja controlado'], mistakes: 'Subir por encima de hombros.', tip: 'Imagina verter agua al subir.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
-
-  // BÍCEPS/TRÍCEPS
-  { id: 'bic_01', name: 'Curl botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', type: 'generico', description: 'Curl de bíceps.', steps: ['Botellas a los lados', 'Codos pegados al torso', 'Sube botellas', 'Baja controlado'], mistakes: 'Balancear el cuerpo.', tip: 'Aprieta el bíceps arriba.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
-  { id: 'tri_01', name: 'Fondos banco', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa', 'gimnasio'], requiredItems: ['banco_publico'], level: 'Principiante', type: 'generico', description: 'Fondos en banco.', steps: ['Manos en banco', 'Piernas extendidas', 'Baja codos', 'Sube controlado'], mistakes: 'Codos abiertos.', tip: 'Talones en suelo si es muy difícil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
-
-  // CORE
-  { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', type: 'generico', description: 'Isométrico de core.', steps: ['Apoyo antebrazos y puntas pies', 'Cuerpo recto', 'Abdomen contraído', 'Mantén la posición'], mistakes: 'Cadera elevada o caída.', tip: 'Aprieta glúteos para estabilizar.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
-  { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', type: 'generico', description: 'Core dinámico.', steps: ['Posición flexión', 'Rodilla al pecho', 'Alterna rápido'], mistakes: 'Cadera muy alta.', tip: 'Imagina correr en plancha.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
-  { id: 'card_01', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Avanzado', type: 'generico', description: 'Cardio completo.', steps: ['De pie a cuclillas', 'Salta a plancha', 'Flexión opcional', 'Salta arriba'], mistakes: 'No completar salto.', tip: 'Haz por tiempo si eres principiante.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
+  { id: 'leg_01', name: 'Sentadillas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Ejercicio básico de piernas.', steps: ['Pies al ancho de caderas', 'Baja la cadera como si te sentaras', 'Rodillas alineadas con pies', 'Sube empujando talones'], mistakes: 'Rodillas hacia dentro o talones despegados.', tip: 'Baja hasta muslos paralelos.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'leg_02', name: 'Zancadas', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Trabajo unilateral.', steps: ['Paso al frente', 'Baja la rodilla trasera', 'Vuelve con talón delantero', 'Alterna piernas'], mistakes: 'Inclinar el torso.', tip: 'Mantén torso recto.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'leg_03', name: 'Sentadilla búlgara', muscle: 'piernas', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', description: 'Unilateral con pie elevado.', steps: ['Empeine trasero en silla', 'Pie delantero a 60 cm', 'Baja flexionando', 'Sube con talón'], mistakes: 'Apoyar peso en silla.', tip: 'Apóyate en pared si falta equilibrio.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'leg_04', name: 'Hip thrust', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['sofa'], level: 'Intermedio', description: 'Aislamiento glúteos.', steps: ['Espalda alta en sofá', 'Pies al ancho caderas', 'Baja cadera', 'Sube apretando glúteos'], mistakes: 'Empujar con lumbar.', tip: 'Aprieta glúteo 2 seg arriba.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'leg_05', name: 'Peso muerto', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['barra'], level: 'Avanzado', description: 'Cadena posterior.', steps: ['Barra cerca espinillas', 'Bisagra cadera', 'Agarra barra', 'Sube extendiendo'], mistakes: 'Redondear espalda.', tip: 'Empuja suelo con pies.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'leg_06', name: 'Step-ups', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['escaleras'], level: 'Principiante', description: 'Subida escalón.', steps: ['Apoya pie completo', 'Sube empujando', 'Baja controlado', 'Alterna'], mistakes: 'Impulsarse.', tip: 'Controla bajada.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'chest_01', name: 'Flexiones', muscle: 'pecho', defaultSets: 4, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Pecho peso corporal.', steps: ['Manos altura hombros', 'Cuerpo recto', 'Baja pecho', 'Sube empujando'], mistakes: 'Cadera arriba/abajo.', tip: 'Codos a 45º.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
+  { id: 'chest_02', name: 'Flexiones inclinadas', muscle: 'pecho', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['mesa'], level: 'Principiante', description: 'Flexiones manos elevadas.', steps: ['Manos en mesa', 'Cuerpo diagonal', 'Baja pecho', 'Sube controlado'], mistakes: 'Cadera caída.', tip: 'Más alto más fácil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
+  { id: 'chest_03', name: 'Press banca', muscle: 'pecho', defaultSets: 4, defaultReps: 10, defaultWeight: '40', context: ['gimnasio'], requiredItems: ['barra', 'banco'], level: 'Intermedio', description: 'Press con barra.', steps: ['Pies firmes', 'Agarre ancho', 'Baja barra', 'Empuja extensión'], mistakes: 'Rebotar barra.', tip: 'Retrae escápulas.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
+  { id: 'chest_04', name: 'Fondos en silla', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'fuera_de_casa'], requiredItems: ['silla'], level: 'Intermedio', description: 'Fondos silla.', steps: ['Manos borde silla', 'Piernas extendidas', 'Baja flexionando', 'Sube empujando'], mistakes: 'Codos abiertos.', tip: 'Pies lejos más difícil.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
+  { id: 'back_01', name: 'Remo con mochila', muscle: 'espalda', defaultSets: 4, defaultReps: 12, defaultWeight: '10', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Remo peso improvisado.', steps: ['Mochila cargada', 'Bisagra 45º', 'Tira al pecho', 'Baja controlado'], mistakes: 'Tirar con lumbar.', tip: 'Junta escápulas.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'back_02', name: 'Superman', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Extensión lumbar.', steps: ['Boca abajo', 'Brazos al frente', 'Eleva brazos y piernas', 'Mantén 2 seg'], mistakes: 'Forzar cuello.', tip: 'Mira al suelo.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'back_03', name: 'Remo con gomas', muscle: 'espalda', defaultSets: 3, defaultReps: 15, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['gomas'], level: 'Principiante', description: 'Remo banda.', steps: ['Ancla goma', 'Siéntate o de pie', 'Tira al pecho', 'Vuelve controlado'], mistakes: 'Usar torso.', tip: 'Ajusta distancia.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'back_04', name: 'Dominadas', muscle: 'espalda', defaultSets: 4, defaultReps: 6, defaultWeight: '0', context: ['gimnasio', 'fuera_de_casa'], requiredItems: ['barra_parque'], level: 'Avanzado', description: 'Dominadas en barra.', steps: ['Agarre prono', 'Cuélgate', 'Tira hasta barbilla', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Usa banda.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'back_05', name: 'Jalón al pecho', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], requiredItems: ['polea_alta'], level: 'Intermedio', description: 'Jalón polea.', steps: ['Siéntate', 'Agarre ancho', 'Tira al pecho', 'Vuelve'], mistakes: 'Tirar con brazos.', tip: 'Codos abajo.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'sh_01', name: 'Press militar mochila', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '8', context: ['casa'], requiredItems: ['mochila'], level: 'Intermedio', description: 'Press vertical.', steps: ['Mochila al pecho', 'Empuja arriba', 'Bloquea', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Activa core.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
+  { id: 'sh_02', name: 'Elevaciones laterales', muscle: 'hombros', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Deltoides lateral.', steps: ['Botellas a los lados', 'Eleva altura hombros', 'Baja controlado'], mistakes: 'Subir por encima.', tip: 'Imagina verter agua.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
+  { id: 'sh_03', name: 'Press banca militar', muscle: 'hombros', defaultSets: 4, defaultReps: 8, defaultWeight: '30', context: ['gimnasio'], requiredItems: ['barra', 'banco_incl'], level: 'Intermedio', description: 'Press militar barra.', steps: ['Siéntate banco', 'Barra clavículas', 'Empuja arriba', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Aprieta core.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
+  { id: 'bic_01', name: 'Curl botellas', muscle: 'biceps', defaultSets: 3, defaultReps: 15, defaultWeight: '2', context: ['casa', 'gimnasio'], requiredItems: ['botellas'], level: 'Principiante', description: 'Curl bíceps.', steps: ['Botellas a los lados', 'Codos pegados', 'Sube botellas', 'Baja controlado'], mistakes: 'Balancear.', tip: 'Aprieta arriba.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'bic_02', name: 'Curl con barra', muscle: 'biceps', defaultSets: 3, defaultReps: 10, defaultWeight: '20', context: ['gimnasio'], requiredItems: ['barra'], level: 'Principiante', description: 'Curl barra.', steps: ['De pie', 'Agarre supino', 'Sube barra', 'Baja controlado'], mistakes: 'Balancear.', tip: 'Codos fijos.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'tri_01', name: 'Fondos banco', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa', 'gimnasio'], requiredItems: ['banco_publico'], level: 'Principiante', description: 'Fondos banco.', steps: ['Manos en banco', 'Piernas extendidas', 'Baja codos', 'Sube'], mistakes: 'Codos abiertos.', tip: 'Talones al suelo.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
+  { id: 'tri_02', name: 'Extensión tríceps polea', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '20', context: ['gimnasio'], requiredItems: ['polea_alta'], level: 'Principiante', description: 'Extensión polea.', steps: ['Frente polea', 'Codos pegados', 'Extiende abajo', 'Vuelve controlado'], mistakes: 'Mover codos.', tip: 'Separa cuerda.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
+  { id: 'core_01', name: 'Plancha frontal', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Isométrico core.', steps: ['Antebrazos y puntas pies', 'Cuerpo recto', 'Abdomen contraído', 'Mantén'], mistakes: 'Cadera elevada.', tip: 'Aprieta glúteos.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
+  { id: 'core_02', name: 'Mountain climbers', muscle: 'core', defaultSets: 3, defaultReps: 30, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Intermedio', description: 'Core dinámico.', steps: ['Posición flexión', 'Rodilla al pecho', 'Alterna rápido'], mistakes: 'Cadera alta.', tip: 'Corre en plancha.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
+  { id: 'core_03', name: 'Elevación piernas', muscle: 'core', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: [], level: 'Intermedio', description: 'Abdomen inferior.', steps: ['Boca arriba', 'Piernas rectas', 'Eleva a 90º', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Flexiona rodillas si cuesta.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
+  { id: 'card_01', name: 'Jumping jacks', muscle: 'cardio', defaultSets: 3, defaultReps: 40, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Principiante', description: 'Cardio clásico.', steps: ['Pies juntos', 'Salta abriendo', 'Vuelve', 'Ritmo constante'], mistakes: 'Saltos pequeños.', tip: 'Aterriza rodillas flexionadas.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
+  { id: 'card_02', name: 'Burpees', muscle: 'cardio', defaultSets: 3, defaultReps: 10, defaultWeight: '0', context: ['casa', 'gimnasio', 'fuera_de_casa'], requiredItems: [], level: 'Avanzado', description: 'Cardio completo.', steps: ['De pie a cuclillas', 'Salta a plancha', 'Flexión opcional', 'Salta arriba'], mistakes: 'No completar.', tip: 'Por tiempo si novato.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
+  { id: 'card_03', name: 'Salto cuerda', muscle: 'cardio', defaultSets: 3, defaultReps: 60, defaultWeight: '0', context: ['casa', 'gimnasio'], requiredItems: ['cuerda_saltar'], level: 'Principiante', description: 'Cardio cuerda.', steps: ['Cuerda detrás', 'Salta con muñecas', 'Ritmo constante'], mistakes: 'Saltos altos.', tip: 'Salta 2 cm.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
+  { id: 'gym_sent', name: 'Sentadilla con barra', muscle: 'piernas', defaultSets: 4, defaultReps: 8, defaultWeight: '60', context: ['gimnasio'], requiredItems: ['barra', 'rack'], level: 'Avanzado', description: 'Sentadilla trasera.', steps: ['Barra trapecios', 'Pies al ancho', 'Baja controlado', 'Sube talones'], mistakes: 'Rodillas dentro.', tip: 'Respira profundo.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'gym_prensa', name: 'Prensa piernas', muscle: 'piernas', defaultSets: 4, defaultReps: 12, defaultWeight: '100', context: ['gimnasio'], requiredItems: ['prensa'], level: 'Principiante', description: 'Prensa.', steps: ['Siéntate', 'Pies en plataforma', 'Empuja', 'Baja controlado'], mistakes: 'Bloquear rodillas.', tip: 'No estires del todo.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'gym_remo', name: 'Remo con barra', muscle: 'espalda', defaultSets: 4, defaultReps: 10, defaultWeight: '50', context: ['gimnasio'], requiredItems: ['barra'], level: 'Intermedio', description: 'Remo inclinado.', steps: ['Bisagra 45º', 'Agarra barra', 'Tira abdomen', 'Baja controlado'], mistakes: 'Torso erguido.', tip: 'Junta escápulas.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'gym_hack', name: 'Hack squat', muscle: 'piernas', defaultSets: 4, defaultReps: 10, defaultWeight: '60', context: ['gimnasio'], requiredItems: ['hack'], level: 'Intermedio', description: 'Sentadilla hack.', steps: ['Espalda apoyada', 'Pies plataforma', 'Baja controlado', 'Sube extendiendo'], mistakes: 'Talones despegados.', tip: 'Bueno para cuádriceps.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'gym_goblet', name: 'Goblet squat', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '16', context: ['gimnasio'], requiredItems: ['kettlebell'], level: 'Principiante', description: 'Sentadilla kettlebell.', steps: ['Kettlebell pecho', 'Pies al ancho', 'Baja controlado', 'Sube empujando'], mistakes: 'Torso inclinado.', tip: 'Codos entre rodillas.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'out_sprint', name: 'Sprints cuesta', muscle: 'cardio', defaultSets: 6, defaultReps: 1, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['cuesta'], level: 'Intermedio', description: 'Sprint pendiente.', steps: ['Calienta 5 min', 'Sprint 20-30m', 'Baja caminando', 'Repite'], mistakes: 'No calentar.', tip: 'Bueno para grasa.', imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400' },
+  { id: 'out_fondos', name: 'Fondos banco parque', muscle: 'triceps', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['banco_publico'], level: 'Principiante', description: 'Fondos aire libre.', steps: ['Manos banco', 'Piernas extendidas', 'Baja codos', 'Sube'], mistakes: 'Codos abiertos.', tip: 'Talones al suelo.', imageUrl: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400' },
+  { id: 'out_dominadas', name: 'Dominadas parque', muscle: 'espalda', defaultSets: 4, defaultReps: 6, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['barra_parque'], level: 'Intermedio', description: 'Dominadas outdoor.', steps: ['Agarre prono', 'Cuélgate', 'Tira barbilla', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Banda si no puedes.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'out_step', name: 'Step-ups escalón parque', muscle: 'piernas', defaultSets: 3, defaultReps: 12, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['escaleras_parque'], level: 'Principiante', description: 'Subida outdoor.', steps: ['Apoya pie', 'Sube empujando', 'Baja controlado', 'Alterna'], mistakes: 'Impulsarse.', tip: 'Controla bajada.', imageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400' },
+  { id: 'out_plancha', name: 'Plancha en arena', muscle: 'core', defaultSets: 3, defaultReps: 1, defaultWeight: '0', context: ['fuera_de_casa'], requiredItems: ['arena'], level: 'Intermedio', description: 'Plancha inestable.', steps: ['Antebrazos arena', 'Cuerpo recto', 'Abdomen contraído', 'Mantén'], mistakes: 'Cadera elevada.', tip: 'Aprieta core.', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400' },
+  { id: 'gym_curl_manc', name: 'Curl mancuernas', muscle: 'biceps', defaultSets: 3, defaultReps: 12, defaultWeight: '10', context: ['gimnasio'], requiredItems: ['mancuernas'], level: 'Principiante', description: 'Curl mancuernas.', steps: ['Mancuernas a los lados', 'Codos pegados', 'Sube girando', 'Baja controlado'], mistakes: 'Balanceo.', tip: 'Aprieta arriba.', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400' },
+  { id: 'gym_press_hombros', name: 'Press hombros mancuernas', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '15', context: ['gimnasio'], requiredItems: ['mancuernas'], level: 'Intermedio', description: 'Press mancuernas.', steps: ['Sentado', 'Mancuernas a hombros', 'Empuja arriba', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Core activo.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
 ];
 
-// ==========================================
-// ALIMENTOS (45)
-// ==========================================
 export const FOOD_DATABASE: Food[] = [
   { id: 'pollo', name: 'Pechuga pollo', aliases: ['pollo'], category: 'proteina', kcal: 165, protein: 31, carbs: 0, fats: 3.6, unit: '100g' },
   { id: 'ternera', name: 'Ternera magra', aliases: ['ternera'], category: 'proteina', kcal: 187, protein: 26, carbs: 0, fats: 9, unit: '100g' },
   { id: 'pavo', name: 'Pavo', aliases: ['pavo'], category: 'proteina', kcal: 135, protein: 29, carbs: 0, fats: 1.7, unit: '100g' },
+  { id: 'cerdo', name: 'Lomo cerdo', aliases: ['cerdo'], category: 'proteina', kcal: 145, protein: 26, carbs: 0, fats: 4, unit: '100g' },
   { id: 'atun', name: 'Atún natural', aliases: ['atun'], category: 'proteina', kcal: 116, protein: 26, carbs: 0, fats: 1, unit: '100g' },
   { id: 'salmon', name: 'Salmón', aliases: ['salmon'], category: 'proteina', kcal: 208, protein: 20, carbs: 0, fats: 13, unit: '100g' },
   { id: 'merluza', name: 'Merluza', aliases: ['merluza'], category: 'proteina', kcal: 90, protein: 18, carbs: 0, fats: 1, unit: '100g' },
+  { id: 'bacalao', name: 'Bacalao', aliases: ['bacalao'], category: 'proteina', kcal: 82, protein: 18, carbs: 0, fats: 0.7, unit: '100g' },
+  { id: 'gambas', name: 'Gambas', aliases: ['gambas'], category: 'proteina', kcal: 99, protein: 24, carbs: 0, fats: 0.3, unit: '100g' },
   { id: 'huevo', name: 'Huevo', aliases: ['huevo'], category: 'proteina', kcal: 155, protein: 13, carbs: 1, fats: 11, unit: '100g' },
-  { id: 'tofu', name: 'Tofu', aliases: ['tofu'], category: 'proteina', kcal: 144, protein: 15, carbs: 3, fats: 9, unit: '100g' },
-  { id: 'lentejas', name: 'Lentejas cocidas', aliases: ['lentejas'], category: 'proteina', kcal: 116, protein: 9, carbs: 20, fats: 0.4, unit: '100g' },
-  { id: 'garbanzos', name: 'Garbanzos cocidos', aliases: ['garbanzos'], category: 'proteina', kcal: 164, protein: 8.9, carbs: 27, fats: 2.6, unit: '100g' },
+  { id: 'tofu', name: 'Tofu firme', aliases: ['tofu'], category: 'proteina', kcal: 144, protein: 15, carbs: 3, fats: 9, unit: '100g' },
+  { id: 'tempeh', name: 'Tempeh', aliases: ['tempeh'], category: 'proteina', kcal: 195, protein: 19, carbs: 8, fats: 11, unit: '100g' },
+  { id: 'lentejas', name: 'Lentejas', aliases: ['lentejas'], category: 'proteina', kcal: 116, protein: 9, carbs: 20, fats: 0.4, unit: '100g' },
+  { id: 'garbanzos', name: 'Garbanzos', aliases: ['garbanzos'], category: 'proteina', kcal: 164, protein: 8.9, carbs: 27, fats: 2.6, unit: '100g' },
   { id: 'proteina_polvo', name: 'Proteína polvo', aliases: ['whey'], category: 'proteina', kcal: 400, protein: 80, carbs: 8, fats: 5, unit: '100g' },
-
   { id: 'arroz', name: 'Arroz blanco', aliases: ['arroz'], category: 'carbo', kcal: 130, protein: 2.7, carbs: 28, fats: 0.3, unit: '100g' },
-  { id: 'arroz_int', name: 'Arroz integral', aliases: ['arroz integral'], category: 'carbo', kcal: 123, protein: 2.7, carbs: 26, fats: 1, unit: '100g' },
+  { id: 'arroz_int', name: 'Arroz integral', aliases: ['arroz int'], category: 'carbo', kcal: 123, protein: 2.7, carbs: 26, fats: 1, unit: '100g' },
   { id: 'pasta', name: 'Pasta cocida', aliases: ['pasta'], category: 'carbo', kcal: 158, protein: 6, carbs: 31, fats: 0.9, unit: '100g' },
   { id: 'pan_int', name: 'Pan integral', aliases: ['pan'], category: 'carbo', kcal: 247, protein: 13, carbs: 41, fats: 3.4, unit: '100g' },
+  { id: 'pan_blanco', name: 'Pan blanco', aliases: ['pan blanco'], category: 'carbo', kcal: 265, protein: 9, carbs: 49, fats: 3.2, unit: '100g' },
   { id: 'avena', name: 'Avena', aliases: ['avena'], category: 'carbo', kcal: 389, protein: 17, carbs: 66, fats: 7, unit: '100g' },
-  { id: 'patata', name: 'Patata cocida', aliases: ['patata'], category: 'carbo', kcal: 87, protein: 2, carbs: 20, fats: 0.1, unit: '100g' },
+  { id: 'muesli', name: 'Muesli', aliases: ['muesli'], category: 'carbo', kcal: 360, protein: 10, carbs: 66, fats: 5, unit: '100g' },
+  { id: 'patata', name: 'Patata', aliases: ['patata'], category: 'carbo', kcal: 87, protein: 2, carbs: 20, fats: 0.1, unit: '100g' },
   { id: 'batata', name: 'Batata', aliases: ['batata'], category: 'carbo', kcal: 86, protein: 1.6, carbs: 20, fats: 0.1, unit: '100g' },
   { id: 'quinoa', name: 'Quinoa', aliases: ['quinoa'], category: 'carbo', kcal: 120, protein: 4.4, carbs: 21, fats: 1.9, unit: '100g' },
-
+  { id: 'cuscus', name: 'Cuscús', aliases: ['cuscus'], category: 'carbo', kcal: 112, protein: 3.8, carbs: 23, fats: 0.2, unit: '100g' },
+  { id: 'bulgur', name: 'Bulgur', aliases: ['bulgur'], category: 'carbo', kcal: 83, protein: 3.1, carbs: 19, fats: 0.2, unit: '100g' },
+  { id: 'maiz', name: 'Maíz', aliases: ['maiz'], category: 'carbo', kcal: 86, protein: 3.3, carbs: 19, fats: 1.4, unit: '100g' },
+  { id: 'tortitas_arroz', name: 'Tortitas arroz', aliases: ['tortitas'], category: 'carbo', kcal: 387, protein: 8, carbs: 82, fats: 3, unit: '100g' },
+  { id: 'wrap', name: 'Tortilla wrap', aliases: ['wrap'], category: 'carbo', kcal: 290, protein: 8, carbs: 48, fats: 7, unit: '100g' },
   { id: 'aceite', name: 'Aceite oliva', aliases: ['aceite'], category: 'grasa', kcal: 884, protein: 0, carbs: 0, fats: 100, unit: '100ml' },
+  { id: 'aceite_coco', name: 'Aceite coco', aliases: ['aceite coco'], category: 'grasa', kcal: 862, protein: 0, carbs: 0, fats: 100, unit: '100ml' },
   { id: 'aguacate', name: 'Aguacate', aliases: ['aguacate'], category: 'grasa', kcal: 160, protein: 2, carbs: 9, fats: 15, unit: '100g' },
   { id: 'nueces', name: 'Nueces', aliases: ['nueces'], category: 'grasa', kcal: 654, protein: 15, carbs: 14, fats: 65, unit: '100g' },
   { id: 'almendras', name: 'Almendras', aliases: ['almendras'], category: 'grasa', kcal: 579, protein: 21, carbs: 22, fats: 50, unit: '100g' },
+  { id: 'avellanas', name: 'Avellanas', aliases: ['avellanas'], category: 'grasa', kcal: 628, protein: 15, carbs: 17, fats: 61, unit: '100g' },
+  { id: 'pistachos', name: 'Pistachos', aliases: ['pistachos'], category: 'grasa', kcal: 562, protein: 20, carbs: 28, fats: 45, unit: '100g' },
+  { id: 'anacardos', name: 'Anacardos', aliases: ['anacardos'], category: 'grasa', kcal: 553, protein: 18, carbs: 30, fats: 44, unit: '100g' },
   { id: 'cacahuete', name: 'Crema cacahuete', aliases: ['cacahuete'], category: 'grasa', kcal: 588, protein: 25, carbs: 20, fats: 50, unit: '100g' },
-  { id: 'chia', name: 'Semillas chía', aliases: ['chia'], category: 'grasa', kcal: 486, protein: 17, carbs: 42, fats: 31, unit: '100g' },
-
+  { id: 'chia', name: 'Chía', aliases: ['chia'], category: 'grasa', kcal: 486, protein: 17, carbs: 42, fats: 31, unit: '100g' },
+  { id: 'lino', name: 'Lino', aliases: ['lino'], category: 'grasa', kcal: 534, protein: 18, carbs: 29, fats: 42, unit: '100g' },
+  { id: 'tahini', name: 'Tahini', aliases: ['tahini'], category: 'grasa', kcal: 595, protein: 17, carbs: 21, fats: 54, unit: '100g' },
   { id: 'brocoli', name: 'Brócoli', aliases: ['brocoli'], category: 'verdura', kcal: 34, protein: 2.8, carbs: 7, fats: 0.4, unit: '100g' },
   { id: 'espinaca', name: 'Espinacas', aliases: ['espinaca'], category: 'verdura', kcal: 23, protein: 2.9, carbs: 3.6, fats: 0.4, unit: '100g' },
   { id: 'tomate', name: 'Tomate', aliases: ['tomate'], category: 'verdura', kcal: 18, protein: 0.9, carbs: 3.9, fats: 0.2, unit: '100g' },
   { id: 'lechuga', name: 'Lechuga', aliases: ['lechuga'], category: 'verdura', kcal: 15, protein: 1.4, carbs: 2.9, fats: 0.2, unit: '100g' },
   { id: 'zanahoria', name: 'Zanahoria', aliases: ['zanahoria'], category: 'verdura', kcal: 41, protein: 0.9, carbs: 10, fats: 0.2, unit: '100g' },
   { id: 'calabacin', name: 'Calabacín', aliases: ['calabacin'], category: 'verdura', kcal: 17, protein: 1.2, carbs: 3.1, fats: 0.3, unit: '100g' },
-
+  { id: 'pimiento', name: 'Pimiento', aliases: ['pimiento'], category: 'verdura', kcal: 31, protein: 1, carbs: 6, fats: 0.3, unit: '100g' },
+  { id: 'cebolla', name: 'Cebolla', aliases: ['cebolla'], category: 'verdura', kcal: 40, protein: 1.1, carbs: 9, fats: 0.1, unit: '100g' },
+  { id: 'ajo', name: 'Ajo', aliases: ['ajo'], category: 'verdura', kcal: 149, protein: 6.4, carbs: 33, fats: 0.5, unit: '100g' },
+  { id: 'pepino', name: 'Pepino', aliases: ['pepino'], category: 'verdura', kcal: 16, protein: 0.7, carbs: 3.6, fats: 0.1, unit: '100g' },
+  { id: 'coliflor', name: 'Coliflor', aliases: ['coliflor'], category: 'verdura', kcal: 25, protein: 1.9, carbs: 5, fats: 0.3, unit: '100g' },
+  { id: 'judias_verdes', name: 'Judías verdes', aliases: ['judias'], category: 'verdura', kcal: 31, protein: 1.8, carbs: 7, fats: 0.1, unit: '100g' },
+  { id: 'berenjena', name: 'Berenjena', aliases: ['berenjena'], category: 'verdura', kcal: 25, protein: 1, carbs: 6, fats: 0.2, unit: '100g' },
+  { id: 'champinones', name: 'Champiñones', aliases: ['champiñones'], category: 'verdura', kcal: 22, protein: 3.1, carbs: 3.3, fats: 0.3, unit: '100g' },
+  { id: 'esparragos', name: 'Espárragos', aliases: ['esparragos'], category: 'verdura', kcal: 20, protein: 2.2, carbs: 3.9, fats: 0.1, unit: '100g' },
   { id: 'platano', name: 'Plátano', aliases: ['platano'], category: 'fruta', kcal: 89, protein: 1.1, carbs: 23, fats: 0.3, unit: '100g' },
   { id: 'manzana', name: 'Manzana', aliases: ['manzana'], category: 'fruta', kcal: 52, protein: 0.3, carbs: 14, fats: 0.2, unit: '100g' },
   { id: 'naranja', name: 'Naranja', aliases: ['naranja'], category: 'fruta', kcal: 47, protein: 0.9, carbs: 12, fats: 0.1, unit: '100g' },
   { id: 'fresas', name: 'Fresas', aliases: ['fresas'], category: 'fruta', kcal: 32, protein: 0.7, carbs: 7.7, fats: 0.3, unit: '100g' },
   { id: 'arandanos', name: 'Arándanos', aliases: ['arandanos'], category: 'fruta', kcal: 57, protein: 0.7, carbs: 14, fats: 0.3, unit: '100g' },
-
+  { id: 'pera', name: 'Pera', aliases: ['pera'], category: 'fruta', kcal: 57, protein: 0.4, carbs: 15, fats: 0.1, unit: '100g' },
+  { id: 'kiwi', name: 'Kiwi', aliases: ['kiwi'], category: 'fruta', kcal: 61, protein: 1.1, carbs: 15, fats: 0.5, unit: '100g' },
+  { id: 'mango', name: 'Mango', aliases: ['mango'], category: 'fruta', kcal: 60, protein: 0.8, carbs: 15, fats: 0.4, unit: '100g' },
+  { id: 'pina', name: 'Piña', aliases: ['pina'], category: 'fruta', kcal: 50, protein: 0.5, carbs: 13, fats: 0.1, unit: '100g' },
+  { id: 'melocoton', name: 'Melocotón', aliases: ['melocoton'], category: 'fruta', kcal: 39, protein: 0.9, carbs: 10, fats: 0.3, unit: '100g' },
+  { id: 'uvas', name: 'Uvas', aliases: ['uvas'], category: 'fruta', kcal: 69, protein: 0.7, carbs: 18, fats: 0.2, unit: '100g' },
+  { id: 'limon', name: 'Limón', aliases: ['limon'], category: 'fruta', kcal: 29, protein: 1.1, carbs: 9, fats: 0.3, unit: '100g' },
   { id: 'yogur', name: 'Yogur griego', aliases: ['yogur'], category: 'lacteo', kcal: 97, protein: 9, carbs: 4, fats: 5, unit: '100g' },
-  { id: 'leche', name: 'Leche semidesnatada', aliases: ['leche'], category: 'lacteo', kcal: 47, protein: 3.2, carbs: 4.8, fats: 1.6, unit: '100ml' },
-  { id: 'queso_fresco', name: 'Queso fresco batido', aliases: ['queso'], category: 'lacteo', kcal: 78, protein: 12, carbs: 4, fats: 1.5, unit: '100g' },
+  { id: 'yogur_nat', name: 'Yogur natural', aliases: ['yogur nat'], category: 'lacteo', kcal: 61, protein: 3.5, carbs: 4.7, fats: 3.3, unit: '100g' },
   { id: 'skyr', name: 'Skyr', aliases: ['skyr'], category: 'lacteo', kcal: 63, protein: 11, carbs: 4, fats: 0.2, unit: '100g' },
-
+  { id: 'kefir', name: 'Kéfir', aliases: ['kefir'], category: 'lacteo', kcal: 55, protein: 3.3, carbs: 4.5, fats: 3, unit: '100ml' },
+  { id: 'leche', name: 'Leche semidesnatada', aliases: ['leche'], category: 'lacteo', kcal: 47, protein: 3.2, carbs: 4.8, fats: 1.6, unit: '100ml' },
+  { id: 'queso_fresco', name: 'Queso fresco', aliases: ['queso'], category: 'lacteo', kcal: 78, protein: 12, carbs: 4, fats: 1.5, unit: '100g' },
+  { id: 'mozzarella', name: 'Mozzarella', aliases: ['mozzarella'], category: 'lacteo', kcal: 254, protein: 18, carbs: 3, fats: 19, unit: '100g' },
+  { id: 'feta', name: 'Queso feta', aliases: ['feta'], category: 'lacteo', kcal: 264, protein: 14, carbs: 4, fats: 21, unit: '100g' },
   { id: 'cacao', name: 'Cacao puro', aliases: ['cacao'], category: 'otro', kcal: 228, protein: 20, carbs: 58, fats: 14, unit: '100g' },
   { id: 'miel', name: 'Miel', aliases: ['miel'], category: 'otro', kcal: 304, protein: 0.3, carbs: 82, fats: 0, unit: '100g' },
-  { id: 'limon', name: 'Limón', aliases: ['limon'], category: 'fruta', kcal: 29, protein: 1.1, carbs: 9, fats: 0.3, unit: '100g' },
-  { id: 'jengibre', name: 'Jengibre', aliases: ['jengibre'], category: 'otro', kcal: 80, protein: 1.8, carbs: 18, fats: 0.8, unit: '100g' },
+  { id: 'chocolate85', name: 'Chocolate negro 85%', aliases: ['chocolate'], category: 'otro', kcal: 592, protein: 10, carbs: 22, fats: 54, unit: '100g' },
   { id: 'hummus', name: 'Hummus', aliases: ['hummus'], category: 'otro', kcal: 166, protein: 8, carbs: 14, fats: 10, unit: '100g' },
+  { id: 'jengibre', name: 'Jengibre', aliases: ['jengibre'], category: 'otro', kcal: 80, protein: 1.8, carbs: 18, fats: 0.8, unit: '100g' },
 ];
 
-// ==========================================
-// HELPERS
-// ==========================================
 const STORAGE_PREFIX = 'fitapp_v20_';
 
 const loadFromStorage = <T,>(key: string, fallback: T): T => {
-  try {
-    const saved = localStorage.getItem(STORAGE_PREFIX + key);
-    return saved ? JSON.parse(saved) : fallback;
-  } catch { return fallback; }
+  try { const s = localStorage.getItem(STORAGE_PREFIX + key); return s ? JSON.parse(s) : fallback; } catch { return fallback; }
 };
 
 const saveToStorage = <T,>(key: string, value: T): void => {
@@ -238,9 +255,7 @@ const calculateStreak = (logs: WorkoutLogRecord[]): number => {
 
 const calculateTargetKcal = (profile: UserProfile): number => {
   const isMale = profile.gender.toLowerCase().includes('hombre') || profile.gender.toLowerCase() === 'm';
-  const bmr = isMale
-    ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
-    : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161;
+  const bmr = isMale ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5 : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161;
   const tdee = bmr * 1.375;
   switch (profile.goal) {
     case 'perder_grasa': return Math.round(tdee - 500);
@@ -262,36 +277,31 @@ const CATEGORY_DEFAULTS: Record<FoodCategory, { kcal: number; protein: number; c
 
 const guessCategory = (name: string): FoodCategory => {
   const n = name.toLowerCase();
-  if (/pollo|ternera|pavo|pescado|atun|salmon|merluza|huevo|tofu|gamba|lenteja|garbanzo|proteina|whey/.test(n)) return 'proteina';
-  if (/arroz|pasta|pan|avena|patata|batata|quinoa/.test(n)) return 'carbo';
-  if (/aceite|nuez|almendra|aguacate|cacahuete|chia/.test(n)) return 'grasa';
-  if (/lechuga|tomate|brocoli|espinaca|zanahoria|calabacin/.test(n)) return 'verdura';
-  if (/manzana|platano|naranja|fresa|arandano|limon/.test(n)) return 'fruta';
-  if (/leche|yogur|queso|skyr/.test(n)) return 'lacteo';
+  if (/pollo|ternera|pavo|pescado|atun|salmon|merluza|bacalao|huevo|tofu|tempeh|gamba|lenteja|garbanzo|proteina|whey/.test(n)) return 'proteina';
+  if (/arroz|pasta|pan|avena|patata|batata|quinoa|cuscus|bulgur|maiz|tortita|wrap|muesli/.test(n)) return 'carbo';
+  if (/aceite|nuez|almendra|aguacate|cacahuete|chia|lino|tahini|pistacho|anacardo|avellana/.test(n)) return 'grasa';
+  if (/lechuga|tomate|brocoli|espinaca|zanahoria|calabacin|pimiento|cebolla|ajo|pepino|coliflor|judia|berenjena|champi|esparrago/.test(n)) return 'verdura';
+  if (/manzana|platano|naranja|fresa|arandano|pera|kiwi|mango|pina|melocoton|uva|limon/.test(n)) return 'fruta';
+  if (/leche|yogur|queso|skyr|kefir|mozzarella|feta/.test(n)) return 'lacteo';
   return 'otro';
 };
 
 const searchFoods = (query: string): Food[] => {
   const q = query.toLowerCase().trim();
   if (!q) return [];
-  return FOOD_DATABASE.filter(f =>
-    f.name.toLowerCase().includes(q) || f.aliases.some(a => a.toLowerCase().includes(q))
-  ).slice(0, 5);
+  return FOOD_DATABASE.filter(f => f.name.toLowerCase().includes(q) || f.aliases.some(a => a.toLowerCase().includes(q))).slice(0, 5);
 };
 
-// ==========================================
-// GENERADOR RECETAS
-// ==========================================
 const TEMPLATES: Record<string, { needs: FoodCategory[]; name: string; icon: string; desc: string }> = {
-  comun: { needs: ['proteina', 'carbo', 'verdura'], name: 'Plato', icon: '🍽️', desc: 'Comida equilibrada con proteína, carbohidratos y verdura.' },
-  ligero: { needs: ['proteina', 'verdura'], name: 'Salteado', icon: '🥗', desc: 'Salteado ligero alto en proteína.' },
-  batido: { needs: ['proteina', 'fruta'], name: 'Batido', icon: '🥤', desc: 'Batido post-entreno.' },
+  comun: { needs: ['proteina', 'carbo', 'verdura'], name: 'Plato', icon: '🍽️', desc: 'Comida equilibrada.' },
+  ligero: { needs: ['proteina', 'verdura'], name: 'Salteado', icon: '🥗', desc: 'Ligero alto en proteína.' },
+  batido: { needs: ['proteina', 'fruta'], name: 'Batido', icon: '🥤', desc: 'Post-entreno.' },
   verde: { needs: ['verdura', 'fruta'], name: 'Smoothie', icon: '🥬', desc: 'Smoothie detox.' },
   bebida: { needs: ['fruta'], name: 'Infusión', icon: '🍵', desc: 'Bebida saludable.' },
 };
 
-const generateRecipe = (foods: Food[], templateKey: string, category: Recipe['category']): Recipe | null => {
-  const tpl = TEMPLATES[templateKey];
+const generateRecipe = (foods: Food[], key: string, category: string): Recipe | null => {
+  const tpl = TEMPLATES[key];
   if (!tpl) return null;
   const byCat: Record<string, Food[]> = {};
   tpl.needs.forEach(c => { byCat[c] = foods.filter(f => f.category === c); });
@@ -304,25 +314,18 @@ const generateRecipe = (foods: Food[], templateKey: string, category: Recipe['ca
     const g = grams[c] || 100;
     chosen.push({ name: food.name, grams: g });
     const f = g / 100;
-    kcal += food.kcal * f; protein += food.protein * f;
-    carbs += food.carbs * f; fats += food.fats * f;
+    kcal += food.kcal * f; protein += food.protein * f; carbs += food.carbs * f; fats += food.fats * f;
   });
   const main = chosen[0].name.split(' ')[0];
   return {
     id: Math.random().toString(36).substring(2, 11),
-    name: `${tpl.name} de ${main}`,
-    category,
-    ingredients: chosen,
-    kcal: Math.round(kcal),
-    protein: Math.round(protein),
-    carbs: Math.round(carbs),
-    fats: Math.round(fats),
-    desc: tpl.desc,
-    icon: tpl.icon,
+    name: `${tpl.name} de ${main}`, category, ingredients: chosen,
+    kcal: Math.round(kcal), protein: Math.round(protein), carbs: Math.round(carbs), fats: Math.round(fats),
+    desc: tpl.desc, icon: tpl.icon,
   };
 };
 
-const generateMeal = (foods: Food[], category: Recipe['category']): Recipe | null => {
+const generateMeal = (foods: Food[], category: string): Recipe | null => {
   const cats = foods.map(f => f.category);
   const has = (c: FoodCategory) => cats.includes(c);
   let tpl: string | null = null;
@@ -344,9 +347,6 @@ const generateMeal = (foods: Food[], category: Recipe['category']): Recipe | nul
   return generateRecipe(foods, tpl, category);
 };
 
-// ==========================================
-// CONTEXTO
-// ==========================================
 interface FitAppContextData {
   profile: UserProfile;
   updateProfile: (p: Partial<UserProfile>) => void;
@@ -359,12 +359,9 @@ interface FitAppContextData {
   toggleHomeItem: (id: string) => void;
   customFoods: Food[];
   addCustomFood: (f: Food) => void;
-  removeCustomFood: (id: string) => void;
   allFoods: Food[];
   hideFood: (id: string) => void;
   unhideFood: (id: string) => void;
-  hideExercise: (id: string) => void;
-  unhideExercise: (id: string) => void;
   hideHomeItem: (id: string) => void;
   unhideHomeItem: (id: string) => void;
   clearAllData: () => void;
@@ -382,7 +379,7 @@ const DEFAULT_ROUTINE: WeeklyRoutineDay[] = [
 
 const defaultProfile: UserProfile = {
   name: 'Atleta', age: 28, gender: 'Hombre', height: 178, weight: 75,
-  experience: 'Intermedio', goal: 'ganar_musculo', daysAvailable: 5, context: 'casa',
+  goal: 'ganar_musculo', context: 'casa',
   homeItems: ['silla', 'mesa', 'sofa', 'mochila', 'botellas'],
   weeklyRoutine: DEFAULT_ROUTINE,
   pantryIngredients: ['pollo', 'arroz', 'brocoli', 'avena', 'platano', 'huevo', 'aceite', 'tomate', 'yogur', 'espinaca'],
@@ -404,12 +401,10 @@ export const FitAppProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogRecord[]>(() => loadFromStorage('logs', []));
   const [excludedExercises, setExcludedExercises] = useState<string[]>(() => loadFromStorage('excluded', []));
   const [customFoods, setCustomFoods] = useState<Food[]>(() => loadFromStorage('customFoods', []));
-
   useEffect(() => saveToStorage('profile', profile), [profile]);
   useEffect(() => saveToStorage('logs', workoutLogs), [workoutLogs]);
   useEffect(() => saveToStorage('excluded', excludedExercises), [excludedExercises]);
   useEffect(() => saveToStorage('customFoods', customFoods), [customFoods]);
-
   const updateProfile = (p: Partial<UserProfile>) => setProfile(prev => ({ ...prev, ...p }));
   const updateWeeklyRoutine = (r: WeeklyRoutineDay[]) => setProfile(prev => ({ ...prev, weeklyRoutine: r }));
   const saveWorkoutLog = (l: WorkoutLogRecord) => setWorkoutLogs(prev => [l, ...prev]);
@@ -419,33 +414,21 @@ export const FitAppProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     updateProfile({ homeItems: exists ? profile.homeItems.filter(i => i !== id) : [...profile.homeItems, id] });
   };
   const addCustomFood = (f: Food) => setCustomFoods(prev => [...prev, f]);
-  const removeCustomFood = (id: string) => setCustomFoods(prev => prev.filter(f => f.id !== id));
   const hideFood = (id: string) => updateProfile({ hiddenFoods: [...profile.hiddenFoods, id] });
   const unhideFood = (id: string) => updateProfile({ hiddenFoods: profile.hiddenFoods.filter(i => i !== id) });
-  const hideExercise = (id: string) => updateProfile({ hiddenExercises: [...profile.hiddenExercises, id] });
-  const unhideExercise = (id: string) => updateProfile({ hiddenExercises: profile.hiddenExercises.filter(i => i !== id) });
   const hideHomeItem = (id: string) => updateProfile({ hiddenHomeItems: [...profile.hiddenHomeItems, id] });
   const unhideHomeItem = (id: string) => updateProfile({ hiddenHomeItems: profile.hiddenHomeItems.filter(i => i !== id) });
   const clearAllData = () => {
     Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX)).forEach(k => localStorage.removeItem(k));
     window.location.reload();
   };
-
-  const allFoods = [
-    ...FOOD_DATABASE.filter(f => !profile.hiddenFoods.includes(f.id)),
-    ...customFoods.filter(f => !profile.hiddenFoods.includes(f.id)),
-  ].filter(f => profile.pantryIngredients.includes(f.id));
-
+  const allFoods = [...FOOD_DATABASE, ...customFoods].filter(f => profile.pantryIngredients.includes(f.id) && !profile.hiddenFoods.includes(f.id));
   const streak = calculateStreak(workoutLogs);
-
   return (
     <FitAppContext.Provider value={{
-      profile, updateProfile, updateWeeklyRoutine,
-      workoutLogs, saveWorkoutLog, streak,
-      excludedExercises, excludeExercise, toggleHomeItem,
-      customFoods, addCustomFood, removeCustomFood, allFoods,
-      hideFood, unhideFood, hideExercise, unhideExercise, hideHomeItem, unhideHomeItem,
-      clearAllData,
+      profile, updateProfile, updateWeeklyRoutine, workoutLogs, saveWorkoutLog, streak,
+      excludedExercises, excludeExercise, toggleHomeItem, customFoods, addCustomFood, allFoods,
+      hideFood, unhideFood, hideHomeItem, unhideHomeItem, clearAllData,
     }}>
       {children}
     </FitAppContext.Provider>
@@ -458,13 +441,10 @@ export const useFitApp = () => {
   return c;
 };
 
-// ==========================================
-// ESTILOS
-// ==========================================
 const s = {
   container: { backgroundColor: '#000', color: '#f5f5f7', minHeight: '100vh', maxWidth: 480, margin: '0 auto', padding: 20, fontFamily: '-apple-system, sans-serif', paddingBottom: 110, boxSizing: 'border-box' as const },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 16, marginBottom: 20 },
-  logo: { fontSize: 20, fontWeight: 900, background: 'linear-gradient(135deg, #fff 0%, #22d3ee 60%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.8px' },
+  logo: { fontSize: 20, fontWeight: 900, background: 'linear-gradient(135deg, #fff 0%, #22d3ee 60%, #3b82f6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
   badge: { fontSize: 10, background: 'rgba(34,211,238,0.12)', color: '#22d3ee', padding: '5px 12px', borderRadius: 20, fontWeight: 800 },
   card: { backgroundColor: '#0f0f11', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 24, padding: 20, marginBottom: 12 },
   hero: { background: 'linear-gradient(140deg, #0c4a6e 0%, #0369a1 40%, #1e1b4b 100%)', borderRadius: 24, padding: 24, color: '#fff', marginBottom: 12 },
@@ -478,9 +458,6 @@ const s = {
   label: { fontSize: 11, color: '#a1a1aa', fontWeight: 700, display: 'block', marginBottom: 6, textTransform: 'uppercase' as const },
 };
 
-// ==========================================
-// DASHBOARD
-// ==========================================
 const Dashboard: React.FC<{ onStart: () => void; onProfile: () => void; onNutrition: () => void; onPlanner: () => void; onHome: () => void }> = ({ onStart, onProfile, onNutrition, onPlanner, onHome }) => {
   const { profile, streak, workoutLogs } = useFitApp();
   const today = new Date().toISOString().split('T')[0];
@@ -493,7 +470,7 @@ const Dashboard: React.FC<{ onStart: () => void; onProfile: () => void; onNutrit
       <div style={s.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 800, letterSpacing: 1 }}>{goalLabels[profile.goal].toUpperCase()}</span>
+            <span style={{ fontSize: 10, color: '#22d3ee', fontWeight: 800 }}>{goalLabels[profile.goal].toUpperCase()}</span>
             <h1 style={{ fontSize: 24, fontWeight: 900, margin: '4px 0 0 0' }}>Hola, {profile.name}</h1>
           </div>
           <div style={{ background: 'rgba(249,115,22,0.15)', padding: '8px 12px', borderRadius: 14, color: '#fb923c', fontWeight: 900, fontSize: 12 }}>🔥 {streak}d</div>
@@ -502,9 +479,7 @@ const Dashboard: React.FC<{ onStart: () => void; onProfile: () => void; onNutrit
       <div style={s.hero}>
         <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.15)', padding: '4px 10px', borderRadius: 20, fontWeight: 800 }}>{ctxLabels[profile.context]}</span>
         <h2 style={{ fontSize: 24, fontWeight: 900, margin: '12px 0 6px 0' }}>Sesión de hoy</h2>
-        <p style={{ fontSize: 12, color: '#cffafe', margin: 0 }}>
-          {todayW.length > 0 ? `⚡ ${todayW.length} series registradas hoy.` : `Ejercicios adaptados a los materiales que tengas marcados.`}
-        </p>
+        <p style={{ fontSize: 12, color: '#cffafe', margin: 0 }}>{todayW.length > 0 ? `⚡ ${todayW.length} series registradas hoy.` : `Ejercicios adaptados a los materiales que tengas marcados.`}</p>
         <button onClick={onStart} style={s.btnPrimary}>🚀 EMPEZAR ENTRENAMIENTO</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -537,17 +512,13 @@ const Dashboard: React.FC<{ onStart: () => void; onProfile: () => void; onNutrit
   );
 };
 
-// ==========================================
-// MATERIALES
-// ==========================================
 const HomeInventoryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const { profile, toggleHomeItem, hideHomeItem } = useFitApp();
+  const { profile, toggleHomeItem, hideHomeItem, unhideHomeItem } = useFitApp();
   const ctxLabels: Record<ContextType, string> = { casa: '🏠 Mi Casa', gimnasio: '🏋️ Mi Gimnasio', fuera_de_casa: '🌳 Exterior' };
   const visibleItems = HOME_ITEMS_LIBRARY.filter(i => i.context === profile.context && !profile.hiddenHomeItems.includes(i.id));
   const hiddenItems = HOME_ITEMS_LIBRARY.filter(i => i.context === profile.context && profile.hiddenHomeItems.includes(i.id));
   const exercisesAvailable = MASTER_EXERCISES.filter(ex =>
-    !profile.hiddenExercises.includes(ex.id) &&
-    ex.context.includes(profile.context) &&
+    !profile.hiddenExercises.includes(ex.id) && ex.context.includes(profile.context) &&
     (ex.requiredItems.length === 0 || ex.requiredItems.every(i => profile.homeItems.includes(i)))
   ).length;
   return (
@@ -562,7 +533,7 @@ const HomeInventoryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <div style={s.card}><div style={{ fontSize: 28, fontWeight: 900 }}>{exercisesAvailable}</div><div style={{ fontSize: 10, color: '#71717a', fontWeight: 700 }}>EJERCICIOS</div></div>
       </div>
       <div style={s.card}>
-        <div style={{ fontSize: 11, color: '#71717a', fontWeight: 800, marginBottom: 10 }}>OBJETOS DISPONIBLES ({visibleItems.length})</div>
+        <div style={{ fontSize: 11, color: '#71717a', fontWeight: 800, marginBottom: 10 }}>DISPONIBLES ({visibleItems.length})</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {visibleItems.map(item => {
             const isSelected = profile.homeItems.includes(item.id);
@@ -574,9 +545,7 @@ const HomeInventoryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     <div style={{ fontSize: 13, fontWeight: 800, color: isSelected ? '#22d3ee' : '#fff' }}>{item.name}</div>
                     <div style={{ fontSize: 10, color: '#71717a' }}>{item.description}</div>
                   </div>
-                  <div style={{ width: 20, height: 20, borderRadius: 10, background: isSelected ? '#22d3ee' : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isSelected ? '#000' : '#52525b', fontSize: 11, fontWeight: 900 }}>
-                    {isSelected ? '✓' : ''}
-                  </div>
+                  <div style={{ width: 20, height: 20, borderRadius: 10, background: isSelected ? '#22d3ee' : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isSelected ? '#000' : '#52525b', fontSize: 11, fontWeight: 900 }}>{isSelected ? '✓' : ''}</div>
                 </div>
                 <button onClick={() => hideHomeItem(item.id)} style={{ background: 'transparent', border: 'none', color: '#52525b', fontSize: 14, cursor: 'pointer', padding: 4 }}>🗑️</button>
               </div>
@@ -588,9 +557,7 @@ const HomeInventoryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <div style={s.card}>
           <div style={{ fontSize: 11, color: '#71717a', fontWeight: 800, marginBottom: 8 }}>OCULTOS ({hiddenItems.length})</div>
           {hiddenItems.map(item => (
-            <button key={item.id} onClick={() => useFitApp().unhideHomeItem(item.id)} style={{ display: 'block', width: '100%', background: 'rgba(255,255,255,0.03)', border: 'none', color: '#a1a1aa', padding: 10, borderRadius: 12, fontSize: 12, marginBottom: 6, cursor: 'pointer', textAlign: 'left' }}>
-              {item.icon} {item.name} — pulsar para restaurar
-            </button>
+            <button key={item.id} onClick={() => unhideHomeItem(item.id)} style={{ display: 'block', width: '100%', background: 'rgba(255,255,255,0.03)', border: 'none', color: '#a1a1aa', padding: 10, borderRadius: 12, fontSize: 12, marginBottom: 6, cursor: 'pointer', textAlign: 'left' }}>{item.icon} {item.name}</button>
           ))}
         </div>
       )}
@@ -598,9 +565,6 @@ const HomeInventoryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-// ==========================================
-// PLANNER
-// ==========================================
 const PlannerView: React.FC<{ onBack: () => void; onStartForDay: (m: string[]) => void }> = ({ onBack, onStartForDay }) => {
   const { profile, updateWeeklyRoutine } = useFitApp();
   const routine = profile.weeklyRoutine || DEFAULT_ROUTINE;
@@ -613,25 +577,17 @@ const PlannerView: React.FC<{ onBack: () => void; onStartForDay: (m: string[]) =
         <div key={day.dayName} style={s.card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <h3 style={{ fontSize: 15, fontWeight: 900, margin: 0 }}>{day.dayName}</h3>
-            <button onClick={() => updateWeeklyRoutine(routine.map((d, idx) => idx === i ? { ...d, isRestDay: !d.isRestDay, muscles: !d.isRestDay ? [] : d.muscles } : d))} style={{ background: day.isRestDay ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.05)', border: day.isRestDay ? '1px solid rgba(34,211,238,0.5)' : '1px solid rgba(255,255,255,0.08)', color: day.isRestDay ? '#22d3ee' : '#71717a', padding: '5px 10px', borderRadius: 10, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>
-              {day.isRestDay ? '💤 DESCANSO' : '🏋️ ENTRENO'}
-            </button>
+            <button onClick={() => updateWeeklyRoutine(routine.map((d, idx) => idx === i ? { ...d, isRestDay: !d.isRestDay, muscles: !d.isRestDay ? [] : d.muscles } : d))} style={{ background: day.isRestDay ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.05)', border: day.isRestDay ? '1px solid rgba(34,211,238,0.5)' : '1px solid rgba(255,255,255,0.08)', color: day.isRestDay ? '#22d3ee' : '#71717a', padding: '5px 10px', borderRadius: 10, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>{day.isRestDay ? '💤 DESCANSO' : '🏋️ ENTRENO'}</button>
           </div>
           {!day.isRestDay && (
             <>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
                 {muscles.map(m => {
                   const sel = day.muscles.includes(m);
-                  return (
-                    <button key={m} onClick={() => updateWeeklyRoutine(routine.map((d, idx) => idx === i ? { ...d, muscles: sel ? d.muscles.filter(x => x !== m) : [...d.muscles, m] } : d))} style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: sel ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)', background: sel ? 'rgba(34,211,238,0.15)' : 'rgba(0,0,0,0.4)', color: sel ? '#22d3ee' : '#71717a', cursor: 'pointer' }}>
-                      {sel ? `✓ ${m}` : m}
-                    </button>
-                  );
+                  return <button key={m} onClick={() => updateWeeklyRoutine(routine.map((d, idx) => idx === i ? { ...d, muscles: sel ? d.muscles.filter(x => x !== m) : [...d.muscles, m] } : d))} style={{ padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, border: sel ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)', background: sel ? 'rgba(34,211,238,0.15)' : 'rgba(0,0,0,0.4)', color: sel ? '#22d3ee' : '#71717a', cursor: 'pointer' }}>{sel ? `✓ ${m}` : m}</button>;
                 })}
               </div>
-              {day.muscles.length > 0 && (
-                <button onClick={() => onStartForDay(day.muscles)} style={{ ...s.btnCyan, padding: 12, fontSize: 12 }}>🚀 ENTRENAR</button>
-              )}
+              {day.muscles.length > 0 && <button onClick={() => onStartForDay(day.muscles)} style={{ ...s.btnCyan, padding: 12, fontSize: 12 }}>🚀 ENTRENAR</button>}
             </>
           )}
         </div>
@@ -640,8 +596,6 @@ const PlannerView: React.FC<{ onBack: () => void; onStartForDay: (m: string[]) =
   );
 };
 
-// ==========================================
-// WORKOUT VIEW// ==========================================
 const WorkoutView: React.FC<{ onPlay: (e: Exercise[], t: number) => void; onBack: () => void; initialMuscles?: string[] }> = ({ onPlay, onBack, initialMuscles }) => {
   const { profile } = useFitApp();
   const [time, setTime] = useState(30);
@@ -656,8 +610,7 @@ const WorkoutView: React.FC<{ onPlay: (e: Exercise[], t: number) => void; onBack
   const handleStart = () => {
     if (selMuscles.length === 0) { alert('Elige al menos un músculo.'); return; }
     let filtered = MASTER_EXERCISES.filter(ex =>
-      selMuscles.includes(ex.muscle) &&
-      !profile.hiddenExercises.includes(ex.id) &&
+      selMuscles.includes(ex.muscle) && !profile.hiddenExercises.includes(ex.id) &&
       ex.context.includes(profile.context) &&
       (ex.requiredItems.length === 0 || ex.requiredItems.every(i => profile.homeItems.includes(i)))
     );
@@ -685,11 +638,7 @@ const WorkoutView: React.FC<{ onPlay: (e: Exercise[], t: number) => void; onBack
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
           {muscles.map(m => {
             const sel = selMuscles.includes(m.k);
-            return (
-              <button key={m.k} onClick={() => setSelMuscles(prev => sel ? prev.filter(x => x !== m.k) : [...prev, m.k])} style={{ padding: '10px 12px', borderRadius: 12, border: sel ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)', background: sel ? 'rgba(34,211,238,0.15)' : 'rgba(0,0,0,0.4)', color: sel ? '#22d3ee' : '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>
-                {sel ? `✓ ${m.l}` : m.l}
-              </button>
-            );
+            return <button key={m.k} onClick={() => setSelMuscles(prev => sel ? prev.filter(x => x !== m.k) : [...prev, m.k])} style={{ padding: '10px 12px', borderRadius: 12, border: sel ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)', background: sel ? 'rgba(34,211,238,0.15)' : 'rgba(0,0,0,0.4)', color: sel ? '#22d3ee' : '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>{sel ? `✓ ${m.l}` : m.l}</button>;
           })}
         </div>
         <button onClick={handleStart} style={s.btnCyan}>GENERAR SESIÓN</button>
@@ -698,9 +647,6 @@ const WorkoutView: React.FC<{ onPlay: (e: Exercise[], t: number) => void; onBack
   );
 };
 
-// ==========================================
-// PREVIEW
-// ==========================================
 const Preview: React.FC<{ exercises: Exercise[]; time: number; onStart: (e: Exercise[]) => void; onBack: () => void }> = ({ exercises, time, onStart, onBack }) => {
   const { excludeExercise, excludedExercises, profile } = useFitApp();
   const [list, setList] = useState(exercises);
@@ -709,15 +655,12 @@ const Preview: React.FC<{ exercises: Exercise[]; time: number; onStart: (e: Exer
     const cur = list[idx];
     excludeExercise(cur.name);
     const alts = MASTER_EXERCISES.filter(ex =>
-      ex.muscle === cur.muscle &&
-      !list.some(i => i.id === ex.id) &&
-      !excludedExercises.includes(ex.name) &&
-      ex.context.includes(profile.context) &&
+      ex.muscle === cur.muscle && !list.some(i => i.id === ex.id) &&
+      !excludedExercises.includes(ex.name) && ex.context.includes(profile.context) &&
       (ex.requiredItems.length === 0 || ex.requiredItems.every(i => profile.homeItems.includes(i)))
     );
-    if (alts.length > 0) {
-      const upd = [...list]; upd[idx] = alts[Math.floor(Math.random() * alts.length)]; setList(upd);
-    } else alert('No hay más alternativas.');
+    if (alts.length > 0) { const upd = [...list]; upd[idx] = alts[Math.floor(Math.random() * alts.length)]; setList(upd); }
+    else alert('No hay más alternativas.');
   };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -735,12 +678,8 @@ const Preview: React.FC<{ exercises: Exercise[]; time: number; onStart: (e: Exer
             </div>
             <button onClick={() => swap(i)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171', padding: '6px 10px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>🩹</button>
           </div>
-          <div style={{ fontSize: 12, color: '#d4d4d8', background: 'rgba(0,0,0,0.4)', padding: 10, borderRadius: 10, marginBottom: 8 }}>
-            <strong>{ex.defaultSets}</strong> series × <strong>{ex.defaultReps}</strong> reps
-          </div>
-          <button onClick={() => setShowTut(showTut === i ? null : i)} style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.3)', color: '#22d3ee', padding: '8px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer', width: '100%' }}>
-            {showTut === i ? '▲ Ocultar tutorial' : '❓ Cómo se hace'}
-          </button>
+          <div style={{ fontSize: 12, color: '#d4d4d8', background: 'rgba(0,0,0,0.4)', padding: 10, borderRadius: 10, marginBottom: 8 }}><strong>{ex.defaultSets}</strong> series × <strong>{ex.defaultReps}</strong> reps</div>
+          <button onClick={() => setShowTut(showTut === i ? null : i)} style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.3)', color: '#22d3ee', padding: '8px 12px', borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: 'pointer', width: '100%' }}>{showTut === i ? '▲ Ocultar tutorial' : '❓ Cómo se hace'}</button>
           {showTut === i && (
             <div style={{ marginTop: 10, background: 'rgba(0,0,0,0.5)', padding: 12, borderRadius: 12 }}>
               <img src={ex.imageUrl} alt={ex.name} style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10, marginBottom: 10 }} />
@@ -757,9 +696,6 @@ const Preview: React.FC<{ exercises: Exercise[]; time: number; onStart: (e: Exer
   );
 };
 
-// ==========================================
-// PLAYER
-// ==========================================
 const Player: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exercises, onFinish }) => {
   const { saveWorkoutLog } = useFitApp();
   const [sid] = useState(() => Math.random().toString(36).substring(2, 11));
@@ -818,9 +754,6 @@ const Player: React.FC<{ exercises: Exercise[]; onFinish: () => void }> = ({ exe
   );
 };
 
-// ==========================================
-// NUTRICIÓN - MENÚ PRINCIPAL
-// ==========================================
 const NutritionView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [sub, setSub] = useState<'menu' | 'pantry' | 'recipes' | 'weekly'>('menu');
   const { profile } = useFitApp();
@@ -857,9 +790,6 @@ const NutritionView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-// ==========================================
-// DESPENSA
-// ==========================================
 const PantryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { profile, updateProfile, customFoods, addCustomFood, hideFood, unhideFood } = useFitApp();
   const [search, setSearch] = useState('');
@@ -868,25 +798,16 @@ const PantryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const suggestions = searchFoods(search).filter(f => !profile.hiddenFoods.includes(f.id));
   const pantryFoods: Food[] = [...FOOD_DATABASE, ...customFoods].filter(f => profile.pantryIngredients.includes(f.id) && !profile.hiddenFoods.includes(f.id));
   const hiddenFoods = [...FOOD_DATABASE, ...customFoods].filter(f => profile.hiddenFoods.includes(f.id));
-  const addFromDB = (f: Food) => {
-    if (!profile.pantryIngredients.includes(f.id)) updateProfile({ pantryIngredients: [...profile.pantryIngredients, f.id] });
-    setSearch('');
-  };
+  const addFromDB = (f: Food) => { if (!profile.pantryIngredients.includes(f.id)) updateProfile({ pantryIngredients: [...profile.pantryIngredients, f.id] }); setSearch(''); };
   const addManual = () => {
     if (!nf.name.trim()) return;
     const cat = guessCategory(nf.name);
     const def = CATEGORY_DEFAULTS[nf.category || cat];
     const food: Food = {
-      id: 'custom_' + Math.random().toString(36).substring(2, 11),
-      name: nf.name.trim(),
-      aliases: [nf.name.toLowerCase().trim()],
-      category: nf.category || cat,
-      kcal: Number(nf.kcal) || def.kcal,
-      protein: Number(nf.protein) || def.protein,
-      carbs: Number(nf.carbs) || def.carbs,
-      fats: Number(nf.fats) || def.fats,
-      unit: '100g',
-      isCustom: true,
+      id: 'custom_' + Math.random().toString(36).substring(2, 11), name: nf.name.trim(),
+      aliases: [nf.name.toLowerCase().trim()], category: nf.category || cat,
+      kcal: Number(nf.kcal) || def.kcal, protein: Number(nf.protein) || def.protein,
+      carbs: Number(nf.carbs) || def.carbs, fats: Number(nf.fats) || def.fats, unit: '100g',
     };
     addCustomFood(food);
     updateProfile({ pantryIngredients: [...profile.pantryIngredients, food.id] });
@@ -899,17 +820,14 @@ const PantryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       <h1 style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>Mis alimentos</h1>
       <div style={s.card}>
         <label style={s.label}>🔍 Buscar</label>
-        <input type="text" placeholder="Ej: pollo, arroz..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...s.input, marginBottom: 0 }} />
+        <input type="text" placeholder="Ej: pollo..." value={search} onChange={e => setSearch(e.target.value)} style={{ ...s.input, marginBottom: 0 }} />
         {suggestions.length > 0 && (
           <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {suggestions.map(f => {
               const already = profile.pantryIngredients.includes(f.id);
               return (
                 <div key={f.id} onClick={() => !already && addFromDB(f)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 10, background: already ? 'rgba(34,211,238,0.05)' : 'rgba(0,0,0,0.4)', borderRadius: 12, cursor: already ? 'default' : 'pointer', opacity: already ? 0.5 : 1 }}>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 800 }}>{f.name}</div>
-                    <div style={{ fontSize: 10, color: '#71717a' }}>{f.kcal} kcal · {f.protein}P · {f.carbs}C · {f.fats}G</div>
-                  </div>
+                  <div><div style={{ fontSize: 12, fontWeight: 800 }}>{f.name}</div><div style={{ fontSize: 10, color: '#71717a' }}>{f.kcal} kcal · {f.protein}P · {f.carbs}C · {f.fats}G</div></div>
                   <span style={{ color: already ? '#52525b' : '#22d3ee', fontWeight: 900 }}>{already ? '✓' : '+'}</span>
                 </div>
               );
@@ -928,7 +846,7 @@ const PantryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <select value={nf.category} onChange={e => setNf({ ...nf, category: e.target.value as FoodCategory })} style={{ ...s.input, background: '#0f0f11' }}>
               {(['proteina','carbo','grasa','verdura','fruta','lacteo','otro'] as FoodCategory[]).map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <div style={{ fontSize: 10, color: '#71717a', fontStyle: 'italic', marginBottom: 8 }}>Macros opcionales. Si los dejas vacíos, se estiman por categoría.</div>
+            <div style={{ fontSize: 10, color: '#71717a', fontStyle: 'italic', marginBottom: 8 }}>Macros opcionales.</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div><label style={s.label}>Kcal</label><input type="number" value={nf.kcal} onChange={e => setNf({ ...nf, kcal: e.target.value })} style={{ ...s.input, marginBottom: 0 }} /></div>
               <div><label style={s.label}>Proteína</label><input type="number" value={nf.protein} onChange={e => setNf({ ...nf, protein: e.target.value })} style={{ ...s.input, marginBottom: 0 }} /></div>
@@ -956,9 +874,7 @@ const PantryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <div style={s.card}>
           <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 8 }}>OCULTOS ({hiddenFoods.length})</div>
           {hiddenFoods.map(f => (
-            <button key={f.id} onClick={() => unhideFood(f.id)} style={{ display: 'block', width: '100%', background: 'rgba(255,255,255,0.03)', border: 'none', color: '#a1a1aa', padding: 10, borderRadius: 12, fontSize: 11, marginBottom: 6, cursor: 'pointer', textAlign: 'left' }}>
-              {f.name} — pulsar para restaurar
-            </button>
+            <button key={f.id} onClick={() => unhideFood(f.id)} style={{ display: 'block', width: '100%', background: 'rgba(255,255,255,0.03)', border: 'none', color: '#a1a1aa', padding: 10, borderRadius: 12, fontSize: 11, marginBottom: 6, cursor: 'pointer', textAlign: 'left' }}>{f.name} — restaurar</button>
           ))}
         </div>
       )}
@@ -966,25 +882,16 @@ const PantryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-// ==========================================
-// RECETAS
-// ==========================================
 const RecipesView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { allFoods } = useFitApp();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [cat, setCat] = useState<Recipe['category']>('comida');
-  const cats: { k: Recipe['category']; l: string }[] = [
-    { k: 'desayuno', l: '🍳 Desayuno' }, { k: 'comida', l: '🍽️ Comida' }, { k: 'cena', l: '🌙 Cena' },
-    { k: 'snack', l: '🥨 Snack' }, { k: 'batido', l: '🥤 Batido' }, { k: 'bebida', l: '💧 Bebida' },
-  ];
+  const [cat, setCat] = useState('comida');
+  const cats = [{ k: 'desayuno', l: '🍳 Desayuno' }, { k: 'comida', l: '🍽️ Comida' }, { k: 'cena', l: '🌙 Cena' }, { k: 'snack', l: '🥨 Snack' }, { k: 'batido', l: '🥤 Batido' }, { k: 'bebida', l: '💧 Bebida' }];
   const gen = () => {
-    if (allFoods.length === 0) { alert('Añade alimentos a la despensa.'); return; }
+    if (allFoods.length === 0) { alert('Añade alimentos.'); return; }
     const r: Recipe[] = [];
-    for (let i = 0; i < 3; i++) {
-      const rec = generateMeal(allFoods, cat);
-      if (rec && !r.some(x => x.name === rec.name)) r.push(rec);
-    }
-    if (r.length === 0) { alert('No hay suficientes alimentos de las categorías necesarias.'); return; }
+    for (let i = 0; i < 3; i++) { const rec = generateMeal(allFoods, cat); if (rec && !r.some(x => x.name === rec.name)) r.push(rec); }
+    if (r.length === 0) { alert('Faltan alimentos.'); return; }
     setRecipes(r);
   };
   return (
@@ -1020,9 +927,6 @@ const RecipesView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-// ==========================================
-// MENÚ SEMANAL
-// ==========================================
 const WeeklyMenuView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { allFoods, profile } = useFitApp();
   const [menu, setMenu] = useState<WeeklyMenuDay[]>([]);
@@ -1032,16 +936,11 @@ const WeeklyMenuView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (allFoods.length < 3) { alert('Añade más alimentos.'); return; }
     const w: WeeklyMenuDay[] = days.map(d => ({
       dayName: d,
-      meals: {
-        desayuno: generateMeal(allFoods, 'desayuno'),
-        comida: generateMeal(allFoods, 'comida'),
-        cena: generateMeal(allFoods, 'cena'),
-        snack: generateMeal(allFoods, 'snack'),
-      },
+      meals: { desayuno: generateMeal(allFoods, 'desayuno'), comida: generateMeal(allFoods, 'comida'), cena: generateMeal(allFoods, 'cena'), snack: generateMeal(allFoods, 'snack') },
     }));
     setMenu(w);
   };
-  const regen = (i: number, k: keyof WeeklyMenuDay['meals']) => {
+  const regen = (i: number, k: string) => {
     const u = [...menu];
     u[i] = { ...u[i], meals: { ...u[i].meals, [k]: generateMeal(allFoods, k) } };
     setMenu(u);
@@ -1096,9 +995,6 @@ const WeeklyMenuView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-// ==========================================
-// PERFIL
-// ==========================================
 const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { profile, updateProfile, clearAllData } = useFitApp();
   const [name, setName] = useState(profile.name);
@@ -1146,7 +1042,7 @@ const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             return <button key={c.k} onClick={() => updateProfile({ context: c.k })} style={{ padding: '10px 12px', borderRadius: 12, border: a ? '2px solid #22d3ee' : '1px solid rgba(255,255,255,0.08)', background: a ? 'rgba(34,211,238,0.15)' : 'rgba(0,0,0,0.4)', color: a ? '#22d3ee' : '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>{c.l}</button>;
           })}
         </div>
-        <div style={{ fontSize: 10, color: '#71717a', marginTop: 10, fontStyle: 'italic' }}>Al cambiar el contexto, los materiales y ejercicios se adaptan automáticamente.</div>
+        <div style={{ fontSize: 10, color: '#71717a', marginTop: 10, fontStyle: 'italic' }}>Al cambiar el contexto, materiales y ejercicios se adaptan.</div>
       </div>
       <div style={s.card}>
         <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 10 }}>🗑️ Datos</div>
@@ -1157,9 +1053,6 @@ const ProfileView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   );
 };
 
-// ==========================================
-// APP
-// ==========================================
 function AppContent() {
   const [tab, setTab] = useState('dashboard');
   const [pending, setPending] = useState<{ e: Exercise[]; t: number } | null>(null);
@@ -1174,7 +1067,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP</span>
-        <span style={s.badge}>v10.0</span>
+        <span style={s.badge}>v10.0 COMPLETA</span>
       </header>
       <main>
         {active ? <Player exercises={active} onFinish={() => setActive(null)} />
