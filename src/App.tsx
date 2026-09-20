@@ -24,6 +24,7 @@ class ErrorBoundary extends Component<Props, State> {
 export type Goal = 'perder_grasa' | 'ganar_musculo' | 'ganar_fuerza' | 'mantener';
 export type ContextType = 'casa' | 'gimnasio' | 'fuera_de_casa';
 export type FoodCategory = 'proteina' | 'carbo' | 'grasa' | 'verdura' | 'fruta' | 'lacteo' | 'otro';
+export type FoodUse = 'plato' | 'salteado' | 'batido' | 'snack' | 'desayuno' | 'bebida' | 'smoothie';
 
 export interface HomeItem { id: string; name: string; icon: string; context: ContextType; category: string; description: string; }
 export interface WeeklyRoutineDay { dayName: string; muscles: string[]; isRestDay: boolean; }
@@ -39,7 +40,7 @@ export interface Exercise {
 }
 export interface WorkoutSetLog { setNumber: number; weight: number; reps: number; completed: boolean; }
 export interface WorkoutLogRecord { id: string; sessionId: string; date: string; exerciseName: string; sets: WorkoutSetLog[]; }
-export interface Food { id: string; name: string; aliases: string[]; category: FoodCategory; kcal: number; protein: number; carbs: number; fats: number; unit: string; }
+export interface Food { id: string; name: string; aliases: string[]; category: FoodCategory; kcal: number; protein: number; carbs: number; fats: number; unit: string; uses: FoodUse[]; }
 export interface Recipe { id: string; name: string; category: string; ingredients: { name: string; grams: number }[]; kcal: number; protein: number; carbs: number; fats: number; desc: string; icon: string; }
 export interface WeeklyMenuDay { dayName: string; meals: { desayuno: Recipe | null; comida: Recipe | null; cena: Recipe | null; snack: Recipe | null; }; }
 
@@ -144,89 +145,104 @@ export const MASTER_EXERCISES: Exercise[] = [
   { id: 'gym_press_hombros', name: 'Press hombros mancuernas', muscle: 'hombros', defaultSets: 4, defaultReps: 10, defaultWeight: '15', context: ['gimnasio'], requiredItems: ['mancuernas'], level: 'Intermedio', description: 'Press mancuernas.', steps: ['Sentado', 'Mancuernas a hombros', 'Empuja arriba', 'Baja controlado'], mistakes: 'Arquear lumbar.', tip: 'Core activo.', imageUrl: 'https://images.unsplash.com/photo-1532029837206-abbe2b76ad0e?w=400' },
 ];
 
+// ALIMENTOS con campo "uses" para saber en qué recetas encajan
 export const FOOD_DATABASE: Food[] = [
-  { id: 'pollo', name: 'Pechuga pollo', aliases: ['pollo'], category: 'proteina', kcal: 165, protein: 31, carbs: 0, fats: 3.6, unit: '100g' },
-  { id: 'ternera', name: 'Ternera magra', aliases: ['ternera'], category: 'proteina', kcal: 187, protein: 26, carbs: 0, fats: 9, unit: '100g' },
-  { id: 'pavo', name: 'Pavo', aliases: ['pavo'], category: 'proteina', kcal: 135, protein: 29, carbs: 0, fats: 1.7, unit: '100g' },
-  { id: 'cerdo', name: 'Lomo cerdo', aliases: ['cerdo'], category: 'proteina', kcal: 145, protein: 26, carbs: 0, fats: 4, unit: '100g' },
-  { id: 'atun', name: 'Atún natural', aliases: ['atun'], category: 'proteina', kcal: 116, protein: 26, carbs: 0, fats: 1, unit: '100g' },
-  { id: 'salmon', name: 'Salmón', aliases: ['salmon'], category: 'proteina', kcal: 208, protein: 20, carbs: 0, fats: 13, unit: '100g' },
-  { id: 'merluza', name: 'Merluza', aliases: ['merluza'], category: 'proteina', kcal: 90, protein: 18, carbs: 0, fats: 1, unit: '100g' },
-  { id: 'bacalao', name: 'Bacalao', aliases: ['bacalao'], category: 'proteina', kcal: 82, protein: 18, carbs: 0, fats: 0.7, unit: '100g' },
-  { id: 'gambas', name: 'Gambas', aliases: ['gambas'], category: 'proteina', kcal: 99, protein: 24, carbs: 0, fats: 0.3, unit: '100g' },
-  { id: 'huevo', name: 'Huevo', aliases: ['huevo'], category: 'proteina', kcal: 155, protein: 13, carbs: 1, fats: 11, unit: '100g' },
-  { id: 'tofu', name: 'Tofu firme', aliases: ['tofu'], category: 'proteina', kcal: 144, protein: 15, carbs: 3, fats: 9, unit: '100g' },
-  { id: 'tempeh', name: 'Tempeh', aliases: ['tempeh'], category: 'proteina', kcal: 195, protein: 19, carbs: 8, fats: 11, unit: '100g' },
-  { id: 'lentejas', name: 'Lentejas', aliases: ['lentejas'], category: 'proteina', kcal: 116, protein: 9, carbs: 20, fats: 0.4, unit: '100g' },
-  { id: 'garbanzos', name: 'Garbanzos', aliases: ['garbanzos'], category: 'proteina', kcal: 164, protein: 8.9, carbs: 27, fats: 2.6, unit: '100g' },
-  { id: 'proteina_polvo', name: 'Proteína polvo', aliases: ['whey'], category: 'proteina', kcal: 400, protein: 80, carbs: 8, fats: 5, unit: '100g' },
-  { id: 'arroz', name: 'Arroz blanco', aliases: ['arroz'], category: 'carbo', kcal: 130, protein: 2.7, carbs: 28, fats: 0.3, unit: '100g' },
-  { id: 'arroz_int', name: 'Arroz integral', aliases: ['arroz int'], category: 'carbo', kcal: 123, protein: 2.7, carbs: 26, fats: 1, unit: '100g' },
-  { id: 'pasta', name: 'Pasta cocida', aliases: ['pasta'], category: 'carbo', kcal: 158, protein: 6, carbs: 31, fats: 0.9, unit: '100g' },
-  { id: 'pan_int', name: 'Pan integral', aliases: ['pan'], category: 'carbo', kcal: 247, protein: 13, carbs: 41, fats: 3.4, unit: '100g' },
-  { id: 'pan_blanco', name: 'Pan blanco', aliases: ['pan blanco'], category: 'carbo', kcal: 265, protein: 9, carbs: 49, fats: 3.2, unit: '100g' },
-  { id: 'avena', name: 'Avena', aliases: ['avena'], category: 'carbo', kcal: 389, protein: 17, carbs: 66, fats: 7, unit: '100g' },
-  { id: 'muesli', name: 'Muesli', aliases: ['muesli'], category: 'carbo', kcal: 360, protein: 10, carbs: 66, fats: 5, unit: '100g' },
-  { id: 'patata', name: 'Patata', aliases: ['patata'], category: 'carbo', kcal: 87, protein: 2, carbs: 20, fats: 0.1, unit: '100g' },
-  { id: 'batata', name: 'Batata', aliases: ['batata'], category: 'carbo', kcal: 86, protein: 1.6, carbs: 20, fats: 0.1, unit: '100g' },
-  { id: 'quinoa', name: 'Quinoa', aliases: ['quinoa'], category: 'carbo', kcal: 120, protein: 4.4, carbs: 21, fats: 1.9, unit: '100g' },
-  { id: 'cuscus', name: 'Cuscús', aliases: ['cuscus'], category: 'carbo', kcal: 112, protein: 3.8, carbs: 23, fats: 0.2, unit: '100g' },
-  { id: 'bulgur', name: 'Bulgur', aliases: ['bulgur'], category: 'carbo', kcal: 83, protein: 3.1, carbs: 19, fats: 0.2, unit: '100g' },
-  { id: 'maiz', name: 'Maíz', aliases: ['maiz'], category: 'carbo', kcal: 86, protein: 3.3, carbs: 19, fats: 1.4, unit: '100g' },
-  { id: 'tortitas_arroz', name: 'Tortitas arroz', aliases: ['tortitas'], category: 'carbo', kcal: 387, protein: 8, carbs: 82, fats: 3, unit: '100g' },
-  { id: 'wrap', name: 'Tortilla wrap', aliases: ['wrap'], category: 'carbo', kcal: 290, protein: 8, carbs: 48, fats: 7, unit: '100g' },
-  { id: 'aceite', name: 'Aceite oliva', aliases: ['aceite'], category: 'grasa', kcal: 884, protein: 0, carbs: 0, fats: 100, unit: '100ml' },
-  { id: 'aceite_coco', name: 'Aceite coco', aliases: ['aceite coco'], category: 'grasa', kcal: 862, protein: 0, carbs: 0, fats: 100, unit: '100ml' },
-  { id: 'aguacate', name: 'Aguacate', aliases: ['aguacate'], category: 'grasa', kcal: 160, protein: 2, carbs: 9, fats: 15, unit: '100g' },
-  { id: 'nueces', name: 'Nueces', aliases: ['nueces'], category: 'grasa', kcal: 654, protein: 15, carbs: 14, fats: 65, unit: '100g' },
-  { id: 'almendras', name: 'Almendras', aliases: ['almendras'], category: 'grasa', kcal: 579, protein: 21, carbs: 22, fats: 50, unit: '100g' },
-  { id: 'avellanas', name: 'Avellanas', aliases: ['avellanas'], category: 'grasa', kcal: 628, protein: 15, carbs: 17, fats: 61, unit: '100g' },
-  { id: 'pistachos', name: 'Pistachos', aliases: ['pistachos'], category: 'grasa', kcal: 562, protein: 20, carbs: 28, fats: 45, unit: '100g' },
-  { id: 'anacardos', name: 'Anacardos', aliases: ['anacardos'], category: 'grasa', kcal: 553, protein: 18, carbs: 30, fats: 44, unit: '100g' },
-  { id: 'cacahuete', name: 'Crema cacahuete', aliases: ['cacahuete'], category: 'grasa', kcal: 588, protein: 25, carbs: 20, fats: 50, unit: '100g' },
-  { id: 'chia', name: 'Chía', aliases: ['chia'], category: 'grasa', kcal: 486, protein: 17, carbs: 42, fats: 31, unit: '100g' },
-  { id: 'lino', name: 'Lino', aliases: ['lino'], category: 'grasa', kcal: 534, protein: 18, carbs: 29, fats: 42, unit: '100g' },
-  { id: 'tahini', name: 'Tahini', aliases: ['tahini'], category: 'grasa', kcal: 595, protein: 17, carbs: 21, fats: 54, unit: '100g' },
-  { id: 'brocoli', name: 'Brócoli', aliases: ['brocoli'], category: 'verdura', kcal: 34, protein: 2.8, carbs: 7, fats: 0.4, unit: '100g' },
-  { id: 'espinaca', name: 'Espinacas', aliases: ['espinaca'], category: 'verdura', kcal: 23, protein: 2.9, carbs: 3.6, fats: 0.4, unit: '100g' },
-  { id: 'tomate', name: 'Tomate', aliases: ['tomate'], category: 'verdura', kcal: 18, protein: 0.9, carbs: 3.9, fats: 0.2, unit: '100g' },
-  { id: 'lechuga', name: 'Lechuga', aliases: ['lechuga'], category: 'verdura', kcal: 15, protein: 1.4, carbs: 2.9, fats: 0.2, unit: '100g' },
-  { id: 'zanahoria', name: 'Zanahoria', aliases: ['zanahoria'], category: 'verdura', kcal: 41, protein: 0.9, carbs: 10, fats: 0.2, unit: '100g' },
-  { id: 'calabacin', name: 'Calabacín', aliases: ['calabacin'], category: 'verdura', kcal: 17, protein: 1.2, carbs: 3.1, fats: 0.3, unit: '100g' },
-  { id: 'pimiento', name: 'Pimiento', aliases: ['pimiento'], category: 'verdura', kcal: 31, protein: 1, carbs: 6, fats: 0.3, unit: '100g' },
-  { id: 'cebolla', name: 'Cebolla', aliases: ['cebolla'], category: 'verdura', kcal: 40, protein: 1.1, carbs: 9, fats: 0.1, unit: '100g' },
-  { id: 'ajo', name: 'Ajo', aliases: ['ajo'], category: 'verdura', kcal: 149, protein: 6.4, carbs: 33, fats: 0.5, unit: '100g' },
-  { id: 'pepino', name: 'Pepino', aliases: ['pepino'], category: 'verdura', kcal: 16, protein: 0.7, carbs: 3.6, fats: 0.1, unit: '100g' },
-  { id: 'coliflor', name: 'Coliflor', aliases: ['coliflor'], category: 'verdura', kcal: 25, protein: 1.9, carbs: 5, fats: 0.3, unit: '100g' },
-  { id: 'judias_verdes', name: 'Judías verdes', aliases: ['judias'], category: 'verdura', kcal: 31, protein: 1.8, carbs: 7, fats: 0.1, unit: '100g' },
-  { id: 'berenjena', name: 'Berenjena', aliases: ['berenjena'], category: 'verdura', kcal: 25, protein: 1, carbs: 6, fats: 0.2, unit: '100g' },
-  { id: 'champinones', name: 'Champiñones', aliases: ['champiñones'], category: 'verdura', kcal: 22, protein: 3.1, carbs: 3.3, fats: 0.3, unit: '100g' },
-  { id: 'esparragos', name: 'Espárragos', aliases: ['esparragos'], category: 'verdura', kcal: 20, protein: 2.2, carbs: 3.9, fats: 0.1, unit: '100g' },
-  { id: 'platano', name: 'Plátano', aliases: ['platano'], category: 'fruta', kcal: 89, protein: 1.1, carbs: 23, fats: 0.3, unit: '100g' },
-  { id: 'manzana', name: 'Manzana', aliases: ['manzana'], category: 'fruta', kcal: 52, protein: 0.3, carbs: 14, fats: 0.2, unit: '100g' },
-  { id: 'naranja', name: 'Naranja', aliases: ['naranja'], category: 'fruta', kcal: 47, protein: 0.9, carbs: 12, fats: 0.1, unit: '100g' },
-  { id: 'fresas', name: 'Fresas', aliases: ['fresas'], category: 'fruta', kcal: 32, protein: 0.7, carbs: 7.7, fats: 0.3, unit: '100g' },
-  { id: 'arandanos', name: 'Arándanos', aliases: ['arandanos'], category: 'fruta', kcal: 57, protein: 0.7, carbs: 14, fats: 0.3, unit: '100g' },
-  { id: 'pera', name: 'Pera', aliases: ['pera'], category: 'fruta', kcal: 57, protein: 0.4, carbs: 15, fats: 0.1, unit: '100g' },
-  { id: 'kiwi', name: 'Kiwi', aliases: ['kiwi'], category: 'fruta', kcal: 61, protein: 1.1, carbs: 15, fats: 0.5, unit: '100g' },
-  { id: 'mango', name: 'Mango', aliases: ['mango'], category: 'fruta', kcal: 60, protein: 0.8, carbs: 15, fats: 0.4, unit: '100g' },
-  { id: 'pina', name: 'Piña', aliases: ['pina'], category: 'fruta', kcal: 50, protein: 0.5, carbs: 13, fats: 0.1, unit: '100g' },
-  { id: 'melocoton', name: 'Melocotón', aliases: ['melocoton'], category: 'fruta', kcal: 39, protein: 0.9, carbs: 10, fats: 0.3, unit: '100g' },
-  { id: 'uvas', name: 'Uvas', aliases: ['uvas'], category: 'fruta', kcal: 69, protein: 0.7, carbs: 18, fats: 0.2, unit: '100g' },
-  { id: 'limon', name: 'Limón', aliases: ['limon'], category: 'fruta', kcal: 29, protein: 1.1, carbs: 9, fats: 0.3, unit: '100g' },
-  { id: 'yogur', name: 'Yogur griego', aliases: ['yogur'], category: 'lacteo', kcal: 97, protein: 9, carbs: 4, fats: 5, unit: '100g' },
-  { id: 'yogur_nat', name: 'Yogur natural', aliases: ['yogur nat'], category: 'lacteo', kcal: 61, protein: 3.5, carbs: 4.7, fats: 3.3, unit: '100g' },
-  { id: 'skyr', name: 'Skyr', aliases: ['skyr'], category: 'lacteo', kcal: 63, protein: 11, carbs: 4, fats: 0.2, unit: '100g' },
-  { id: 'kefir', name: 'Kéfir', aliases: ['kefir'], category: 'lacteo', kcal: 55, protein: 3.3, carbs: 4.5, fats: 3, unit: '100ml' },
-  { id: 'leche', name: 'Leche semidesnatada', aliases: ['leche'], category: 'lacteo', kcal: 47, protein: 3.2, carbs: 4.8, fats: 1.6, unit: '100ml' },
-  { id: 'queso_fresco', name: 'Queso fresco', aliases: ['queso'], category: 'lacteo', kcal: 78, protein: 12, carbs: 4, fats: 1.5, unit: '100g' },
-  { id: 'mozzarella', name: 'Mozzarella', aliases: ['mozzarella'], category: 'lacteo', kcal: 254, protein: 18, carbs: 3, fats: 19, unit: '100g' },
-  { id: 'feta', name: 'Queso feta', aliases: ['feta'], category: 'lacteo', kcal: 264, protein: 14, carbs: 4, fats: 21, unit: '100g' },
-  { id: 'cacao', name: 'Cacao puro', aliases: ['cacao'], category: 'otro', kcal: 228, protein: 20, carbs: 58, fats: 14, unit: '100g' },
-  { id: 'miel', name: 'Miel', aliases: ['miel'], category: 'otro', kcal: 304, protein: 0.3, carbs: 82, fats: 0, unit: '100g' },
-  { id: 'chocolate85', name: 'Chocolate negro 85%', aliases: ['chocolate'], category: 'otro', kcal: 592, protein: 10, carbs: 22, fats: 54, unit: '100g' },
-  { id: 'hummus', name: 'Hummus', aliases: ['hummus'], category: 'otro', kcal: 166, protein: 8, carbs: 14, fats: 10, unit: '100g' },
-  { id: 'jengibre', name: 'Jengibre', aliases: ['jengibre'], category: 'otro', kcal: 80, protein: 1.8, carbs: 18, fats: 0.8, unit: '100g' },
+  // PROTEÍNAS SÓLIDAS (para plato, salteado)
+  { id: 'pollo', name: 'Pechuga pollo', aliases: ['pollo'], category: 'proteina', kcal: 165, protein: 31, carbs: 0, fats: 3.6, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'ternera', name: 'Ternera magra', aliases: ['ternera'], category: 'proteina', kcal: 187, protein: 26, carbs: 0, fats: 9, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'pavo', name: 'Pavo', aliases: ['pavo'], category: 'proteina', kcal: 135, protein: 29, carbs: 0, fats: 1.7, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'cerdo', name: 'Lomo cerdo', aliases: ['cerdo'], category: 'proteina', kcal: 145, protein: 26, carbs: 0, fats: 4, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'atun', name: 'Atún natural', aliases: ['atun'], category: 'proteina', kcal: 116, protein: 26, carbs: 0, fats: 1, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'salmon', name: 'Salmón', aliases: ['salmon'], category: 'proteina', kcal: 208, protein: 20, carbs: 0, fats: 13, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'merluza', name: 'Merluza', aliases: ['merluza'], category: 'proteina', kcal: 90, protein: 18, carbs: 0, fats: 1, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'bacalao', name: 'Bacalao', aliases: ['bacalao'], category: 'proteina', kcal: 82, protein: 18, carbs: 0, fats: 0.7, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'gambas', name: 'Gambas', aliases: ['gambas'], category: 'proteina', kcal: 99, protein: 24, carbs: 0, fats: 0.3, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'huevo', name: 'Huevo', aliases: ['huevo'], category: 'proteina', kcal: 155, protein: 13, carbs: 1, fats: 11, unit: '100g', uses: ['plato', 'salteado', 'desayuno'] },
+  { id: 'tofu', name: 'Tofu firme', aliases: ['tofu'], category: 'proteina', kcal: 144, protein: 15, carbs: 3, fats: 9, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'tempeh', name: 'Tempeh', aliases: ['tempeh'], category: 'proteina', kcal: 195, protein: 19, carbs: 8, fats: 11, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'lentejas', name: 'Lentejas', aliases: ['lentejas'], category: 'proteina', kcal: 116, protein: 9, carbs: 20, fats: 0.4, unit: '100g', uses: ['plato'] },
+  { id: 'garbanzos', name: 'Garbanzos', aliases: ['garbanzos'], category: 'proteina', kcal: 164, protein: 8.9, carbs: 27, fats: 2.6, unit: '100g', uses: ['plato'] },
+  // PROTEÍNAS PARA BATIDO (lácteas / polvo)
+  { id: 'proteina_polvo', name: 'Proteína polvo', aliases: ['whey'], category: 'proteina', kcal: 400, protein: 80, carbs: 8, fats: 5, unit: '100g', uses: ['batido'] },
+
+  // CARBOHIDRATOS
+  { id: 'arroz', name: 'Arroz blanco', aliases: ['arroz'], category: 'carbo', kcal: 130, protein: 2.7, carbs: 28, fats: 0.3, unit: '100g', uses: ['plato'] },
+  { id: 'arroz_int', name: 'Arroz integral', aliases: ['arroz int'], category: 'carbo', kcal: 123, protein: 2.7, carbs: 26, fats: 1, unit: '100g', uses: ['plato'] },
+  { id: 'pasta', name: 'Pasta cocida', aliases: ['pasta'], category: 'carbo', kcal: 158, protein: 6, carbs: 31, fats: 0.9, unit: '100g', uses: ['plato'] },
+  { id: 'pan_int', name: 'Pan integral', aliases: ['pan'], category: 'carbo', kcal: 247, protein: 13, carbs: 41, fats: 3.4, unit: '100g', uses: ['desayuno'] },
+  { id: 'pan_blanco', name: 'Pan blanco', aliases: ['pan blanco'], category: 'carbo', kcal: 265, protein: 9, carbs: 49, fats: 3.2, unit: '100g', uses: ['desayuno'] },
+  { id: 'avena', name: 'Avena', aliases: ['avena'], category: 'carbo', kcal: 389, protein: 17, carbs: 66, fats: 7, unit: '100g', uses: ['desayuno', 'batido'] },
+  { id: 'muesli', name: 'Muesli', aliases: ['muesli'], category: 'carbo', kcal: 360, protein: 10, carbs: 66, fats: 5, unit: '100g', uses: ['desayuno'] },
+  { id: 'patata', name: 'Patata', aliases: ['patata'], category: 'carbo', kcal: 87, protein: 2, carbs: 20, fats: 0.1, unit: '100g', uses: ['plato'] },
+  { id: 'batata', name: 'Batata', aliases: ['batata'], category: 'carbo', kcal: 86, protein: 1.6, carbs: 20, fats: 0.1, unit: '100g', uses: ['plato'] },
+  { id: 'quinoa', name: 'Quinoa', aliases: ['quinoa'], category: 'carbo', kcal: 120, protein: 4.4, carbs: 21, fats: 1.9, unit: '100g', uses: ['plato'] },
+  { id: 'cuscus', name: 'Cuscús', aliases: ['cuscus'], category: 'carbo', kcal: 112, protein: 3.8, carbs: 23, fats: 0.2, unit: '100g', uses: ['plato'] },
+  { id: 'bulgur', name: 'Bulgur', aliases: ['bulgur'], category: 'carbo', kcal: 83, protein: 3.1, carbs: 19, fats: 0.2, unit: '100g', uses: ['plato'] },
+  { id: 'maiz', name: 'Maíz', aliases: ['maiz'], category: 'carbo', kcal: 86, protein: 3.3, carbs: 19, fats: 1.4, unit: '100g', uses: ['plato'] },
+  { id: 'tortitas_arroz', name: 'Tortitas arroz', aliases: ['tortitas'], category: 'carbo', kcal: 387, protein: 8, carbs: 82, fats: 3, unit: '100g', uses: ['snack'] },
+  { id: 'wrap', name: 'Tortilla wrap', aliases: ['wrap'], category: 'carbo', kcal: 290, protein: 8, carbs: 48, fats: 7, unit: '100g', uses: ['plato'] },
+
+  // GRASAS
+  { id: 'aceite', name: 'Aceite oliva', aliases: ['aceite'], category: 'grasa', kcal: 884, protein: 0, carbs: 0, fats: 100, unit: '100ml', uses: ['plato', 'salteado'] },
+  { id: 'aceite_coco', name: 'Aceite coco', aliases: ['aceite coco'], category: 'grasa', kcal: 862, protein: 0, carbs: 0, fats: 100, unit: '100ml', uses: ['plato'] },
+  { id: 'aguacate', name: 'Aguacate', aliases: ['aguacate'], category: 'grasa', kcal: 160, protein: 2, carbs: 9, fats: 15, unit: '100g', uses: ['plato', 'salteado', 'snack'] },
+  { id: 'nueces', name: 'Nueces', aliases: ['nueces'], category: 'grasa', kcal: 654, protein: 15, carbs: 14, fats: 65, unit: '100g', uses: ['snack', 'desayuno'] },
+  { id: 'almendras', name: 'Almendras', aliases: ['almendras'], category: 'grasa', kcal: 579, protein: 21, carbs: 22, fats: 50, unit: '100g', uses: ['snack', 'desayuno'] },
+  { id: 'avellanas', name: 'Avellanas', aliases: ['avellanas'], category: 'grasa', kcal: 628, protein: 15, carbs: 17, fats: 61, unit: '100g', uses: ['snack'] },
+  { id: 'pistachos', name: 'Pistachos', aliases: ['pistachos'], category: 'grasa', kcal: 562, protein: 20, carbs: 28, fats: 45, unit: '100g', uses: ['snack'] },
+  { id: 'anacardos', name: 'Anacardos', aliases: ['anacardos'], category: 'grasa', kcal: 553, protein: 18, carbs: 30, fats: 44, unit: '100g', uses: ['snack'] },
+  { id: 'cacahuete', name: 'Crema cacahuete', aliases: ['cacahuete'], category: 'grasa', kcal: 588, protein: 25, carbs: 20, fats: 50, unit: '100g', uses: ['batido', 'snack', 'desayuno'] },
+  { id: 'chia', name: 'Chía', aliases: ['chia'], category: 'grasa', kcal: 486, protein: 17, carbs: 42, fats: 31, unit: '100g', uses: ['desayuno', 'snack'] },
+  { id: 'lino', name: 'Lino', aliases: ['lino'], category: 'grasa', kcal: 534, protein: 18, carbs: 29, fats: 42, unit: '100g', uses: ['desayuno'] },
+  { id: 'tahini', name: 'Tahini', aliases: ['tahini'], category: 'grasa', kcal: 595, protein: 17, carbs: 21, fats: 54, unit: '100g', uses: ['salteado'] },
+
+  // VERDURAS
+  { id: 'brocoli', name: 'Brócoli', aliases: ['brocoli'], category: 'verdura', kcal: 34, protein: 2.8, carbs: 7, fats: 0.4, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'espinaca', name: 'Espinacas', aliases: ['espinaca'], category: 'verdura', kcal: 23, protein: 2.9, carbs: 3.6, fats: 0.4, unit: '100g', uses: ['plato', 'salteado', 'smoothie'] },
+  { id: 'tomate', name: 'Tomate', aliases: ['tomate'], category: 'verdura', kcal: 18, protein: 0.9, carbs: 3.9, fats: 0.2, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'lechuga', name: 'Lechuga', aliases: ['lechuga'], category: 'verdura', kcal: 15, protein: 1.4, carbs: 2.9, fats: 0.2, unit: '100g', uses: ['plato', 'salteado', 'smoothie'] },
+  { id: 'zanahoria', name: 'Zanahoria', aliases: ['zanahoria'], category: 'verdura', kcal: 41, protein: 0.9, carbs: 10, fats: 0.2, unit: '100g', uses: ['plato', 'salteado', 'smoothie'] },
+  { id: 'calabacin', name: 'Calabacín', aliases: ['calabacin'], category: 'verdura', kcal: 17, protein: 1.2, carbs: 3.1, fats: 0.3, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'pimiento', name: 'Pimiento', aliases: ['pimiento'], category: 'verdura', kcal: 31, protein: 1, carbs: 6, fats: 0.3, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'cebolla', name: 'Cebolla', aliases: ['cebolla'], category: 'verdura', kcal: 40, protein: 1.1, carbs: 9, fats: 0.1, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'ajo', name: 'Ajo', aliases: ['ajo'], category: 'verdura', kcal: 149, protein: 6.4, carbs: 33, fats: 0.5, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'pepino', name: 'Pepino', aliases: ['pepino'], category: 'verdura', kcal: 16, protein: 0.7, carbs: 3.6, fats: 0.1, unit: '100g', uses: ['plato', 'salteado', 'smoothie'] },
+  { id: 'coliflor', name: 'Coliflor', aliases: ['coliflor'], category: 'verdura', kcal: 25, protein: 1.9, carbs: 5, fats: 0.3, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'judias_verdes', name: 'Judías verdes', aliases: ['judias'], category: 'verdura', kcal: 31, protein: 1.8, carbs: 7, fats: 0.1, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'berenjena', name: 'Berenjena', aliases: ['berenjena'], category: 'verdura', kcal: 25, protein: 1, carbs: 6, fats: 0.2, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'champinones', name: 'Champiñones', aliases: ['champiñones'], category: 'verdura', kcal: 22, protein: 3.1, carbs: 3.3, fats: 0.3, unit: '100g', uses: ['plato', 'salteado'] },
+  { id: 'esparragos', name: 'Espárragos', aliases: ['esparragos'], category: 'verdura', kcal: 20, protein: 2.2, carbs: 3.9, fats: 0.1, unit: '100g', uses: ['plato', 'salteado'] },
+
+  // FRUTAS
+  { id: 'platano', name: 'Plátano', aliases: ['platano'], category: 'fruta', kcal: 89, protein: 1.1, carbs: 23, fats: 0.3, unit: '100g', uses: ['batido', 'snack', 'desayuno', 'smoothie'] },
+  { id: 'manzana', name: 'Manzana', aliases: ['manzana'], category: 'fruta', kcal: 52, protein: 0.3, carbs: 14, fats: 0.2, unit: '100g', uses: ['snack', 'desayuno', 'smoothie'] },
+  { id: 'naranja', name: 'Naranja', aliases: ['naranja'], category: 'fruta', kcal: 47, protein: 0.9, carbs: 12, fats: 0.1, unit: '100g', uses: ['snack', 'desayuno', 'smoothie', 'bebida'] },
+  { id: 'fresas', name: 'Fresas', aliases: ['fresas'], category: 'fruta', kcal: 32, protein: 0.7, carbs: 7.7, fats: 0.3, unit: '100g', uses: ['batido', 'snack', 'desayuno', 'smoothie'] },
+  { id: 'arandanos', name: 'Arándanos', aliases: ['arandanos'], category: 'fruta', kcal: 57, protein: 0.7, carbs: 14, fats: 0.3, unit: '100g', uses: ['batido', 'snack', 'desayuno', 'smoothie'] },
+  { id: 'pera', name: 'Pera', aliases: ['pera'], category: 'fruta', kcal: 57, protein: 0.4, carbs: 15, fats: 0.1, unit: '100g', uses: ['snack', 'desayuno', 'smoothie'] },
+  { id: 'kiwi', name: 'Kiwi', aliases: ['kiwi'], category: 'fruta', kcal: 61, protein: 1.1, carbs: 15, fats: 0.5, unit: '100g', uses: ['snack', 'desayuno', 'smoothie'] },
+  { id: 'mango', name: 'Mango', aliases: ['mango'], category: 'fruta', kcal: 60, protein: 0.8, carbs: 15, fats: 0.4, unit: '100g', uses: ['batido', 'snack', 'smoothie'] },
+  { id: 'pina', name: 'Piña', aliases: ['pina'], category: 'fruta', kcal: 50, protein: 0.5, carbs: 13, fats: 0.1, unit: '100g', uses: ['snack', 'smoothie'] },
+  { id: 'melocoton', name: 'Melocotón', aliases: ['melocoton'], category: 'fruta', kcal: 39, protein: 0.9, carbs: 10, fats: 0.3, unit: '100g', uses: ['snack', 'smoothie'] },
+  { id: 'uvas', name: 'Uvas', aliases: ['uvas'], category: 'fruta', kcal: 69, protein: 0.7, carbs: 18, fats: 0.2, unit: '100g', uses: ['snack'] },
+  { id: 'limon', name: 'Limón', aliases: ['limon'], category: 'fruta', kcal: 29, protein: 1.1, carbs: 9, fats: 0.3, unit: '100g', uses: ['bebida'] },
+
+  // LÁCTEOS (para batido, snack, desayuno)
+  { id: 'yogur', name: 'Yogur griego', aliases: ['yogur'], category: 'lacteo', kcal: 97, protein: 9, carbs: 4, fats: 5, unit: '100g', uses: ['batido', 'snack', 'desayuno'] },
+  { id: 'yogur_nat', name: 'Yogur natural', aliases: ['yogur nat'], category: 'lacteo', kcal: 61, protein: 3.5, carbs: 4.7, fats: 3.3, unit: '100g', uses: ['batido', 'snack', 'desayuno'] },
+  { id: 'skyr', name: 'Skyr', aliases: ['skyr'], category: 'lacteo', kcal: 63, protein: 11, carbs: 4, fats: 0.2, unit: '100g', uses: ['batido', 'snack', 'desayuno'] },
+  { id: 'kefir', name: 'Kéfir', aliases: ['kefir'], category: 'lacteo', kcal: 55, protein: 3.3, carbs: 4.5, fats: 3, unit: '100ml', uses: ['batido', 'desayuno'] },
+  { id: 'leche', name: 'Leche semidesnatada', aliases: ['leche'], category: 'lacteo', kcal: 47, protein: 3.2, carbs: 4.8, fats: 1.6, unit: '100ml', uses: ['batido', 'desayuno'] },
+  { id: 'queso_fresco', name: 'Queso fresco', aliases: ['queso'], category: 'lacteo', kcal: 78, protein: 12, carbs: 4, fats: 1.5, unit: '100g', uses: ['batido', 'snack'] },
+  { id: 'mozzarella', name: 'Mozzarella', aliases: ['mozzarella'], category: 'lacteo', kcal: 254, protein: 18, carbs: 3, fats: 19, unit: '100g', uses: ['plato'] },
+  { id: 'feta', name: 'Queso feta', aliases: ['feta'], category: 'lacteo', kcal: 264, protein: 14, carbs: 4, fats: 21, unit: '100g', uses: ['plato', 'salteado'] },
+
+  // OTROS
+  { id: 'cacao', name: 'Cacao puro', aliases: ['cacao'], category: 'otro', kcal: 228, protein: 20, carbs: 58, fats: 14, unit: '100g', uses: ['batido', 'desayuno'] },
+  { id: 'miel', name: 'Miel', aliases: ['miel'], category: 'otro', kcal: 304, protein: 0.3, carbs: 82, fats: 0, unit: '100g', uses: ['desayuno', 'batido'] },
+  { id: 'chocolate85', name: 'Chocolate negro 85%', aliases: ['chocolate'], category: 'otro', kcal: 592, protein: 10, carbs: 22, fats: 54, unit: '100g', uses: ['snack'] },
+  { id: 'hummus', name: 'Hummus', aliases: ['hummus'], category: 'otro', kcal: 166, protein: 8, carbs: 14, fats: 10, unit: '100g', uses: ['snack', 'salteado'] },
+  { id: 'jengibre', name: 'Jengibre', aliases: ['jengibre'], category: 'otro', kcal: 80, protein: 1.8, carbs: 18, fats: 0.8, unit: '100g', uses: ['bebida'] },
 ];
 
 const STORAGE_PREFIX = 'fitapp_v20_';
@@ -292,30 +308,42 @@ const searchFoods = (query: string): Food[] => {
   return FOOD_DATABASE.filter(f => f.name.toLowerCase().includes(q) || f.aliases.some(a => a.toLowerCase().includes(q))).slice(0, 5);
 };
 
-const TEMPLATES: Record<string, { needs: FoodCategory[]; name: string; icon: string; desc: string }> = {
-  comun: { needs: ['proteina', 'carbo', 'verdura'], name: 'Plato', icon: '🍽️', desc: 'Comida equilibrada.' },
-  ligero: { needs: ['proteina', 'verdura'], name: 'Salteado', icon: '🥗', desc: 'Ligero alto en proteína.' },
-  batido: { needs: ['proteina', 'fruta'], name: 'Batido', icon: '🥤', desc: 'Post-entreno.' },
-  verde: { needs: ['verdura', 'fruta'], name: 'Smoothie', icon: '🥬', desc: 'Smoothie detox.' },
-  bebida: { needs: ['fruta'], name: 'Infusión', icon: '🍵', desc: 'Bebida saludable.' },
+// PLANTILLAS DE RECETAS con lógica culinaria correcta
+const RECIPE_TEMPLATES: Record<string, { use: FoodUse; name: string; icon: string; desc: string; neededCats: FoodCategory[] }> = {
+  plato_proteina_carbo_verdura: { use: 'plato', name: 'Plato', icon: '🍽️', desc: 'Proteína con carbohidrato y verdura.', neededCats: ['proteina', 'carbo', 'verdura'] },
+  plato_proteina_verdura: { use: 'plato', name: 'Salteado', icon: '🥗', desc: 'Salteado proteico con verduras.', neededCats: ['proteina', 'verdura'] },
+  batido_proteico: { use: 'batido', name: 'Batido', icon: '🥤', desc: 'Batido proteico post-entreno.', neededCats: ['lacteo', 'fruta'] },
+  batido_polvo: { use: 'batido', name: 'Batido proteico', icon: '🥤', desc: 'Batido con proteína en polvo.', neededCats: ['proteina', 'fruta'] },
+  snack_yogur_fruta: { use: 'snack', name: 'Yogur con fruta', icon: '🍓', desc: 'Snack ligero con yogur.', neededCats: ['lacteo', 'fruta'] },
+  snack_fruta_seco: { use: 'snack', name: 'Snack de fruta y frutos secos', icon: '🥜', desc: 'Snack energético.', neededCats: ['fruta', 'grasa'] },
+  smoothie_verde: { use: 'smoothie', name: 'Smoothie verde', icon: '🥬', desc: 'Smoothie detox con verdura y fruta.', neededCats: ['verdura', 'fruta'] },
+  desayuno_completo: { use: 'desayuno', name: 'Desayuno', icon: '🍳', desc: 'Desayuno completo con proteína y carbos.', neededCats: ['lacteo', 'carbo', 'fruta'] },
+  bebida_infusion: { use: 'bebida', name: 'Infusión', icon: '🍵', desc: 'Bebida saludable refrescante.', neededCats: ['fruta'] },
 };
 
-const generateRecipe = (foods: Food[], key: string, category: string): Recipe | null => {
-  const tpl = TEMPLATES[key];
+// Genera una receta cogiendo solo alimentos que tengan el "use" requerido
+const generateRecipe = (foods: Food[], templateKey: string, category: string): Recipe | null => {
+  const tpl = RECIPE_TEMPLATES[templateKey];
   if (!tpl) return null;
-  const byCat: Record<string, Food[]> = {};
-  tpl.needs.forEach(c => { byCat[c] = foods.filter(f => f.category === c); });
-  if (tpl.needs.some(c => byCat[c].length === 0)) return null;
-  const grams: Record<string, number> = { proteina: 150, carbo: 80, grasa: 15, verdura: 100, fruta: 100, lacteo: 100, otro: 20 };
+
+  const candidates: Food[][] = tpl.neededCats.map(cat => 
+    foods.filter(f => f.category === cat && f.uses.includes(tpl.use))
+  );
+
+  if (candidates.some(list => list.length === 0)) return null;
+
+  const grams: Record<string, number> = { proteina: 150, carbo: 80, grasa: 15, verdura: 100, fruta: 100, lacteo: 150, otro: 20 };
   const chosen: { name: string; grams: number }[] = [];
   let kcal = 0, protein = 0, carbs = 0, fats = 0;
-  tpl.needs.forEach(c => {
-    const food = byCat[c][Math.floor(Math.random() * byCat[c].length)];
-    const g = grams[c] || 100;
+
+  tpl.neededCats.forEach((cat, i) => {
+    const food = candidates[i][Math.floor(Math.random() * candidates[i].length)];
+    const g = grams[cat] || 100;
     chosen.push({ name: food.name, grams: g });
     const f = g / 100;
     kcal += food.kcal * f; protein += food.protein * f; carbs += food.carbs * f; fats += food.fats * f;
   });
+
   const main = chosen[0].name.split(' ')[0];
   return {
     id: Math.random().toString(36).substring(2, 11),
@@ -325,26 +353,25 @@ const generateRecipe = (foods: Food[], key: string, category: string): Recipe | 
   };
 };
 
+// Elige la mejor plantilla según la categoría de receta y los alimentos disponibles
 const generateMeal = (foods: Food[], category: string): Recipe | null => {
-  const cats = foods.map(f => f.category);
-  const has = (c: FoodCategory) => cats.includes(c);
-  let tpl: string | null = null;
-  if (category === 'desayuno') {
-    if (has('proteina') && has('carbo')) tpl = 'comun';
-    else if (has('proteina') && has('fruta')) tpl = 'batido';
-  } else if (category === 'comida' || category === 'cena') {
-    if (has('proteina') && has('carbo') && has('verdura')) tpl = 'comun';
-    else if (has('proteina') && has('verdura')) tpl = 'ligero';
+  const templates: string[] = [];
+  if (category === 'comida' || category === 'cena') {
+    templates.push('plato_proteina_carbo_verdura', 'plato_proteina_verdura');
+  } else if (category === 'desayuno') {
+    templates.push('desayuno_completo', 'batido_proteico');
   } else if (category === 'snack') {
-    if (has('proteina') && has('fruta')) tpl = 'batido';
+    templates.push('snack_yogur_fruta', 'snack_fruta_seco');
   } else if (category === 'batido') {
-    if (has('proteina') && has('fruta')) tpl = 'batido';
-    else if (has('verdura') && has('fruta')) tpl = 'verde';
+    templates.push('batido_proteico', 'batido_polvo');
   } else if (category === 'bebida') {
-    if (has('fruta')) tpl = 'bebida';
+    templates.push('bebida_infusion');
   }
-  if (!tpl) return null;
-  return generateRecipe(foods, tpl, category);
+  for (const t of templates) {
+    const r = generateRecipe(foods, t, category);
+    if (r) return r;
+  }
+  return null;
 };
 
 interface FitAppContextData {
@@ -382,7 +409,7 @@ const defaultProfile: UserProfile = {
   goal: 'ganar_musculo', context: 'casa',
   homeItems: ['silla', 'mesa', 'sofa', 'mochila', 'botellas'],
   weeklyRoutine: DEFAULT_ROUTINE,
-  pantryIngredients: ['pollo', 'arroz', 'brocoli', 'avena', 'platano', 'huevo', 'aceite', 'tomate', 'yogur', 'espinaca'],
+  pantryIngredients: ['pollo', 'arroz', 'brocoli', 'avena', 'platano', 'huevo', 'aceite', 'tomate', 'yogur', 'espinaca', 'proteina_polvo'],
   hiddenFoods: [], hiddenExercises: [], hiddenHomeItems: [],
 };
 
@@ -803,11 +830,13 @@ const PantryView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (!nf.name.trim()) return;
     const cat = guessCategory(nf.name);
     const def = CATEGORY_DEFAULTS[nf.category || cat];
+    const usesForCat: FoodUse[] = nf.category === 'proteina' ? ['plato', 'salteado'] : nf.category === 'carbo' ? ['plato', 'desayuno'] : nf.category === 'grasa' ? ['snack', 'plato'] : nf.category === 'verdura' ? ['plato', 'salteado'] : nf.category === 'fruta' ? ['snack', 'batido', 'desayuno'] : nf.category === 'lacteo' ? ['batido', 'desayuno', 'snack'] : ['plato'];
     const food: Food = {
       id: 'custom_' + Math.random().toString(36).substring(2, 11), name: nf.name.trim(),
       aliases: [nf.name.toLowerCase().trim()], category: nf.category || cat,
       kcal: Number(nf.kcal) || def.kcal, protein: Number(nf.protein) || def.protein,
       carbs: Number(nf.carbs) || def.carbs, fats: Number(nf.fats) || def.fats, unit: '100g',
+      uses: usesForCat,
     };
     addCustomFood(food);
     updateProfile({ pantryIngredients: [...profile.pantryIngredients, food.id] });
@@ -891,7 +920,7 @@ const RecipesView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (allFoods.length === 0) { alert('Añade alimentos.'); return; }
     const r: Recipe[] = [];
     for (let i = 0; i < 3; i++) { const rec = generateMeal(allFoods, cat); if (rec && !r.some(x => x.name === rec.name)) r.push(rec); }
-    if (r.length === 0) { alert('Faltan alimentos.'); return; }
+    if (r.length === 0) { alert('Faltan alimentos de las categorías necesarias para este tipo de receta.'); return; }
     setRecipes(r);
   };
   return (
@@ -1067,7 +1096,7 @@ function AppContent() {
     <div style={s.container}>
       <header style={s.header}>
         <span style={s.logo}>FITAPP</span>
-        <span style={s.badge}>v10.0 COMPLETA</span>
+        <span style={s.badge}>v10.1 RECETAS OK</span>
       </header>
       <main>
         {active ? <Player exercises={active} onFinish={() => setActive(null)} />
